@@ -1,0 +1,231 @@
+/* eslint-disable no-unused-vars */
+import React, { useState } from "react";
+import CommonNavbar from "@/components/shared/common/CommonNavbar/CommonNavbar";
+import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import mealIcon from "../../assets/SVG.png";
+import {
+  ArrowLeft,
+  ArrowRight,
+  Calendar,
+  Home,
+  Wallet,
+  Check,
+} from "lucide-react";
+import { Link } from "react-router-dom";
+
+const MEAL_PLANS = [
+  {
+    id: "full",
+    title: "Full Board",
+    subtitle: "All meals included",
+    items: ["Breakfast", "Lunch", "Dinner", "Snacks & Beverages"],
+    price: 250000,
+  },
+  {
+    id: "half",
+    title: "Half Board",
+    subtitle: "Breakfast and Dinner",
+    items: ["Breakfast", "Dinner", "Tea or Coffee"],
+    price: 225000,
+  },
+];
+
+function formatPrice(n) {
+  return n.toLocaleString();
+}
+
+export default function MealPlan() {
+
+  return (
+    <div className="overflow-x-hidden min-h-screen w-full bg-[#F7F5F0]">
+      <CommonNavbar />
+
+      <div className="max-w-7xl mx-auto px-4 md:px-6 lg:px-8 py-10">
+        <Button
+          variant="ghost"
+          className="flex items-center gap-2 text-sm text-gray-700 mb-6 pl-0 hover:bg-transparent"
+        >
+          <ArrowLeft className="w-4 h-4" />
+          <Link to="/new-booking">Back</Link>
+        </Button>
+        <h2 className="text-2xl md:text-5xl font-bold text-[#09432B] text-center">
+          Choose Your Meal Plan
+        </h2>
+
+        <p className="text-center text-sm md:text-lg font-medium text-[#737373] mt-2 mb-10">
+          Step 2 of 6 – Select your dining experience
+        </p>
+        <div className="grid grid-cols-1 md:grid-cols-12 gap-8">
+          <div className="md:col-span-8 space-y-6">
+            {MEAL_PLANS.map((plan) => (
+              <Card
+                key={plan.id}
+                className="bg-white rounded-xl shadow-sm px-6 py-6"
+              >
+                <CardContent className="p-0">
+                  <div className="flex items-start gap-4">
+                    <div className="w-12 h-12 bg-[#E6F2EE] rounded-full flex items-center justify-center">
+                      <img src={mealIcon} className="w-5 h-5" alt="Meal Icon" />
+                    </div>
+
+                    <div>
+                      <h3 className="text-xl font-bold text-[#09432B] leading-tight">
+                        {plan.title}
+                      </h3>
+                      <p className="text-sm text-[#737373] mt-1">
+                        {plan.subtitle}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="mt-5 space-y-3 ">
+                    {plan.items.map((item) => (
+                      <div key={item} className="flex items-center gap-2">
+                        <Check className="w-4 h-4 text-[#09432B]" />
+                        <span className="text-sm text-[#09432B]">{item}</span>
+                      </div>
+                    ))}
+                  </div>
+                  <div
+                    className="
+                      mt-8 
+                      flex-col items-start gap-4
+                      flex
+                      sm:flex-row sm:items-center sm:justify-between
+                    "
+                  >
+                    <span className="text-lg font-bold text-[#09432B] whitespace-nowrap ">
+                      ₦{formatPrice(plan.price)}
+                      <span className="text-sm  font-normal text-[#737373] ml-1">
+                        per person/night
+                      </span>
+                    </span>
+                    <Button
+                      variant="ghost"
+                      className="
+                        text-[#09432B] font-bold flex items-center gap-2 hover:bg-transparent
+                        w-full justify-end px-0 py-2
+                        sm:w-auto sm:justify-end sm:px-0 sm:py-0
+                      "
+                    >
+                      Select Meal Plan
+                      <ArrowRight className="w-4 h-4 mt-1" />
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+          <div className="md:col-span-4 space-y-4">
+            <div className="bg-white rounded-xl border border-gray-200 p-4 shadow-sm">
+              <div className="flex items-center gap-2 mb-4">
+                <div className="w-8 h-8 bg-[#E6F2EE] rounded-full flex items-center justify-center">
+                  <Calendar className="w-4 h-4 text-[#09432B]" />
+                </div>
+                <h4 className="text-[#09432B] font-bold text-base">
+                  Stay Dates
+                </h4>
+              </div>
+
+              <div className="flex items-start justify-between w-full">
+                <div>
+                  <p className="text-sm text-[#737373]">Check in:</p>
+                  <p className="text-sm font-medium text-[#4F4F4F] mt-1">
+                    01/02/2025
+                  </p>
+                </div>
+
+                <div>
+                  <p className="text-sm text-[#737373]">Check out:</p>
+                  <p className="text-sm font-medium text-[#4F4F4F] mt-1">
+                    04/02/2025
+                  </p>
+                </div>
+
+                <p className="text-sm font-semibold text-[#09432B] whitespace-nowrap">
+                  2 Nights
+                </p>
+              </div>
+            </div>
+
+            <div className="bg-white rounded-xl border border-gray-200 px-5 py-4 shadow-sm">
+              <div className="flex items-center gap-2 mb-3">
+                <div className="w-8 h-8 bg-[#E6F2EE] rounded-full flex items-center justify-center">
+                  <Home className="w-4 h-4 text-[#09432B]" />
+                </div>
+                <h4 className="text-[#09432B] font-bold">Your Pod</h4>
+              </div>
+
+              <p className="text-sm text-[#737373] font-medium">Forest Haven</p>
+            </div>
+
+            <div className="bg-white rounded-xl border border-gray-200 px-5 py-4 shadow-sm">
+              <div className="flex items-center gap-2 mb-3">
+                <div className="w-8 h-8 bg-[#E6F2EE] rounded-full flex items-center justify-center">
+                  <Wallet className="w-4 h-4 text-[#09432B]" />
+                </div>
+                <h4 className="text-[#09432B] font-bold">Price Summary</h4>
+              </div>
+
+              <p className="text-xs font-medium text-[#737373] mb-3">
+                Pod & Meals (2 Nights)
+              </p>
+
+              <div className="space-y-3 text-sm font-semibold text-[#09432B]">
+                <div className="flex justify-between">
+                  <span>Sub Total:</span>
+                  <span>₦0</span>
+                </div>
+
+                <div className="flex justify-between leading-snug">
+                  <span>
+                    After consumption tax and <br /> VAT(12.5%)
+                  </span>
+                  <span>₦0</span>
+                </div>
+
+                <div className="flex justify-between">
+                  <span>Discount</span>
+                  <span>0%</span>
+                </div>
+
+                <div className="border-t pt-3 flex justify-between bg-[#F2EFE7] px-3 py-2 rounded-md">
+                  <span>Total:</span>
+                  <span>₦0</span>
+                </div>
+              </div>
+            </div>
+
+            <div className="w-full rounded-t-xl overflow-hidden">
+              <div
+                className="px-4 py-3 text-[#0A4C30] text-sm font-medium"
+                style={{ backgroundColor: "#B7FFFF" }}
+              >
+                Happy with your meal plan? let’s move ahead
+              </div>
+
+              <Button
+                asChild
+                className="w-full bg-[#09432B] hover:bg-[#083f28] text-white text-base font-bold py-6 rounded-none rounded-b-xl"
+              >
+                <Link
+                  to="/guest-details"
+                  className="flex items-center gap-2 justify-center"
+                >
+                  Continue to Guest Details →
+                </Link>
+              </Button>
+            </div>
+
+            <Button
+              variant="outline"
+              className="w-full py-6 rounded-md border border-[#A19257] bg-gradient-to-r from-[#B5AB84] to-[#A19257] font-bold text-white hover:text-white"
+            >
+              Quick Book
+            </Button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
