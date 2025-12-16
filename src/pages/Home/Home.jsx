@@ -52,7 +52,7 @@ export default function Home() {
               h-10 md:h-12 flex items-center gap-2
             "
           >
-            <Link to='/book-your-stay'>Book your stay</Link>
+            <Link to="/manage-your-booking">Manage Booking</Link>
 
             <ArrowRight className="w-4 h-4" />
           </Button>

@@ -40,7 +40,7 @@ export default function Navbar() {
               items-center justify-center gap-2
             "
           >
-            <Link to="/book-your-stay">Book your stay</Link>
+            <Link to="/manage-your-booking">Manage Booking</Link>
             <ArrowRight className="w-4 h-4 mt-1" />
           </Button>
 

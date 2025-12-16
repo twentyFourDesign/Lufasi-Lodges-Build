@@ -9,11 +9,13 @@ import EnterYourDetails from "@/pages/EnterYourDetails/EnterYourDetails";
 import ReviewYourBooking from "@/pages/ReviewYourBooking/ReviewYourBooking";
 import BookingConfirmation from "@/pages/BookingConfirmation/BookingConfirmation";
 import EditBookingPage from "@/pages/EditBookingPage/EditBookingPage";
+import ManageBooking from "@/pages/ManageBooking";
 
 export default function AppRoutes() {
   return (
     <Routes>
       <Route path="/" element={<Home />} />
+      <Route path="/manage-your-booking" element={<ManageBooking />} />
       <Route path="/book-your-stay" element={<BookYourStay />} />
       <Route path="/new-booking" element={<NewBooking />} />
       <Route path="/meal-plan" element={<MealPlan />} />
