@@ -1,6 +1,7 @@
 import { Button } from "@/components/ui/button";
 import logo from "../../../assets/logo.png";
 import { ArrowRight } from "lucide-react";
+import { Link } from "react-router-dom";
 
 export default function Navbar() {
   return (
@@ -39,7 +40,7 @@ export default function Navbar() {
               items-center justify-center gap-2
             "
           >
-            <span>Book your stay</span>
+            <Link to="/book-your-stay">Book your stay</Link>
             <ArrowRight className="w-4 h-4 mt-1" />
           </Button>
 
