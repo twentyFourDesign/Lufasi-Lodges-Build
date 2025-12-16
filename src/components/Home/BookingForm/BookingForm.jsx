@@ -15,10 +15,50 @@ import {
   SelectItem,
 } from "@/components/ui/select";
 
-export default function BookingForm() {
+import { BASE_URL } from "@/config";
+
+export default function BookingForm({ onAvailabilityCheck }) {
   const [checkIn, setCheckIn] = useState();
   const [checkOut, setCheckOut] = useState();
   const [guests, setGuests] = useState("2 Guests");
+  const [loading, setLoading] = useState(false);
+
+  const handleCheckAvailability = async () => {
+    if (!checkIn || !checkOut) {
+      return;
+    }
+
+    if (checkOut <= checkIn) {
+      return;
+    }
+
+    setLoading(true);
+
+    try {
+      const response = await fetch(`${BASE_URL}/availability/check`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          startDate: checkIn.toISOString().split("T")[0], // "2025-12-20"
+          endDate: checkOut.toISOString().split("T")[0], // "2025-12-22"
+          adults: parseInt(guests.match(/(\d+)/)[1]) || 1, // Extract number from "2 Guests"
+        }),
+      });
+      const data = await response.json();
+
+      // Call parent component's callback with results
+      if (onAvailabilityCheck) {
+        onAvailabilityCheck(data);
+      }
+      console.log("Available pods:", data.availablePods);
+    } catch (error) {
+      console.error("Error checking availability:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <div
@@ -60,6 +100,7 @@ export default function BookingForm() {
               mode="single"
               selected={checkIn}
               onSelect={setCheckIn}
+              disabled={(date) => date < new Date()} // Disable past dates
               className="rounded-md"
             />
           </PopoverContent>
@@ -91,6 +132,7 @@ export default function BookingForm() {
               mode="single"
               selected={checkOut}
               onSelect={setCheckOut}
+              disabled={(date) => date <= (checkIn || new Date())} // Disable dates before check-in
               className="rounded-md"
             />
           </PopoverContent>
@@ -125,6 +167,8 @@ export default function BookingForm() {
       {/* BUTTON */}
       <div className="w-full md:w-auto flex items-center justify-center md:justify-end md:mt-6">
         <Button
+          onClick={handleCheckAvailability}
+          disabled={loading}
           className="
             w-full md:w-auto
             h-12
@@ -137,9 +181,11 @@ export default function BookingForm() {
 
             bg-[#09432B] md:bg-[#09432B]
             hover:bg-green-900
+            disabled:opacity-50 disabled:cursor-not-allowed
           "
         >
-          Check Availability <ArrowRight className="w-4 h-4" />
+          {loading ? "Checking..." : "Check Availability"}
+          <ArrowRight className="w-4 h-4" />
         </Button>
       </div>
     </div>
