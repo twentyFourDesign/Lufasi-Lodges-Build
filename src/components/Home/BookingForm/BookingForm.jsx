@@ -16,12 +16,16 @@ import {
 } from "@/components/ui/select";
 
 import { BASE_URL } from "@/config";
+import { useBookingStore } from "@/store/useBookingStore";
+import { useNavigate } from "react-router-dom";
 
-export default function BookingForm({ onAvailabilityCheck }) {
+export default function BookingForm() {
   const [checkIn, setCheckIn] = useState();
   const [checkOut, setCheckOut] = useState();
   const [guests, setGuests] = useState("2 Guests");
   const [loading, setLoading] = useState(false);
+  const bookingStore = useBookingStore();
+  const navigate = useNavigate();
 
   const handleCheckAvailability = async () => {
     if (!checkIn || !checkOut) {
@@ -48,10 +52,13 @@ export default function BookingForm({ onAvailabilityCheck }) {
       });
       const data = await response.json();
 
-      // Call parent component's callback with results
-      if (onAvailabilityCheck) {
-        onAvailabilityCheck(data);
-      }
+      bookingStore.updateDraft({
+        dates: { checkIn, checkOut },
+        totalGuests: parseInt(guests.match(/(\d+)/)[1]) || 1,
+        availablePods: data.availablePods,
+      });
+
+      navigate("/new-booking");
       console.log("Available pods:", data.availablePods);
     } catch (error) {
       console.error("Error checking availability:", error);
