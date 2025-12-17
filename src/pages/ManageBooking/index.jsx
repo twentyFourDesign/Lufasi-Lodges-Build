@@ -1,3 +1,6 @@
+/* eslint-disable no-unused-vars */
+import { BASE_URL } from "@/config";
+import { useState } from "react";
 import CommonNavbar from "@/components/shared/common/CommonNavbar/CommonNavbar";
 import { ArrowLeft } from "lucide-react";
 import { Card } from "@/components/ui/card";
@@ -6,6 +9,46 @@ import { Link } from "react-router-dom";
 import { ArrowRight } from "lucide-react";
 
 export default function ManageBooking() {
+  const [bookingReference, setBookingReference] = useState("");
+  const [lastName, setLastName] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [bookingData, setBookingData] = useState(null);
+  const [error, setError] = useState("");
+
+  const handleFindBooking = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    setError("");
+
+    try {
+      const response = await fetch(`${BASE_URL}/bookings/find`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          bookingReference: bookingReference.trim(),
+          lastName: lastName.trim(),
+        }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        setBookingData(data.booking);
+        // You can redirect to a booking details page or show details here
+        console.log("Booking found:", data.booking);
+      } else {
+        setError(data.error || "Booking not found");
+      }
+    } catch (error) {
+      console.error("Error finding booking:", error);
+      setError("Failed to find booking. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <div className="min-h-screen lg:min-h-[93vh] w-full bg-[#F7F5F0] ">
       <CommonNavbar />
@@ -28,14 +71,15 @@ export default function ManageBooking() {
           Enter Details Below to find you booking details
         </p>
         <Card className="w-full max-w-sm h-[376px] bg-white rounded-xl shadow-md hover:shadow-lg transition px-8 py-10 m-auto">
-          <form className="flex flex-col gap-8">
-            {/* Form fields can be added here in the future */}
+          <form onSubmit={handleFindBooking} className="flex flex-col gap-8">
             <div className="flex flex-col gap-3">
               <label className="text-gray-700 font-semibold text-sm">
                 Booking Reference
               </label>
               <input
                 type="text"
+                value={bookingReference}
+                onChange={(e) => setBookingReference(e.target.value)}
                 className="w-full px-4 py-2 mt-2 mb-4 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#09432B]"
                 placeholder="Enter your booking reference"
                 required
@@ -47,6 +91,8 @@ export default function ManageBooking() {
               </label>
               <input
                 type="text"
+                value={lastName}
+                onChange={(e) => setLastName(e.target.value)}
                 className="w-full px-4 py-2 mt-2 mb-4 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#09432B]"
                 placeholder="Enter your last name"
                 required
@@ -90,8 +136,9 @@ export default function ManageBooking() {
                 flex-1
               "
                 type="submit"
+                disabled={loading}
               >
-                Find Booking
+                {loading ? "Finding..." : "Find Booking"}{" "}
                 <ArrowRight className="w-4 h-4 mt-1" />
               </Button>
             </div>
