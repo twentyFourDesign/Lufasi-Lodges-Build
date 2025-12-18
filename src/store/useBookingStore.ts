@@ -22,13 +22,24 @@ type Extras = {
   }[];
 };
 
+type Pod = {
+  id: string;
+  title: string;
+  desc: string;
+  price: number;
+  available: boolean;
+  tags: string[];
+  img: string;
+};
+
 type BookingDraft = {
   propertyId?: string;
   dates?: {
     checkIn: Date;
     checkOut: Date;
   };
-  availablePods?: unknown[];
+  availablePods?: Pod[];
+  selectedPod?: Pod;
   totalGuests?: number;
   boardType?: BoardType;
   guests?: {

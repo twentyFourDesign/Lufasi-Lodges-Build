@@ -30,6 +30,11 @@ export default function NewBooking() {
   const [selectedPod, setSelectedPod] = useState(null);
   const bookingStore = useBookingStore();
 
+  const onSelectPod = (pod) => {
+    setSelectedPod(pod);
+    bookingStore.updateDraft({ selectedPod: pod });
+  };
+
   return (
     <div className="overflow-x-hidden min-h-screen lg:min-h-[80vh] w-full bg-[#F7F5F0]">
       <CommonNavbar />
@@ -118,7 +123,7 @@ export default function NewBooking() {
                       <div className="flex items-center justify-end mt-2">
                         {/* === DESKTOP & TABLET BUTTON WITH ARROW === */}
                         <Button
-                          onClick={() => setSelectedPod(pod)}
+                          onClick={() => onSelectPod(pod)}
                           disabled={!pod.available}
                           className={`
       hidden sm:flex items-center gap-2
@@ -141,7 +146,7 @@ export default function NewBooking() {
                           <Checkbox
                             checked={selectedPod?.id === pod.id}
                             onCheckedChange={() =>
-                              setSelectedPod(
+                              onSelectPod(
                                 selectedPod?.id === pod.id ? null : pod
                               )
                             }
@@ -352,17 +357,26 @@ export default function NewBooking() {
                 Happy with your pod let’s move ahead
               </div>
 
-              <Button
-                asChild
-                className="w-full bg-[#09432B] hover:bg-[#083f28] text-white text-base font-bold py-6 rounded-none rounded-b-xl"
-              >
-                <Link
-                  to="/meal-plan"
-                  className="flex items-center justify-center gap-2"
+              {!selectedPod ? (
+                <Button
+                  className="w-full bg-gray-400 text-white text-base font-bold py-6 rounded-none rounded-b-xl opacity-50 cursor-not-allowed"
+                  disabled={true}
                 >
                   Continue to Meal Plan →
-                </Link>
-              </Button>
+                </Button>
+              ) : (
+                <Button
+                  asChild
+                  className="w-full bg-[#09432B] hover:bg-[#083f28] text-white text-base font-bold py-6 rounded-none rounded-b-xl"
+                >
+                  <Link
+                    to="/meal-plan"
+                    className="flex items-center justify-center gap-2"
+                  >
+                    Continue to Meal Plan →
+                  </Link>
+                </Button>
+              )}
             </div>
             <Button
               variant="outline"
