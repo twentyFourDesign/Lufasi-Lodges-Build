@@ -20,6 +20,8 @@ import {
 import demoImg from "../../assets/Lakeside Serenity.png";
 import { Link } from "react-router-dom";
 import { Checkbox } from "@/components/ui/checkbox";
+import { useBookingStore } from "@/store/useBookingStore";
+import { format, differenceInCalendarDays } from "date-fns";
 
 const PODS = [
   {
@@ -84,6 +86,8 @@ function formatPrice(n) {
 
 export default function NewBooking() {
   const [selectedPod, setSelectedPod] = useState(null);
+  const bookingStore = useBookingStore();
+
   return (
     <div className="overflow-x-hidden min-h-screen lg:min-h-[80vh] w-full bg-[#F7F5F0]">
       <CommonNavbar />
@@ -316,7 +320,7 @@ export default function NewBooking() {
                     Check in:
                   </p>
                   <p className="text-sm font-medium text-[#4F4F4F] leading-tight mt-1">
-                    01/02/2025
+                    {format(bookingStore.draft.dates.checkIn, "dd/MM/yyyy")}
                   </p>
                 </div>
                 <div>
@@ -324,12 +328,16 @@ export default function NewBooking() {
                     Check out:
                   </p>
                   <p className="text-sm font-medium text-[#4F4F4F] leading-tight mt-1">
-                    04/02/2025
+                    {format(bookingStore.draft.dates.checkOut, "dd/MM/yyyy")}
                   </p>
                 </div>
                 <div className="flex items-center justify-end">
                   <p className="text-sm font-semibold text-[#09432B] whitespace-nowrap">
-                    2 Nights
+                    {differenceInCalendarDays(
+                      bookingStore.draft.dates.checkOut,
+                      bookingStore.draft.dates.checkIn
+                    )}{" "}
+                    Nights
                   </p>
                 </div>
               </div>

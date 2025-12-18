@@ -53,7 +53,10 @@ export default function BookingForm() {
       const data = await response.json();
 
       bookingStore.updateDraft({
-        dates: { checkIn, checkOut },
+        dates: {
+          checkIn: checkIn.toISOString().split("T")[0],
+          checkOut: checkOut.toISOString().split("T")[0],
+        },
         totalGuests: parseInt(guests.match(/(\d+)/)[1]) || 1,
         availablePods: data.availablePods,
       });
