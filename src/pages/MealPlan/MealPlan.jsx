@@ -1,5 +1,5 @@
 /* eslint-disable no-unused-vars */
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import CommonNavbar from "@/components/shared/common/CommonNavbar/CommonNavbar";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -11,31 +11,63 @@ import {
   Home,
   Wallet,
   Check,
+  Loader2,
 } from "lucide-react";
 import { Link } from "react-router-dom";
-
-const MEAL_PLANS = [
-  {
-    id: "full",
-    title: "Full Board",
-    subtitle: "All meals included",
-    items: ["Breakfast", "Lunch", "Dinner", "Snacks & Beverages"],
-    price: 250000,
-  },
-  {
-    id: "half",
-    title: "Half Board",
-    subtitle: "Breakfast and Dinner",
-    items: ["Breakfast", "Dinner", "Tea or Coffee"],
-    price: 225000,
-  },
-];
+import { BASE_URL } from "@/config";
+import { useBookingStore } from "@/store/useBookingStore";
 
 function formatPrice(n) {
   return n.toLocaleString();
 }
 
 export default function MealPlan() {
+  const [mealPlans, setMealPlans] = useState([]);
+  const [selectedMealPlan, setSelectedMealPlan] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const bookingStore = useBookingStore();
+
+  useEffect(() => {
+    fetchMealPlans();
+  }, []);
+
+  const fetchMealPlans = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+
+      const response = await fetch(`${BASE_URL}/meal-plans`);
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data = await response.json();
+      setMealPlans(data);
+    } catch (error) {
+      console.error("Error fetching meal plans:", error);
+      setError(error.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSelectMealPlan = (plan) => {
+    setSelectedMealPlan(plan);
+    bookingStore.updateDraft({
+      mealPlan: plan,
+      mealPlanTotal:
+        plan.price *
+        bookingStore.draft.numberOfGuests *
+        bookingStore.draft.numberOfNights,
+      subTotal:
+        (bookingStore.draft.podsTotal || 0) +
+        plan.price *
+          bookingStore.draft.numberOfGuests *
+          bookingStore.draft.numberOfNights,
+    });
+  };
 
   return (
     <div className="overflow-x-hidden min-h-screen w-full bg-[#F7F5F0]">
@@ -49,6 +81,7 @@ export default function MealPlan() {
           <ArrowLeft className="w-4 h-4" />
           <Link to="/new-booking">Back</Link>
         </Button>
+
         <h2 className="text-2xl md:text-5xl font-bold text-[#09432B] text-center">
           Choose Your Meal Plan
         </h2>
@@ -56,67 +89,90 @@ export default function MealPlan() {
         <p className="text-center text-sm md:text-lg font-medium text-[#737373] mt-2 mb-10">
           Step 2 of 6 – Select your dining experience
         </p>
+
         <div className="grid grid-cols-1 md:grid-cols-12 gap-8">
           <div className="md:col-span-8 space-y-6">
-            {MEAL_PLANS.map((plan) => (
-              <Card
-                key={plan.id}
-                className="bg-white rounded-xl shadow-sm px-6 py-6"
-              >
-                <CardContent className="p-0">
-                  <div className="flex items-start gap-4">
-                    <div className="w-12 h-12 bg-[#E6F2EE] rounded-full flex items-center justify-center">
-                      <img src={mealIcon} className="w-5 h-5" alt="Meal Icon" />
-                    </div>
-
-                    <div>
-                      <h3 className="text-xl font-bold text-[#09432B] leading-tight">
-                        {plan.title}
-                      </h3>
-                      <p className="text-sm text-[#737373] mt-1">
-                        {plan.subtitle}
-                      </p>
-                    </div>
-                  </div>
-                  <div className="mt-5 space-y-3 ">
-                    {plan.items.map((item) => (
-                      <div key={item} className="flex items-center gap-2">
-                        <Check className="w-4 h-4 text-[#09432B]" />
-                        <span className="text-sm text-[#09432B]">{item}</span>
+            {loading && !error && (
+              <div className="flex items-center justify-center min-h-[400px]">
+                <div className="flex items-center gap-2 text-[#09432B]">
+                  <Loader2 className="w-6 h-6 animate-spin" />
+                  <span className="text-lg font-medium">
+                    Loading meal plans...
+                  </span>
+                </div>
+              </div>
+            )}
+            {!loading && error && (
+              <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg text-center">
+                <p className="text-red-700 text-sm">
+                  Unable to load meal plans from server.
+                </p>
+              </div>
+            )}
+            {!loading &&
+              !error &&
+              mealPlans.map((plan) => (
+                <Card
+                  key={plan.id}
+                  className="bg-white rounded-xl shadow-sm px-6 py-6"
+                >
+                  <CardContent className="p-0">
+                    <div className="flex items-start gap-4">
+                      <div className="w-12 h-12 bg-[#E6F2EE] rounded-full flex items-center justify-center">
+                        <img
+                          src={mealIcon}
+                          className="w-5 h-5"
+                          alt="Meal Icon"
+                        />
                       </div>
-                    ))}
-                  </div>
-                  <div
-                    className="
-                      mt-8 
-                      flex-col items-start gap-4
-                      flex
-                      sm:flex-row sm:items-center sm:justify-between
-                    "
-                  >
-                    <span className="text-lg font-bold text-[#09432B] whitespace-nowrap ">
-                      ₦{formatPrice(plan.price)}
-                      <span className="text-sm  font-normal text-[#737373] ml-1">
-                        per person/night
+
+                      <div>
+                        <h3 className="text-xl font-bold text-[#09432B] leading-tight">
+                          {plan.title}
+                        </h3>
+                        <p className="text-sm text-[#737373] mt-1">
+                          {plan.subtitle}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="mt-5 space-y-3">
+                      {plan.items.map((item) => (
+                        <div key={item} className="flex items-center gap-2">
+                          <Check className="w-4 h-4 text-[#09432B]" />
+                          <span className="text-sm text-[#09432B]">{item}</span>
+                        </div>
+                      ))}
+                    </div>
+                    <div className="mt-8 flex-col items-start gap-4 flex sm:flex-row sm:items-center sm:justify-between">
+                      <span className="text-lg font-bold text-[#09432B] whitespace-nowrap">
+                        ₦{formatPrice(plan.price)}
+                        <span className="text-sm font-normal text-[#737373] ml-1">
+                          per person/night
+                        </span>
                       </span>
-                    </span>
-                    <Button
-                      variant="ghost"
-                      className="
+                      <Button
+                        variant="ghost"
+                        className="
                         text-[#09432B] font-bold flex items-center gap-2 hover:bg-transparent
                         w-full justify-end px-0 py-2
                         sm:w-auto sm:justify-end sm:px-0 sm:py-0
                       "
-                    >
-                      Select Meal Plan
-                      <ArrowRight className="w-4 h-4 mt-1" />
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleSelectMealPlan(plan);
+                        }}
+                      >
+                        Select Meal Plan
+                        <ArrowRight className="w-4 h-4 mt-1" />
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
           </div>
+
           <div className="md:col-span-4 space-y-4">
+            {/* Stay Dates Card */}
             <div className="bg-white rounded-xl border border-gray-200 p-4 shadow-sm">
               <div className="flex items-center gap-2 mb-4">
                 <div className="w-8 h-8 bg-[#E6F2EE] rounded-full flex items-center justify-center">
@@ -148,6 +204,7 @@ export default function MealPlan() {
               </div>
             </div>
 
+            {/* Selected Pod Card */}
             <div className="bg-white rounded-xl border border-gray-200 px-5 py-4 shadow-sm">
               <div className="flex items-center gap-2 mb-3">
                 <div className="w-8 h-8 bg-[#E6F2EE] rounded-full flex items-center justify-center">
@@ -159,6 +216,7 @@ export default function MealPlan() {
               <p className="text-sm text-[#737373] font-medium">Forest Haven</p>
             </div>
 
+            {/* Price Summary Card */}
             <div className="bg-white rounded-xl border border-gray-200 px-5 py-4 shadow-sm">
               <div className="flex items-center gap-2 mb-3">
                 <div className="w-8 h-8 bg-[#E6F2EE] rounded-full flex items-center justify-center">
@@ -174,14 +232,19 @@ export default function MealPlan() {
               <div className="space-y-3 text-sm font-semibold text-[#09432B]">
                 <div className="flex justify-between">
                   <span>Sub Total:</span>
-                  <span>₦0</span>
+                  <span>₦{formatPrice(bookingStore.draft.subTotal)}</span>
                 </div>
 
                 <div className="flex justify-between leading-snug">
                   <span>
                     After consumption tax and <br /> VAT(12.5%)
                   </span>
-                  <span>₦0</span>
+                  <span>
+                    ₦
+                    {formatPrice(
+                      Math.round(bookingStore.draft.subTotal * 0.125)
+                    )}
+                  </span>
                 </div>
 
                 <div className="flex justify-between">
@@ -191,30 +254,45 @@ export default function MealPlan() {
 
                 <div className="border-t pt-3 flex justify-between bg-[#F2EFE7] px-3 py-2 rounded-md">
                   <span>Total:</span>
-                  <span>₦0</span>
+                  <span>
+                    ₦
+                    {formatPrice(
+                      Math.round(bookingStore.draft.subTotal * 1.125)
+                    )}
+                  </span>
                 </div>
               </div>
             </div>
 
+            {/* Continue Button */}
             <div className="w-full rounded-t-xl overflow-hidden">
               <div
                 className="px-4 py-3 text-[#0A4C30] text-sm font-medium"
                 style={{ backgroundColor: "#B7FFFF" }}
               >
-                Happy with your meal plan? let’s move ahead
+                Happy with your meal plan? let's move ahead
               </div>
 
-              <Button
-                asChild
-                className="w-full bg-[#09432B] hover:bg-[#083f28] text-white text-base font-bold py-6 rounded-none rounded-b-xl"
-              >
-                <Link
-                  to="/guest-details"
-                  className="flex items-center gap-2 justify-center"
+              {!selectedMealPlan ? (
+                <Button
+                  className="w-full bg-gray-400 text-white text-base font-bold py-6 rounded-none rounded-b-xl opacity-50 cursor-not-allowed"
+                  disabled={true}
                 >
                   Continue to Guest Details →
-                </Link>
-              </Button>
+                </Button>
+              ) : (
+                <Button
+                  asChild
+                  className="w-full bg-[#09432B] hover:bg-[#083f28] text-white text-base font-bold py-6 rounded-none rounded-b-xl"
+                >
+                  <Link
+                    to="/guest-details"
+                    className="flex items-center gap-2 justify-center"
+                  >
+                    Continue to Guest Details →
+                  </Link>
+                </Button>
+              )}
             </div>
 
             <Button

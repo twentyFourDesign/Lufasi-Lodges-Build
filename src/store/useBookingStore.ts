@@ -32,17 +32,29 @@ type Pod = {
   img: string;
 };
 
+type BoardOption = {
+  id: string;
+  boardType: BoardType;
+  title: string;
+  subtitle: string;
+  items: string[];
+  price: number;
+  isActive: boolean;
+};
+
 type BookingDraft = {
   propertyId?: string;
   dates?: {
     checkIn: Date;
     checkOut: Date;
   };
-  numberOfNights?: number;
   availablePods?: Pod[];
-  selectedPod?: Pod;
+  numberOfNights?: number;
   numberOfGuests?: number;
-  boardType?: BoardType;
+  selectedPod?: Pod;
+  podsTotal?: number;
+  mealPlan?: BoardOption;
+  mealPlanTotal?: number;
   subTotal?: number;
   guests?: {
     adults: number;
