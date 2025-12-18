@@ -14,6 +14,7 @@ import {
   SelectContent,
   SelectItem,
 } from "@/components/ui/select";
+import { differenceInCalendarDays } from "date-fns";
 
 import { BASE_URL } from "@/config";
 import { useBookingStore } from "@/store/useBookingStore";
@@ -57,8 +58,12 @@ export default function BookingForm() {
           checkIn: checkIn.toISOString().split("T")[0],
           checkOut: checkOut.toISOString().split("T")[0],
         },
-        totalGuests: parseInt(guests.match(/(\d+)/)[1]) || 1,
+        numberOfGuests: parseInt(guests.match(/(\d+)/)[1]) || 1,
         availablePods: data,
+        numberOfNights: differenceInCalendarDays(
+          checkOut.toISOString().split("T")[0],
+          checkIn.toISOString().split("T")[0]
+        ),
       });
 
       navigate("/new-booking");

@@ -38,10 +38,12 @@ type BookingDraft = {
     checkIn: Date;
     checkOut: Date;
   };
+  numberOfNights?: number;
   availablePods?: Pod[];
   selectedPod?: Pod;
-  totalGuests?: number;
+  numberOfGuests?: number;
   boardType?: BoardType;
+  subTotal?: number;
   guests?: {
     adults: number;
     teenagers: number;

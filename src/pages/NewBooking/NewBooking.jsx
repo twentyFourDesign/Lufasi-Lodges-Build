@@ -20,7 +20,7 @@ import {
 import { Link } from "react-router-dom";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useBookingStore } from "@/store/useBookingStore";
-import { format, differenceInCalendarDays } from "date-fns";
+import { format } from "date-fns";
 
 function formatPrice(n) {
   return n.toLocaleString();
@@ -32,9 +32,16 @@ export default function NewBooking() {
 
   const onSelectPod = (pod) => {
     setSelectedPod(pod);
-    bookingStore.updateDraft({ selectedPod: pod });
+    bookingStore.updateDraft({
+      selectedPod: pod,
+      subTotal:
+        pod.price *
+        bookingStore.draft.numberOfGuests *
+        bookingStore.draft.numberOfNights,
+    });
   };
 
+  console.log("Draft in NewBooking:", bookingStore.draft);
   return (
     <div className="overflow-x-hidden min-h-screen lg:min-h-[80vh] w-full bg-[#F7F5F0]">
       <CommonNavbar />
@@ -280,11 +287,7 @@ export default function NewBooking() {
                 </div>
                 <div className="flex items-center justify-end">
                   <p className="text-sm font-semibold text-[#09432B] whitespace-nowrap">
-                    {differenceInCalendarDays(
-                      bookingStore.draft.dates.checkOut,
-                      bookingStore.draft.dates.checkIn
-                    )}{" "}
-                    Nights
+                    {bookingStore.draft.numberOfNights} Nights
                   </p>
                 </div>
               </div>
@@ -310,14 +313,14 @@ export default function NewBooking() {
               </div>
 
               <p className="text-xs font-medium text-[#737373] mb-3">
-                Pod & Meals (2 Nights)
+                Pod & Meals ({bookingStore.draft.numberOfNights} Nights)
               </p>
 
               <div className="space-y-3 text-sm font-semibold text-[#09432B]">
                 <div className="flex justify-between">
                   <span>Sub Total:</span>
                   <span className="text-[#09432B] font-semibold">
-                    ₦{selectedPod ? formatPrice(selectedPod.price) : "0"}
+                    ₦{selectedPod ? bookingStore.draft.subTotal : "0"}
                   </span>
                 </div>
 
@@ -328,7 +331,9 @@ export default function NewBooking() {
                   <span className="text-[#09432B] font-semibold">
                     ₦
                     {selectedPod
-                      ? Math.round(selectedPod.price * 1.125).toLocaleString()
+                      ? Math.round(
+                          (bookingStore.draft.subTotal || 0) * 0.125
+                        ).toLocaleString()
                       : "0"}
                   </span>
                 </div>
@@ -343,7 +348,9 @@ export default function NewBooking() {
                   <span>
                     ₦
                     {selectedPod
-                      ? Math.round(selectedPod.price * 1.125).toLocaleString()
+                      ? Math.round(
+                          (bookingStore.draft.subTotal || 0) * 1.125
+                        ).toLocaleString()
                       : "0"}
                   </span>
                 </div>
