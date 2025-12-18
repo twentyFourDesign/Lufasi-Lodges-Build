@@ -34,6 +34,10 @@ export default function NewBooking() {
     setSelectedPod(pod);
     bookingStore.updateDraft({
       selectedPod: pod,
+      podsTotal:
+        pod.price *
+        bookingStore.draft.numberOfGuests *
+        bookingStore.draft.numberOfNights,
       subTotal:
         pod.price *
         bookingStore.draft.numberOfGuests *
@@ -41,7 +45,6 @@ export default function NewBooking() {
     });
   };
 
-  console.log("Draft in NewBooking:", bookingStore.draft);
   return (
     <div className="overflow-x-hidden min-h-screen lg:min-h-[80vh] w-full bg-[#F7F5F0]">
       <CommonNavbar />
