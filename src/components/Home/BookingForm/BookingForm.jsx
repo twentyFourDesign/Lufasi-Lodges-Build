@@ -58,11 +58,11 @@ export default function BookingForm() {
           checkOut: checkOut.toISOString().split("T")[0],
         },
         totalGuests: parseInt(guests.match(/(\d+)/)[1]) || 1,
-        availablePods: data.availablePods,
+        availablePods: data,
       });
 
       navigate("/new-booking");
-      console.log("Available pods:", data.availablePods);
+      console.log("Available pods:", data);
     } catch (error) {
       console.error("Error checking availability:", error);
     } finally {

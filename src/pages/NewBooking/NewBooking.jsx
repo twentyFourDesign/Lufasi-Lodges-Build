@@ -17,68 +17,10 @@ import {
   Info,
   Wallet,
 } from "lucide-react";
-import demoImg from "../../assets/Lakeside Serenity.png";
 import { Link } from "react-router-dom";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useBookingStore } from "@/store/useBookingStore";
 import { format, differenceInCalendarDays } from "date-fns";
-
-const PODS = [
-  {
-    id: "pod-1",
-    title: "Lakeside Serenity",
-    desc: "Wake up to stunning lake views with your private plunge pool steps from your bed.",
-    price: 250000,
-    available: true,
-    tags: ["Lake View", "Private Pool", "King Size Bed"],
-    img: demoImg,
-  },
-  {
-    id: "pod-2",
-    title: "Forest Haven",
-    desc: "Wake up to stunning lake views with your private plunge pool steps from your bed.",
-    price: 250000,
-    available: true,
-    tags: ["Lake View", "Private Pool", "King Size Bed"],
-    img: demoImg,
-  },
-  {
-    id: "pod-3",
-    title: "Garden Estate",
-    desc: "Wake up to stunning lake views with your private plunge pool steps from your bed.",
-    price: 250000,
-    available: true,
-    tags: ["Lake View", "Private Pool", "King Size Bed"],
-    img: demoImg,
-  },
-  {
-    id: "pod-4",
-    title: "Hillside Escape",
-    desc: "Wake up to stunning lake views with your private plunge pool steps from your bed.",
-    price: 250000,
-    available: false,
-    tags: ["Lake View", "Private Pool", "King Size Bed"],
-    img: demoImg,
-  },
-  {
-    id: "pod-5",
-    title: "Sunset Vista",
-    desc: "Wake up to stunning lake views with your private plunge pool steps from your bed.",
-    price: 250000,
-    available: true,
-    tags: ["Lake View", "Private Pool", "King Size Bed"],
-    img: demoImg,
-  },
-  {
-    id: "pod-6",
-    title: "Riverside Tranquility",
-    desc: "Wake up to stunning lake views with your private plunge pool steps from your bed.",
-    price: 250000,
-    available: true,
-    tags: ["Lake View", "Private Pool", "King Size Bed"],
-    img: demoImg,
-  },
-];
 
 function formatPrice(n) {
   return n.toLocaleString();
@@ -123,7 +65,7 @@ export default function NewBooking() {
               </span>
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mt-6">
-              {PODS.map((pod) => (
+              {bookingStore.draft.availablePods.map((pod) => (
                 <Card
                   key={pod.id}
                   className={`bg-white rounded-xl shadow-sm overflow-hidden transition-all ${
@@ -263,7 +205,7 @@ export default function NewBooking() {
                       <div className="relative">
                         <select className="w-full border border-[#0F5B45] rounded-md px-3 py-3 text-sm appearance-none">
                           <option>Forest Haven</option>
-                          {PODS.map((p) => (
+                          {bookingStore.draft.availablePods.map((p) => (
                             <option key={p.id}>{p.title}</option>
                           ))}
                         </select>
@@ -283,7 +225,7 @@ export default function NewBooking() {
                       <div className="relative">
                         <select className="w-full border border-[#0F5B45] rounded-md px-3 py-3 text-sm appearance-none">
                           <option>Select A different pod</option>
-                          {PODS.map((p) => (
+                          {bookingStore.draft.availablePods.map((p) => (
                             <option key={p.id + "-2"}>{p.title}</option>
                           ))}
                         </select>
