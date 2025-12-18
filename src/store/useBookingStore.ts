@@ -1,0 +1,88 @@
+import { create } from "zustand";
+import { persist } from "zustand/middleware";
+
+enum BoardType {
+  FULL_BOARD = "fullBoard",
+  HALF_BOARD = "halfBoard",
+}
+
+enum ExtraType {
+  DECOR = "decor",
+  PICNIC = "picnic",
+  DRINKS = "drinks",
+  PAINTING = "painting",
+}
+
+type Extras = {
+  type: ExtraType;
+  options: {
+    id: string;
+    label: string;
+    price: number;
+  }[];
+};
+
+type BookingDraft = {
+  propertyId?: string;
+  dates?: {
+    checkIn: Date;
+    checkOut: Date;
+  };
+  availablePods?: unknown[];
+  totalGuests?: number;
+  boardType?: BoardType;
+  guests?: {
+    adults: number;
+    teenagers: number;
+    infants: number;
+  };
+  extras?: Extras[];
+  contact?: {
+    firstName: string;
+    lastName: string;
+    email: string;
+    phone: string;
+    gender: "male" | "female";
+    dateOfBirth: Date;
+    specialRequests?: string;
+  };
+  identificationImage?: File;
+  guestNames?: string[];
+  payment?: {
+    method: "card" | "cash";
+  };
+};
+
+type BookingStore = {
+  draft: BookingDraft;
+  updateDraft: (data: Partial<BookingDraft>) => void;
+  resetBooking: () => void;
+};
+
+export const useBookingStore = create<BookingStore>()(
+  persist(
+    (set) => ({
+      draft: {},
+      updateDraft: (data) =>
+        set((state) => ({
+          draft: { ...state.draft, ...data },
+        })),
+      resetBooking: () => set({ draft: {} }),
+    }),
+    {
+      name: "booking-draft",
+      storage: {
+        getItem: (name) => {
+          const item = sessionStorage.getItem(name);
+          return item ? JSON.parse(item) : null;
+        },
+        setItem: (name, value) => {
+          sessionStorage.setItem(name, JSON.stringify(value));
+        },
+        removeItem: (name) => {
+          sessionStorage.removeItem(name);
+        },
+      }, // use localStorage if you want long-term
+    }
+  )
+);
