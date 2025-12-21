@@ -70,8 +70,6 @@ type BookingDraft = {
     identification?: File;
     guestNames?: string[];
   };
-  identificationImage?: File;
-  guestNames?: string[];
   payment?: {
     method: "card" | "cash";
   };
