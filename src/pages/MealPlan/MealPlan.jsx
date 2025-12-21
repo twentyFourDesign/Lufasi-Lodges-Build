@@ -1,4 +1,3 @@
-/* eslint-disable no-unused-vars */
 import React, { useState, useEffect } from "react";
 import CommonNavbar from "@/components/shared/common/CommonNavbar/CommonNavbar";
 import { Card, CardContent } from "@/components/ui/card";
@@ -16,6 +15,7 @@ import {
 import { Link } from "react-router-dom";
 import { BASE_URL } from "@/config";
 import { useBookingStore } from "@/store/useBookingStore";
+import { format } from "date-fns";
 
 function formatPrice(n) {
   return n.toLocaleString();
@@ -57,15 +57,11 @@ export default function MealPlan() {
     setSelectedMealPlan(plan);
     bookingStore.updateDraft({
       mealPlan: plan,
-      mealPlanTotal:
-        plan.price *
-        bookingStore.draft.numberOfGuests *
-        bookingStore.draft.numberOfNights,
+      basePrice: plan.price,
       subTotal:
-        (bookingStore.draft.podsTotal || 0) +
         plan.price *
-          bookingStore.draft.numberOfGuests *
-          bookingStore.draft.numberOfNights,
+        bookingStore.draft.guests?.adults *
+        bookingStore.draft.numberOfNights,
     });
   };
 
@@ -187,19 +183,19 @@ export default function MealPlan() {
                 <div>
                   <p className="text-sm text-[#737373]">Check in:</p>
                   <p className="text-sm font-medium text-[#4F4F4F] mt-1">
-                    01/02/2025
+                    {format(bookingStore.draft.dates.checkIn, "dd/MM/yyyy")}
                   </p>
                 </div>
 
                 <div>
                   <p className="text-sm text-[#737373]">Check out:</p>
                   <p className="text-sm font-medium text-[#4F4F4F] mt-1">
-                    04/02/2025
+                    {format(bookingStore.draft.dates.checkOut, "dd/MM/yyyy")}
                   </p>
                 </div>
 
                 <p className="text-sm font-semibold text-[#09432B] whitespace-nowrap">
-                  2 Nights
+                  {bookingStore.draft.numberOfNights} Nights
                 </p>
               </div>
             </div>
@@ -213,7 +209,9 @@ export default function MealPlan() {
                 <h4 className="text-[#09432B] font-bold">Your Pod</h4>
               </div>
 
-              <p className="text-sm text-[#737373] font-medium">Forest Haven</p>
+              <p className="text-sm text-[#737373] font-medium">
+                {bookingStore.draft.pod?.title || "N/A"}
+              </p>
             </div>
 
             {/* Price Summary Card */}
@@ -226,7 +224,7 @@ export default function MealPlan() {
               </div>
 
               <p className="text-xs font-medium text-[#737373] mb-3">
-                Pod & Meals (2 Nights)
+                Pod & Meals ({bookingStore.draft.numberOfNights} Nights)
               </p>
 
               <div className="space-y-3 text-sm font-semibold text-[#09432B]">

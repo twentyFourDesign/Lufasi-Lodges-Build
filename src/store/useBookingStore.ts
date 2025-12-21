@@ -43,24 +43,21 @@ type BoardOption = {
 };
 
 type BookingDraft = {
-  propertyId?: string;
   dates?: {
     checkIn: Date;
     checkOut: Date;
   };
-  availablePods?: Pod[];
-  numberOfNights?: number;
-  numberOfGuests?: number;
-  selectedPod?: Pod;
-  podsTotal?: number;
-  mealPlan?: BoardOption;
-  mealPlanTotal?: number;
-  subTotal?: number;
   guests?: {
     adults: number;
     teenagers: number;
     infants: number;
   };
+  numberOfNights?: number;
+  availablePods?: Pod[];
+  basePrice?: number;
+  pod?: Pod;
+  mealPlan?: BoardOption;
+  subTotal?: number;
   extras?: Extras[];
   contact?: {
     firstName: string;
@@ -68,8 +65,10 @@ type BookingDraft = {
     email: string;
     phone: string;
     gender: "male" | "female";
-    dateOfBirth: Date;
-    specialRequests?: string;
+    dob: Date;
+    instruction?: string;
+    identification?: File;
+    guestNames?: string[];
   };
   identificationImage?: File;
   guestNames?: string[];

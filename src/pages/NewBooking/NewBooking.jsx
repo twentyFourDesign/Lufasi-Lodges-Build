@@ -33,14 +33,11 @@ export default function NewBooking() {
   const onSelectPod = (pod) => {
     setSelectedPod(pod);
     bookingStore.updateDraft({
-      selectedPod: pod,
-      podsTotal:
-        pod.price *
-        bookingStore.draft.numberOfGuests *
-        bookingStore.draft.numberOfNights,
+      pod: pod,
+      basePrice: pod.price,
       subTotal:
         pod.price *
-        bookingStore.draft.numberOfGuests *
+        bookingStore.draft.guests?.adults *
         bookingStore.draft.numberOfNights,
     });
   };

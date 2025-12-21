@@ -1,8 +1,7 @@
-/* eslint-disable no-unused-vars */
 import React from "react";
 import { useForm } from "react-hook-form";
 import CommonNavbar from "@/components/shared/common/CommonNavbar/CommonNavbar";
-
+import { DevTool } from "@hookform/devtools";
 import {
   Form,
   FormField,
@@ -12,6 +11,7 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 
+import { useBookingStore } from "@/store/useBookingStore";
 import { Input } from "@/components/ui/input";
 
 import {
@@ -49,9 +49,14 @@ import {
   FileUp,
 } from "lucide-react";
 
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 
+function formatPrice(n) {
+  return n.toLocaleString();
+}
 export default function EnterDetails() {
+  const navigate = useNavigate();
+  const bookingStore = useBookingStore();
   const form = useForm({
     defaultValues: {
       firstName: "",
@@ -59,12 +64,33 @@ export default function EnterDetails() {
       email: "",
       phone: "",
       gender: "",
-      dob: "",
+      dob: undefined,
+      identification: undefined,
       instruction: "",
-      guest1: "",
-      guest2: "",
+      guestNames: [],
     },
   });
+
+  const onSubmit = async (data) => {
+    try {
+      // Transform form data to match booking hook structure
+      const contactInfo = {
+        ...data,
+        guestNames:
+          data.guestNames?.filter((name) => name && name.trim() !== "") || [],
+      };
+
+      // Update booking store with contact information
+      bookingStore.updateDraft({
+        contact: contactInfo,
+      });
+
+      // Navigate to next step
+      navigate("/review-your-booking");
+    } catch (error) {
+      console.error("Error submitting form:", error);
+    }
+  };
 
   return (
     <div className="overflow-x-hidden min-h-screen w-full bg-[#F7F5F0]">
@@ -88,7 +114,11 @@ export default function EnterDetails() {
         <div className="grid grid-cols-1 md:grid-cols-12 gap-8">
           <div className="md:col-span-8">
             <Form {...form}>
-              <form className="bg-white p-6 rounded-lg shadow-sm border border-gray-200 space-y-6">
+              <form
+                id="details-form"
+                onSubmit={form.handleSubmit(onSubmit)}
+                className="bg-white p-6 rounded-lg shadow-sm border border-gray-200 space-y-6"
+              >
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 ">
                   <FormField
                     control={form.control}
@@ -132,6 +162,7 @@ export default function EnterDetails() {
                         <FormLabel>Email</FormLabel>
                         <FormControl>
                           <Input
+                            type="email"
                             className="border-[#29A3A3] border"
                             placeholder="Enter Email"
                             {...field}
@@ -149,6 +180,7 @@ export default function EnterDetails() {
                         <FormLabel>Phone Number</FormLabel>
                         <FormControl>
                           <Input
+                            type="tel"
                             className="border-[#29A3A3] border"
                             placeholder="Enter Phone Number"
                             {...field}
@@ -165,7 +197,10 @@ export default function EnterDetails() {
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>Gender</FormLabel>
-                        <Select onValueChange={field.onChange}>
+                        <Select
+                          onValueChange={field.onChange}
+                          value={field.value}
+                        >
                           <FormControl>
                             <SelectTrigger className="border-[#29A3A3] border">
                               <SelectValue placeholder="Select Gender" />
@@ -202,12 +237,12 @@ export default function EnterDetails() {
                               </Button>
                             </FormControl>
                           </PopoverTrigger>
-
                           <PopoverContent className="p-0">
                             <Calendar
                               mode="single"
                               selected={field.value}
                               onSelect={field.onChange}
+                              initialFocus
                             />
                           </PopoverContent>
                         </Popover>
@@ -231,17 +266,38 @@ export default function EnterDetails() {
                     </FormItem>
                   )}
                 />
-                <div>
-                  <FormLabel>
-                    Upload Identification (Passport, National ID, Drivers
-                    License)
-                  </FormLabel>
-
-                  <div className="mt-2 border border-[#29A3A3] rounded-md w-full h-14 flex flex-col items-center justify-center text-sm text-gray-500 cursor-pointer">
-                    <FileUp className="w-4 h-4 mb-1" />
-                    Upload File
-                  </div>
-                </div>
+                <FormField
+                  control={form.control}
+                  name="identification"
+                  render={({ field: { onChange, value, ...field } }) => (
+                    <FormItem>
+                      <FormLabel>
+                        Upload Identification (Passport, National ID, Drivers
+                        License)
+                      </FormLabel>
+                      <FormControl>
+                        <label
+                          htmlFor="identification"
+                          className="mt-2 border border-[#29A3A3] rounded-md w-full h-14 flex flex-col items-center justify-center text-sm text-gray-500 cursor-pointer hover:bg-gray-50"
+                        >
+                          <FileUp className="w-4 h-4 mb-1" />
+                          {value ? value.name : "Upload File"}
+                        </label>
+                      </FormControl>
+                      <input
+                        {...field}
+                        type="file"
+                        id="identification"
+                        accept="image/png, image/jpeg, application/pdf"
+                        className="hidden"
+                        onChange={(e) => {
+                          const file = e.target.files?.[0];
+                          onChange(file);
+                        }}
+                      />
+                    </FormItem>
+                  )}
+                />
                 <Accordion type="single" collapsible defaultValue="guests">
                   <AccordionItem
                     value="guests"
@@ -253,7 +309,7 @@ export default function EnterDetails() {
                     <AccordionContent className="bg-[#C8FBFF] px-4 py-4 space-y-4">
                       <FormField
                         control={form.control}
-                        name="guest1"
+                        name="guestNames.0"
                         render={({ field }) => (
                           <FormItem>
                             <FormLabel>Guest 1</FormLabel>
@@ -263,12 +319,13 @@ export default function EnterDetails() {
                                 {...field}
                               />
                             </FormControl>
+                            <FormMessage />
                           </FormItem>
                         )}
                       />
                       <FormField
                         control={form.control}
-                        name="guest2"
+                        name="guestNames.1"
                         render={({ field }) => (
                           <FormItem>
                             <FormLabel>Guest 2</FormLabel>
@@ -296,18 +353,24 @@ export default function EnterDetails() {
                     Stay Dates
                   </h4>
                 </div>
-                <p className="text-sm font-semibold text-[#09432B]">2 Nights</p>
+                <p className="text-sm font-semibold text-[#09432B]">
+                  {bookingStore.draft.numberOfNights} Nights
+                </p>
               </div>
 
               <div className="flex items-start justify-between w-full text-sm">
                 <div>
                   <p className="text-[#737373]">Check in:</p>
-                  <p className="text-[#4F4F4F] font-medium mt-1">01/02/2025</p>
+                  <p className="text-[#4F4F4F] font-medium mt-1">
+                    {format(bookingStore.draft.dates.checkIn, "dd/MM/yyyy")}
+                  </p>
                 </div>
 
                 <div>
                   <p className="text-[#737373]">Check out:</p>
-                  <p className="text-[#4F4F4F] font-medium mt-1">04/02/2025</p>
+                  <p className="text-[#4F4F4F] font-medium mt-1">
+                    {format(bookingStore.draft.dates.checkOut, "dd/MM/yyyy")}
+                  </p>
                 </div>
               </div>
             </div>
@@ -317,28 +380,40 @@ export default function EnterDetails() {
                 <Home className="w-5 h-5 text-[#09432B]" />
                 <h4 className="text-[#09432B] font-bold">Your Pod</h4>
               </div>
-              <p className="text-sm text-[#737373]">Forest Haven</p>
+              <p className="text-sm text-[#737373]">
+                {bookingStore.draft.pod?.title || "N/A"}
+              </p>
             </div>
             <div className="bg-white rounded-xl border border-gray-200 p-4 shadow-sm">
               <div className="flex items-center gap-2 mb-3">
                 <Wallet className="w-5 h-5 text-[#09432B]" />
                 <h4 className="text-[#09432B] font-bold">Meal Plan</h4>
               </div>
-              <p className="text-sm text-[#737373]">N/A</p>
+              <p className="text-sm text-[#737373]">
+                {bookingStore.draft.mealPlan?.title || "N/A"}
+              </p>
             </div>
             <div className="bg-white rounded-xl border border-gray-200 p-4 shadow-sm">
               <div className="flex items-center gap-2 mb-3">
                 <Users className="w-5 h-5 text-[#09432B]" />
                 <h4 className="text-[#09432B] font-bold">Guests</h4>
               </div>
-              <p className="text-sm text-[#737373]">2 Adults (18+)</p>
+              <p className="text-sm text-[#737373]">
+                {bookingStore.draft.guests?.adults || 0} Adults (18+)
+              </p>
             </div>
             <div className="bg-white rounded-xl border border-gray-200 p-4 shadow-sm">
               <div className="flex items-center gap-2 mb-3">
                 <Wallet className="w-5 h-5 text-[#09432B]" />
                 <h4 className="text-[#09432B] font-bold">Extras</h4>
               </div>
-              <p className="text-sm text-[#737373]">N/A</p>
+              {bookingStore.draft.extras.length === 0 ? (
+                <p className="text-sm text-[#737373]">None selected</p>
+              ) : (
+                <p className="text-sm text-[#737373]">
+                  {bookingStore.draft.extras.length} selected
+                </p>
+              )}{" "}
             </div>
             <div className="bg-white rounded-xl border border-gray-200 p-5 shadow-sm">
               <h4 className="text-[#09432B] font-bold mb-3">Price Summary</h4>
@@ -346,14 +421,19 @@ export default function EnterDetails() {
               <div className="space-y-3 text-sm text-[#09432B]">
                 <div className="flex justify-between">
                   <span>Sub Total:</span>
-                  <span>₦0</span>
+                  <span>₦{formatPrice(bookingStore.draft.subTotal)}</span>
                 </div>
 
                 <div className="flex justify-between leading-snug">
                   <span>
                     After consumption tax and <br /> VAT(12.5%)
                   </span>
-                  <span>₦0</span>
+                  <span>
+                    ₦
+                    {formatPrice(
+                      Math.round(bookingStore.draft.subTotal * 0.125)
+                    )}
+                  </span>
                 </div>
 
                 <div className="flex justify-between">
@@ -363,7 +443,12 @@ export default function EnterDetails() {
 
                 <div className="border-t pt-3 flex justify-between bg-[#F2EFE7] px-3 py-2 rounded-md">
                   <span>Total:</span>
-                  <span>₦0</span>
+                  <span>
+                    ₦
+                    {formatPrice(
+                      Math.round(bookingStore.draft.subTotal * 1.125)
+                    )}
+                  </span>
                 </div>
               </div>
             </div>
@@ -376,15 +461,12 @@ export default function EnterDetails() {
               </div>
 
               <Button
-                asChild
+                type="submit"
+                form="details-form"
                 className="w-full bg-[#09432B] hover:bg-[#083f28] text-white text-base font-bold py-6 rounded-none rounded-b-xl"
+                disabled={form.formState.isSubmitting}
               >
-                <Link
-                  to="/review-your-booking"
-                  className="flex items-center justify-center gap-2"
-                >
-                  Review Your Booking →
-                </Link>
+                Review Your Booking →
               </Button>
             </div>
 

@@ -13,11 +13,103 @@ import {
   UtensilsCrossed,
 } from "lucide-react";
 import { Link } from "react-router-dom";
+import { useBookingStore } from "@/store/useBookingStore";
+import { format } from "date-fns";
+
+function formatPrice(n) {
+  return n.toLocaleString();
+}
 
 export default function GuestDetails() {
-  const [adults, setAdults] = useState(2);
+  const bookingStore = useBookingStore();
+  const [adults, setAdults] = useState(bookingStore.draft.guests?.adults || 2);
   const [teens, setTeens] = useState(0);
   const [infants, setInfants] = useState(0);
+  const [subTotal, setSubTotal] = useState(bookingStore.draft?.subTotal || 0);
+
+  const onChangeAdults = (type) => {
+    if (type === "dec" && adults > 1) {
+      setAdults(adults - 1);
+      setSubTotal(
+        subTotal -
+          bookingStore.draft.basePrice * bookingStore.draft.numberOfNights
+      );
+      bookingStore.updateDraft({
+        guests: {
+          ...bookingStore.draft.guests,
+          adults: adults - 1,
+        },
+        subTotal:
+          bookingStore.draft.subTotal -
+          bookingStore.draft.basePrice * bookingStore.draft.numberOfNights,
+      });
+    } else if (type === "inc") {
+      setAdults(adults + 1);
+      setSubTotal(
+        subTotal +
+          bookingStore.draft.basePrice * bookingStore.draft.numberOfNights
+      );
+      bookingStore.updateDraft({
+        guests: {
+          ...bookingStore.draft.guests,
+          adults: adults + 1,
+        },
+        subTotal:
+          bookingStore.draft.subTotal +
+          bookingStore.draft.basePrice * bookingStore.draft.numberOfNights,
+      });
+    }
+  };
+
+  const onChangeTeens = (type) => {
+    if (type === "dec" && teens > 0) {
+      setTeens(teens - 1);
+      setSubTotal(
+        subTotal -
+          0.75 *
+            bookingStore.draft.basePrice *
+            bookingStore.draft.numberOfNights
+      );
+      bookingStore.updateDraft({
+        guests: {
+          ...bookingStore.draft.guests,
+          teenagers: teens - 1,
+        },
+        subTotal:
+          bookingStore.draft.subTotal -
+          0.75 *
+            bookingStore.draft.basePrice *
+            bookingStore.draft.numberOfNights,
+      });
+    } else if (type === "inc") {
+      setTeens(teens + 1);
+      setSubTotal(
+        subTotal +
+          0.75 *
+            bookingStore.draft.basePrice *
+            bookingStore.draft.numberOfNights
+      );
+      bookingStore.updateDraft({
+        guests: {
+          ...bookingStore.draft.guests,
+          teenagers: teens + 1,
+        },
+        subTotal:
+          bookingStore.draft.subTotal +
+          0.75 *
+            bookingStore.draft.basePrice *
+            bookingStore.draft.numberOfNights,
+      });
+    }
+  };
+
+  const onChangeInfants = (type) => {
+    if (type === "dec" && infants > 0) {
+      setInfants(infants - 1);
+    } else if (type === "inc") {
+      setInfants(infants + 1);
+    }
+  };
 
   return (
     <div className="overflow-x-hidden min-h-screen w-full bg-[#F7F5F0]">
@@ -54,7 +146,7 @@ export default function GuestDetails() {
 
                 <div className="flex items-center gap-6 mt-4 sm:mt-0">
                   <button
-                    onClick={() => adults > 1 && setAdults(adults - 1)}
+                    onClick={() => onChangeAdults("dec")}
                     className="w-12 h-12 rounded-full border-2 border-[#0F5B45] flex items-center justify-center text-[#0F5B45] text-xl"
                   >
                     –
@@ -65,7 +157,7 @@ export default function GuestDetails() {
                   </span>
 
                   <button
-                    onClick={() => setAdults(adults + 1)}
+                    onClick={() => onChangeAdults("inc")}
                     className="w-12 h-12 rounded-full border-2 border-[#0F5B45] flex items-center justify-center text-[#0F5B45] text-xl"
                   >
                     +
@@ -84,7 +176,7 @@ export default function GuestDetails() {
 
                 <div className="flex items-center gap-6 mt-4 sm:mt-0">
                   <button
-                    onClick={() => teens > 0 && setTeens(teens - 1)}
+                    onClick={() => onChangeTeens("dec")}
                     className="w-12 h-12 rounded-full border-2 border-[#0F5B45] flex items-center justify-center text-[#0F5B45] text-xl"
                   >
                     –
@@ -95,7 +187,7 @@ export default function GuestDetails() {
                   </span>
 
                   <button
-                    onClick={() => setTeens(teens + 1)}
+                    onClick={() => onChangeTeens("inc")}
                     className="w-12 h-12 rounded-full border-2 border-[#0F5B45] flex items-center justify-center text-[#0F5B45] text-xl"
                   >
                     +
@@ -114,7 +206,7 @@ export default function GuestDetails() {
 
                 <div className="flex items-center gap-6 mt-4 sm:mt-0">
                   <button
-                    onClick={() => infants > 0 && setInfants(infants - 1)}
+                    onClick={() => onChangeInfants("dec")}
                     className="w-12 h-12 rounded-full border-2 border-[#0F5B45] flex items-center justify-center text-[#0F5B45] text-xl"
                   >
                     –
@@ -125,7 +217,7 @@ export default function GuestDetails() {
                   </span>
 
                   <button
-                    onClick={() => setInfants(infants + 1)}
+                    onClick={() => onChangeInfants("inc")}
                     className="w-12 h-12 rounded-full border-2 border-[#0F5B45] flex items-center justify-center text-[#0F5B45] text-xl"
                   >
                     +
@@ -167,19 +259,19 @@ export default function GuestDetails() {
                 <div>
                   <p className="text-sm text-[#737373]">Check in:</p>
                   <p className="text-sm font-medium text-[#4F4F4F] mt-1">
-                    01/02/2025
+                    {format(bookingStore.draft.dates.checkIn, "dd/MM/yyyy")}
                   </p>
                 </div>
 
                 <div>
                   <p className="text-sm text-[#737373]">Check out:</p>
                   <p className="text-sm font-medium text-[#4F4F4F] mt-1">
-                    04/02/2025
+                    {format(bookingStore.draft.dates.checkOut, "dd/MM/yyyy")}
                   </p>
                 </div>
 
                 <p className="text-sm font-semibold text-[#09432B] whitespace-nowrap">
-                  2 Nights
+                  {bookingStore.draft.numberOfNights} Nights
                 </p>
               </div>
             </div>
@@ -191,7 +283,9 @@ export default function GuestDetails() {
                 <h4 className="text-[#09432B] font-bold">Your Pod</h4>
               </div>
 
-              <p className="text-sm text-[#737373] font-medium">Forest Haven</p>
+              <p className="text-sm text-[#737373] font-medium">
+                {bookingStore.draft.pod?.title || "N/A"}
+              </p>
             </div>
             <div className="bg-white rounded-xl border border-gray-200 px-5 py-4 shadow-sm">
               <div className="flex items-center gap-2 mb-3">
@@ -201,7 +295,9 @@ export default function GuestDetails() {
                 <h4 className="text-[#09432B] font-bold">Meal Plan</h4>
               </div>
 
-              <p className="text-sm text-[#737373] font-medium">Full Board</p>
+              <p className="text-sm text-[#737373] font-medium">
+                {bookingStore.draft.mealPlan?.title || "N/A"}
+              </p>
             </div>
             <div className="bg-white rounded-xl border border-gray-200 px-5 py-4 shadow-sm">
               <div className="flex items-center gap-2 mb-3">
@@ -212,20 +308,20 @@ export default function GuestDetails() {
               </div>
 
               <p className="text-xs font-medium text-[#737373] mb-3">
-                Pod & Meals (2 Nights)
+                Pod & Meals ({bookingStore.draft.numberOfNights} Nights)
               </p>
 
               <div className="space-y-3 text-sm font-semibold text-[#09432B]">
                 <div className="flex justify-between">
                   <span>Sub Total:</span>
-                  <span>₦0</span>
+                  <span>₦{formatPrice(subTotal)}</span>
                 </div>
 
                 <div className="flex justify-between leading-snug">
                   <span>
                     After consumption tax and <br /> VAT(12.5%)
                   </span>
-                  <span>₦0</span>
+                  <span>₦{formatPrice(Math.round(subTotal * 0.125))}</span>
                 </div>
 
                 <div className="flex justify-between">
@@ -235,7 +331,7 @@ export default function GuestDetails() {
 
                 <div className="border-t pt-3 flex justify-between bg-[#F2EFE7] px-3 py-2 rounded-md">
                   <span>Total:</span>
-                  <span>₦0</span>
+                  <span>₦{formatPrice(Math.round(subTotal * 1.125))}</span>
                 </div>
               </div>
             </div>

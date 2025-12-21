@@ -13,21 +13,14 @@ import {
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import CommonNavbar from "@/components/shared/common/CommonNavbar/CommonNavbar";
+import { useBookingStore } from "@/store/useBookingStore";
+import { format } from "date-fns/format";
 
+function formatPrice(n) {
+  return n.toLocaleString();
+}
 export default function ReviewYourBooking() {
-  const stay = { checkIn: "01/02/2025", checkOut: "09/02/2025", nights: 2 };
-  const pod = { title: "Sunset Vista", subtitle: "King Bed" };
-  const mealPlan = { title: "Half Board" };
-  const guests = { adults: 2 };
-  const extras = "N/A";
-
-  const priceSummary = {
-    subtotal: 400000,
-    vat: 12500,
-    discountPercent: 0,
-    total: 412500,
-  };
-
+  const bookingStore = useBookingStore();
   const [voucher, setVoucher] = useState("");
   const [discountCode, setDiscountCode] = useState("");
   const [clubId, setClubId] = useState("");
@@ -67,17 +60,24 @@ export default function ReviewYourBooking() {
                   <div className="flex justify-between">
                     <h4 className="font-semibold text-[#09432B]">Stay Dates</h4>
                     <span className="font-semibold text-[#09432B] text-sm">
-                      {stay.nights} Nights
+                      {bookingStore.draft.numberOfNights} Nights
                     </span>
                   </div>
                   <div className="grid grid-cols-2 gap-2 mt-3 text-sm">
                     <div>
                       <div className="text-xs text-[#6B6B6B]">Check in</div>
-                      <div className="font-medium mt-1">{stay.checkIn}</div>
+                      <div className="font-medium mt-1">
+                        {format(bookingStore.draft.dates.checkIn, "dd/MM/yyyy")}
+                      </div>
                     </div>
                     <div>
                       <div className="text-xs text-[#6B6B6B]">Check out</div>
-                      <div className="font-medium mt-1">{stay.checkOut}</div>
+                      <div className="font-medium mt-1">
+                        {format(
+                          bookingStore.draft.dates.checkOut,
+                          "dd/MM/yyyy"
+                        )}
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -92,7 +92,7 @@ export default function ReviewYourBooking() {
                 <div>
                   <h4 className="font-semibold text-[#09432B]">Your Pod</h4>
                   <p className="text-sm text-[#6B6B6B]">
-                    {pod.title} — {pod.subtitle}
+                    {bookingStore.draft.pod?.title || "N/A"} — King Bed
                   </p>
                 </div>
               </CardContent>
@@ -106,7 +106,7 @@ export default function ReviewYourBooking() {
                 <div>
                   <h4 className="font-semibold text-[#09432B]">Guests</h4>
                   <p className="text-sm text-[#6B6B6B]">
-                    {guests.adults} Adults (18+)
+                    {bookingStore.draft.guests?.adults || 0} Adults (18+)
                   </p>
                 </div>
               </CardContent>
@@ -119,7 +119,9 @@ export default function ReviewYourBooking() {
                 </div>
                 <div>
                   <h4 className="font-semibold text-[#09432B]">Meal Plan</h4>
-                  <p className="text-sm text-[#6B6B6B]">{mealPlan.title}</p>
+                  <p className="text-sm text-[#6B6B6B]">
+                    {bookingStore.draft.mealPlan?.title || "N/A"}
+                  </p>
                 </div>
               </CardContent>
             </Card>
@@ -131,7 +133,9 @@ export default function ReviewYourBooking() {
                 </div>
                 <div>
                   <h4 className="font-semibold text-[#09432B]">Extras</h4>
-                  <p className="text-sm text-[#6B6B6B]">{extras}</p>
+                  <p className="text-sm text-[#6B6B6B]">
+                    {bookingStore.draft.extras || "N/A"}
+                  </p>
                 </div>
               </CardContent>
             </Card>
@@ -142,14 +146,14 @@ export default function ReviewYourBooking() {
                 Price Summary
               </h3>
               <p className="text-xs text-[#6B6B6B] mb-4">
-                Pod & Meals (2 Nights)
+                Pod & Meals ({bookingStore.draft.numberOfNights || 0} Nights)
               </p>
 
               <div className="space-y-3 text-sm">
                 <div className="flex justify-between">
                   <span className="text-[#6B6B6B]">Sub Total:</span>
                   <span className="font-semibold">
-                    ₦{priceSummary.subtotal.toLocaleString()}
+                    ₦{formatPrice(bookingStore.draft.subTotal)}
                   </span>
                 </div>
 
@@ -158,7 +162,10 @@ export default function ReviewYourBooking() {
                     After consumption tax and VAT(12.5%)
                   </span>
                   <span className="font-semibold">
-                    ₦{priceSummary.vat.toLocaleString()}
+                    ₦
+                    {formatPrice(
+                      Math.round(bookingStore.draft.subTotal * 0.125)
+                    )}
                   </span>
                 </div>
 
@@ -241,7 +248,12 @@ export default function ReviewYourBooking() {
 
                   <div className="border-t mt-4 pt-3 bg-[#F2EFE7] px-3 py-2 rounded-md flex justify-between font-semibold">
                     <span>Total:</span>
-                    <span>₦{priceSummary.total.toLocaleString()}</span>
+                    <span>
+                      ₦
+                      {formatPrice(
+                        Math.round(bookingStore.draft.subTotal * 1.125)
+                      )}
+                    </span>
                   </div>
                 </div>
               </div>
