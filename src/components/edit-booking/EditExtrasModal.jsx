@@ -1,5 +1,4 @@
-/* eslint-disable react-hooks/set-state-in-effect */
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import {
   Dialog,
   DialogContent,
@@ -12,43 +11,14 @@ import { Checkbox } from "@/components/ui/checkbox";
 import demoImg from "@/assets/Lakeside Serenity.png";
 
 export default function EditExtrasModal({ open, onOpenChange, value, onSave }) {
-  const EXTRAS = [
-    {
-      id: "decor",
-      label: "Special Room Decor",
-      price: 40000,
-      desc: "Romantic setup with flowers, candles, and petals",
-    },
-    {
-      id: "picnic",
-      label: "Private Sunset Picnic",
-      price: 35000,
-      desc: "Curated picnic experience at our premium sunset spot",
-    },
-    {
-      id: "drinks",
-      label: "Premium Drinks Package",
-      price: 55000,
-      desc: "Selection of premium wines, spirits, and cocktails",
-    },
-    {
-      id: "cake",
-      label: "Premium Cactus Cake",
-      price: 60000,
-      desc: "Chocolate sponge cake",
-    },
-  ];
-
-  const [selected, setSelected] = useState(new Set(value || []));
+  const [selected, setSelected] = useState(new Set(value?.extras || []));
   const [note, setNote] = useState("");
 
-  useEffect(() => setSelected(new Set(value || [])), [value, open]);
-
-  const toggle = (id) => {
+  const toggle = (extra) => {
     setSelected((s) => {
       const copy = new Set([...s]);
-      if (copy.has(id)) copy.delete(id);
-      else copy.add(id);
+      if (copy.has(extra)) copy.delete(extra);
+      else copy.add(extra);
       return copy;
     });
   };
@@ -67,43 +37,40 @@ export default function EditExtrasModal({ open, onOpenChange, value, onSave }) {
             Edit special touches to your stay
           </p>
 
-          <div className="space-y-3">
-            {EXTRAS.map((e) => (
-              <div
-                key={e.id}
-                className="border rounded-md p-3 bg-white flex items-start gap-3"
-              >
-                <img
-                  src={demoImg}
-                  alt={e.label}
-                  className="w-20 h-14 object-cover rounded-md"
-                />
-                <div className="flex-1">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <div className="text-sm font-semibold text-[#09432B]">
-                        {e.label}
-                      </div>
-                      <div className="text-xs text-[#737373]">{e.desc}</div>
-                    </div>
-                    <div className="text-sm font-semibold">
-                      ₦{e.price.toLocaleString()}
-                    </div>
-                  </div>
-
-                  <div className="mt-2">
-                    <label className="inline-flex items-center gap-2 cursor-pointer">
+          {value.availableExtras.map((category) => (
+            <div key={category.id} className="space-y-3">
+              <img
+                src={demoImg}
+                className="w-20 h-14 object-cover rounded-md"
+              />
+              {(category?.options || []).map((e) => (
+                <div
+                  key={e.id}
+                  className="border rounded-md p-3 bg-white flex items-start gap-3"
+                >
+                  <div className="flex-1 ">
+                    <label className="inline-flex items-center gap-2 cursor-pointer w-full">
                       <Checkbox
-                        checked={selected.has(e.id)}
-                        onCheckedChange={() => toggle(e.id)}
+                        checked={selected.has(e)}
+                        onCheckedChange={() => toggle(e)}
                       />
-                      <span className="text-sm text-[#4F4F4F]">Select</span>
+                      <div className="flex items-center justify-between w-auto flex-1">
+                        <div>
+                          <div className="text-sm font-semibold text-[#09432B]">
+                            {e.label}
+                          </div>
+                          <div className="text-xs text-[#737373]">{e.desc}</div>
+                        </div>
+                        <div className="text-sm font-semibold">
+                          ₦{e.price.toLocaleString()}
+                        </div>
+                      </div>
                     </label>
                   </div>
                 </div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          ))}
 
           <div>
             <label className="block text-sm font-medium text-[#09432B] mb-1">

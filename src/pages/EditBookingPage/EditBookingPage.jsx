@@ -40,6 +40,7 @@ export default function EditBookingPage() {
   const [podOpen, setPodOpen] = useState(false);
   const [guestOpen, setGuestOpen] = useState(false);
   const [mealOpen, setMealOpen] = useState(false);
+  const [extrasOpen, setExtrasOpen] = useState(false);
   const [isApiDataLoaded, setIsApiDataLoaded] = useState(false);
 
   const checkPodAvalability = useCallback(async () => {
@@ -86,6 +87,23 @@ export default function EditBookingPage() {
     }
   }, [bookingStore]);
 
+  const fetchExtras = useCallback(async () => {
+    try {
+      const response = await fetch(`${BASE_URL}/extras/by-category`);
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data = await response.json();
+      bookingStore.updateDraft({
+        availableExtras: data,
+      });
+    } catch (error) {
+      console.error("Error fetching extras:", error);
+    }
+  }, [bookingStore]);
+
   const setStayDates = (dates) => {
     function parseDate(ddmmyyyy) {
       const [day, month, year] = ddmmyyyy.split("/");
@@ -126,19 +144,20 @@ export default function EditBookingPage() {
     });
   };
 
-  // const setExtras = (extras) => {
-  //   bookingStore.updateDraft({
-  //     extras,
-  //   });
-  // };
+  const setExtras = (extras) => {
+    bookingStore.updateDraft({
+      extras,
+    });
+  };
 
   useEffect(() => {
     if (isApiDataLoaded) return;
 
     checkPodAvalability();
     fetchMealPlans();
+    fetchExtras();
     setIsApiDataLoaded(true);
-  }, [checkPodAvalability, fetchMealPlans, isApiDataLoaded]);
+  }, [checkPodAvalability, fetchExtras, fetchMealPlans, isApiDataLoaded]);
 
   console.log("Booking Draft:", bookingStore.draft);
 
@@ -184,18 +203,18 @@ export default function EditBookingPage() {
             subtitle={bookingStore.draft.mealPlan?.title}
             onClick={() => setMealOpen(true)}
           />
-          {/*<Row
+          <Row
             icon={<Gift size={18} className="text-[#09432B]" />}
             title="Extras"
             subtitle={
               bookingStore.draft.extras?.length > 0
                 ? bookingStore.draft.extras
-                    .map((extra) => extra.type)
+                    .map((extra) => extra.label)
                     .join(", ")
                 : "N/A"
             }
             onClick={() => setExtrasOpen(true)}
-          /> */}
+          />
         </div>
         <div className="mt-6 border border-[#E5E5E5] bg-white rounded-xl p-5">
           <h3 className="text-[#09432B] font-semibold pb-2">Price Summary</h3>
@@ -283,12 +302,15 @@ export default function EditBookingPage() {
         onSave={setMealPlan}
       />
 
-      {/*<EditExtrasModal
+      <EditExtrasModal
         open={extrasOpen}
         onOpenChange={setExtrasOpen}
-        value={bookingStore.draft.extras}
+        value={{
+          availableExtras: bookingStore.draft.availableExtras || [],
+          extras: bookingStore.draft.extras,
+        }}
         onSave={setExtras}
-      /> */}
+      />
     </div>
   );
 }
