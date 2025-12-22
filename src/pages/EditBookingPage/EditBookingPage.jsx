@@ -167,30 +167,45 @@ export default function EditBookingPage() {
           : bookingStore.draft.subTotal,
     });
     checkPodAvalability();
+    setTimeout(() => {
+      handleEditBooking();
+    }, 2000);
   };
 
   const setPod = (pod) => {
     bookingStore.updateDraft({
       pod,
     });
+    setTimeout(() => {
+      handleEditBooking();
+    }, 2000);
   };
 
   const setGuests = (guests) => {
     bookingStore.updateDraft({
       guests,
     });
+    setTimeout(() => {
+      handleEditBooking();
+    }, 2000);
   };
 
   const setMealPlan = (mealPlan) => {
     bookingStore.updateDraft({
       mealPlan,
     });
+    setTimeout(() => {
+      handleEditBooking();
+    }, 2000);
   };
 
   const setExtras = (extras) => {
     bookingStore.updateDraft({
       extras,
     });
+    setTimeout(() => {
+      handleEditBooking();
+    }, 2000);
   };
 
   useEffect(() => {
@@ -201,12 +216,6 @@ export default function EditBookingPage() {
     fetchExtras();
     setIsApiDataLoaded(true);
   }, [checkPodAvalability, fetchExtras, fetchMealPlans, isApiDataLoaded]);
-
-  useEffect(() => {
-    handleEditBooking();
-  }, [bookingStore.draft, handleEditBooking]);
-
-  console.log("Booking Draft:", bookingStore.draft);
 
   return (
     <div className="min-h-screen bg-[#F7F5F0] pb-12">
@@ -256,7 +265,7 @@ export default function EditBookingPage() {
             subtitle={
               bookingStore.draft.extras?.length > 0
                 ? bookingStore.draft.extras
-                    .map((extra) => extra.label)
+                    .map((extra) => extra.name)
                     .join(", ")
                 : "N/A"
             }

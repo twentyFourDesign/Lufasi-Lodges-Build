@@ -170,7 +170,9 @@ export default function ReviewYourBooking() {
                 <div>
                   <h4 className="font-semibold text-[#09432B]">Extras</h4>
                   <p className="text-sm text-[#6B6B6B]">
-                    {bookingStore.draft.extras || "N/A"}
+                    {bookingStore.draft.extras.length > 0
+                      ? `${bookingStore.draft.extras.length} Selected`
+                      : "N/A"}
                   </p>
                 </div>
               </CardContent>

@@ -17,7 +17,7 @@ type Extras = {
   type: ExtraType;
   options: {
     id: string;
-    label: string;
+    name: string;
     price: number;
   }[];
 };

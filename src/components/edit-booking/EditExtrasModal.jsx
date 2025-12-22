@@ -11,15 +11,16 @@ import { Checkbox } from "@/components/ui/checkbox";
 import demoImg from "@/assets/Lakeside Serenity.png";
 
 export default function EditExtrasModal({ open, onOpenChange, value, onSave }) {
-  const [selected, setSelected] = useState(new Set(value?.extras || []));
+  const [selected, setSelected] = useState(value?.extras || []);
   const [note, setNote] = useState("");
 
   const toggle = (extra) => {
-    setSelected((s) => {
-      const copy = new Set([...s]);
-      if (copy.has(extra)) copy.delete(extra);
-      else copy.add(extra);
-      return copy;
+    setSelected((prev) => {
+      if (prev.some((e) => e.id === extra.id)) {
+        return prev.filter((e) => e.id !== extra.id);
+      } else {
+        return [...prev, extra];
+      }
     });
   };
 
@@ -37,7 +38,7 @@ export default function EditExtrasModal({ open, onOpenChange, value, onSave }) {
             Edit special touches to your stay
           </p>
 
-          {value.availableExtras.map((category) => (
+          {(value?.availableExtras || []).map((category) => (
             <div key={category.id} className="space-y-3">
               <img
                 src={demoImg}
@@ -51,18 +52,18 @@ export default function EditExtrasModal({ open, onOpenChange, value, onSave }) {
                   <div className="flex-1 ">
                     <label className="inline-flex items-center gap-2 cursor-pointer w-full">
                       <Checkbox
-                        checked={selected.has(e)}
+                        checked={selected?.some((item) => item.id === e.id)}
                         onCheckedChange={() => toggle(e)}
                       />
                       <div className="flex items-center justify-between w-auto flex-1">
                         <div>
                           <div className="text-sm font-semibold text-[#09432B]">
-                            {e.label}
+                            {e.name}
                           </div>
                           <div className="text-xs text-[#737373]">{e.desc}</div>
                         </div>
                         <div className="text-sm font-semibold">
-                          ₦{e.price.toLocaleString()}
+                          ₦{(e.price || 0).toLocaleString()}
                         </div>
                       </div>
                     </label>
@@ -92,7 +93,7 @@ export default function EditExtrasModal({ open, onOpenChange, value, onSave }) {
           <div className="flex gap-2">
             <Button
               onClick={() => {
-                onSave([...selected]);
+                onSave(selected);
                 onOpenChange(false);
               }}
               className="bg-[#09432B] text-white"
