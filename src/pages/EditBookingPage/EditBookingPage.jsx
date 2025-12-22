@@ -38,6 +38,7 @@ export default function EditBookingPage() {
   const bookingStore = useBookingStore();
   const [stayOpen, setStayOpen] = useState(false);
   const [podOpen, setPodOpen] = useState(false);
+  const [guestOpen, setGuestOpen] = useState(false);
 
   const checkPodAvalability = async () => {
     try {
@@ -93,11 +94,12 @@ export default function EditBookingPage() {
     });
   };
 
-  // const setGuests = (guests) => {
-  //   bookingStore.updateDraft({
-  //     guests,
-  //   });
-  // };
+  const setGuests = (guests) => {
+    bookingStore.updateDraft({
+      guests,
+    });
+  };
+
   // const setMealPlan = (mealPlan) => {
   //   bookingStore.updateDraft({
   //     mealPlan,
@@ -141,13 +143,13 @@ export default function EditBookingPage() {
             subtitle={`${bookingStore.draft.pod.title} - King Bed`}
             onClick={() => setPodOpen(true)}
           />
-          {/*<Row
+          <Row
             icon={<Users size={18} className="text-[#09432B]" />}
             title="Guests"
-            subtitle={`${bookingStore.draftguests.adults} Adults (18+)`}
+            subtitle={`${bookingStore.draft.guests.adults} Adults (18+)`}
             onClick={() => setGuestOpen(true)}
           />
-          <Row
+          {/*<Row
             icon={<Utensils size={18} className="text-[#09432B]" />}
             title="Meal Plan"
             subtitle={bookingStore.draft.mealPlan?.title}
@@ -235,14 +237,14 @@ export default function EditBookingPage() {
         onSave={setPod}
       />
 
-      {/* <EditGuestsModal
+      <EditGuestsModal
         open={guestOpen}
         onOpenChange={setGuestOpen}
         value={bookingStore.draft.guests}
         onSave={setGuests}
       />
 
-      <EditMealPlanModal
+      {/* <EditMealPlanModal
         open={mealOpen}
         onOpenChange={setMealOpen}
         value={bookingStore.draft.mealPlan}

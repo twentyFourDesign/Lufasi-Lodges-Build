@@ -1,5 +1,4 @@
-/* eslint-disable react-hooks/set-state-in-effect */
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import {
   Dialog,
   DialogContent,
@@ -12,11 +11,6 @@ import { Button } from "@/components/ui/button";
 export default function EditGuestsModal({ open, onOpenChange, value, onSave }) {
   const [local, setLocal] = useState(
     value || { adults: 2, teenagers: 0, infants: 0 }
-  );
-
-  useEffect(
-    () => setLocal(value || { adults: 2, teenagers: 0, infants: 0 }),
-    [value, open]
   );
 
   const change = (key, delta) => {
