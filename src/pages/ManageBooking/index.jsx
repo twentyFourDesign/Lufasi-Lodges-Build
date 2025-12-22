@@ -7,12 +7,14 @@ import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import { ArrowRight } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { useBookingStore } from "@/store/useBookingStore";
 
 export default function ManageBooking() {
   const [bookingReference, setBookingReference] = useState("");
   const [lastName, setLastName] = useState("");
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+  const bookingStore = useBookingStore();
 
   const handleFindBooking = async (e) => {
     e.preventDefault();
@@ -33,7 +35,8 @@ export default function ManageBooking() {
       const data = await response.json();
 
       if (response.ok) {
-        navigate("/edit-your-booking", { state: { booking: data.booking } });
+        bookingStore.updateDraft(data.booking);
+        navigate("/edit-your-booking");
       } else {
         console.log(data.error || "Booking not found");
       }
