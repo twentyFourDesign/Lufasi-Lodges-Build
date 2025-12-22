@@ -9,6 +9,7 @@ import EditMealPlanModal from "@/components/edit-booking/EditMealPlanModal";
 import EditExtrasModal from "@/components/edit-booking/EditExtrasModal";
 import { format, differenceInCalendarDays } from "date-fns";
 import { BoardType, useBookingStore } from "@/store/useBookingStore";
+import { BASE_URL } from "@/config";
 
 const Row = ({ icon, title, subtitle, onClick }) => (
   <div className="w-full border border-[#E5E5E5] rounded-xl bg-white px-4 py-4 flex items-center justify-between">
@@ -36,7 +37,34 @@ const Row = ({ icon, title, subtitle, onClick }) => (
 export default function EditBookingPage() {
   const bookingStore = useBookingStore();
   const [stayOpen, setStayOpen] = useState(false);
+  const [podOpen, setPodOpen] = useState(false);
 
+  const checkPodAvalability = async () => {
+    try {
+      const response = await fetch(`${BASE_URL}/availability/check`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          startDate: bookingStore.draft.dates.checkIn
+            .toISOString()
+            .split("T")[0], // "2025-12-20"
+          endDate: bookingStore.draft.dates.checkOut
+            .toISOString()
+            .split("T")[0], // "2025-12-22"
+          adults: parseInt(bookingStore.draft.guests.adults) || 1, // Extract number from "2 Guests"
+        }),
+      });
+      const data = await response.json();
+
+      bookingStore.updateDraft({
+        availablePods: data,
+      });
+    } catch (error) {
+      console.error("Error checking availability:", error);
+    }
+  };
   const setStayDates = (dates) => {
     function parseDate(ddmmyyyy) {
       const [day, month, year] = ddmmyyyy.split("/");
@@ -56,13 +84,15 @@ export default function EditBookingPage() {
         adults: parseInt(dates.guests.match(/(\d+)/)[1]) || 1,
       },
     });
+    checkPodAvalability();
   };
-  console.log("Booking Draft:", bookingStore.draft);
-  // const setPod = (pod) => {
-  //   bookingStore.updateDraft({
-  //     pod,
-  //   });
-  // };
+
+  const setPod = (pod) => {
+    bookingStore.updateDraft({
+      pod,
+    });
+  };
+
   // const setGuests = (guests) => {
   //   bookingStore.updateDraft({
   //     guests,
@@ -78,6 +108,9 @@ export default function EditBookingPage() {
   //     extras,
   //   });
   // };
+
+  console.log("Booking Draft:", bookingStore.draft);
+
   return (
     <div className="min-h-screen bg-[#F7F5F0] pb-12">
       <CommonNavbar />
@@ -102,13 +135,13 @@ export default function EditBookingPage() {
             )} • ${bookingStore.draft.numberOfNights} Nights`}
             onClick={() => setStayOpen(true)}
           />
-          {/* <Row
+          <Row
             icon={<Home size={18} className="text-[#09432B]" />}
             title="Your Pod"
             subtitle={`${bookingStore.draft.pod.title} - King Bed`}
             onClick={() => setPodOpen(true)}
           />
-          <Row
+          {/*<Row
             icon={<Users size={18} className="text-[#09432B]" />}
             title="Guests"
             subtitle={`${bookingStore.draftguests.adults} Adults (18+)`}
@@ -192,14 +225,17 @@ export default function EditBookingPage() {
         onSave={setStayDates}
       />
 
-      {/* <EditPodModal
+      <EditPodModal
         open={podOpen}
         onOpenChange={setPodOpen}
-        value={bookingStore.draft.pod}
+        value={{
+          availablePods: bookingStore.draft.availablePods,
+          pod: bookingStore.draft.pod,
+        }}
         onSave={setPod}
       />
 
-      <EditGuestsModal
+      {/* <EditGuestsModal
         open={guestOpen}
         onOpenChange={setGuestOpen}
         value={bookingStore.draft.guests}

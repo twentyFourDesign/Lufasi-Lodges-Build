@@ -1,5 +1,4 @@
-/* eslint-disable react-hooks/set-state-in-effect */
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import {
   Dialog,
   DialogContent,
@@ -8,53 +7,13 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import demoImg from "@/assets/Lakeside Serenity.png";
 
 export default function EditPodModal({ open, onOpenChange, value, onSave }) {
-  const PODS = [
-    {
-      id: "pod-1",
-      title: "Lakeside Serenity",
-      price: 250000,
-      available: true,
-      img: demoImg,
-    },
-    {
-      id: "pod-2",
-      title: "Garden Estate",
-      price: 250000,
-      available: true,
-      img: demoImg,
-    },
-    {
-      id: "pod-3",
-      title: "Hillside Escape",
-      price: 250000,
-      available: false,
-      img: demoImg,
-    },
-    {
-      id: "pod-4",
-      title: "Forest Haven",
-      price: 250000,
-      available: true,
-      img: demoImg,
-    },
-    {
-      id: "pod-5",
-      title: "Sunset Vista",
-      price: 250000,
-      available: true,
-      img: demoImg,
-    },
-  ];
-
-  const [selectedId, setSelectedId] = useState(value?.id ?? null);
-
-  useEffect(() => setSelectedId(value?.id ?? null), [value, open]);
+  const [selectedId, setSelectedId] = useState(() => value?.pod?.id ?? null);
 
   const pick = () => {
-    const picked = PODS.find((p) => p.id === selectedId) || value;
+    const picked =
+      value.availablePods.find((p) => p.id === selectedId) || value.pod;
     onSave(picked);
     onOpenChange(false);
   };
@@ -72,7 +31,7 @@ export default function EditPodModal({ open, onOpenChange, value, onSave }) {
           <p className="text-sm text-[#737373]">Edit your perfect sanctuary</p>
 
           <div className="space-y-3">
-            {PODS.map((p) => (
+            {value.availablePods.map((p) => (
               <div
                 key={p.id}
                 className={`rounded-lg border ${
@@ -143,9 +102,14 @@ export default function EditPodModal({ open, onOpenChange, value, onSave }) {
                   <label className="text-sm text-[#09432B] block mb-1">
                     Day 1
                   </label>
-                  <select className="w-full border border-[#0F5B45] rounded-md px-3 py-2">
-                    {PODS.map((p) => (
-                      <option key={p.id}>{p.title}</option>
+                  <select
+                    className="w-full border border-[#0F5B45] rounded-md px-3 py-2"
+                    defaultValue={value.pod.title}
+                  >
+                    {value.availablePods.map((p) => (
+                      <option key={p.id} disabled={!p.available}>
+                        {p.title}
+                      </option>
                     ))}
                   </select>
                 </div>
@@ -154,9 +118,14 @@ export default function EditPodModal({ open, onOpenChange, value, onSave }) {
                   <label className="text-sm text-[#09432B] block mb-1">
                     Day 2
                   </label>
-                  <select className="w-full border border-[#0F5B45] rounded-md px-3 py-2">
-                    {PODS.map((p) => (
-                      <option key={p.id + "-2"}>{p.title}</option>
+                  <select
+                    className="w-full border border-[#0F5B45] rounded-md px-3 py-2"
+                    defaultValue={value.pod.title}
+                  >
+                    {value.availablePods.map((p) => (
+                      <option key={p.id} disabled={!p.available}>
+                        {p.title}
+                      </option>
                     ))}
                   </select>
                 </div>
