@@ -1,4 +1,3 @@
-/* eslint-disable no-unused-vars */
 import { BASE_URL } from "@/config";
 import { useState } from "react";
 import CommonNavbar from "@/components/shared/common/CommonNavbar/CommonNavbar";
@@ -7,18 +6,17 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import { ArrowRight } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 export default function ManageBooking() {
   const [bookingReference, setBookingReference] = useState("");
   const [lastName, setLastName] = useState("");
   const [loading, setLoading] = useState(false);
-  const [bookingData, setBookingData] = useState(null);
-  const [error, setError] = useState("");
+  const navigate = useNavigate();
 
   const handleFindBooking = async (e) => {
     e.preventDefault();
     setLoading(true);
-    setError("");
 
     try {
       const response = await fetch(`${BASE_URL}/bookings/find`, {
@@ -35,15 +33,12 @@ export default function ManageBooking() {
       const data = await response.json();
 
       if (response.ok) {
-        setBookingData(data.booking);
-        // You can redirect to a booking details page or show details here
-        console.log("Booking found:", data.booking);
+        navigate("/edit-your-booking", { state: { booking: data.booking } });
       } else {
-        setError(data.error || "Booking not found");
+        console.log(data.error || "Booking not found");
       }
     } catch (error) {
       console.error("Error finding booking:", error);
-      setError("Failed to find booking. Please try again.");
     } finally {
       setLoading(false);
     }
