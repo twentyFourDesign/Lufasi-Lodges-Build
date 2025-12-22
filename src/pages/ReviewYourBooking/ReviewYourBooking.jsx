@@ -11,23 +11,59 @@ import {
   Utensils,
   Percent,
 } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import CommonNavbar from "@/components/shared/common/CommonNavbar/CommonNavbar";
 import { useBookingStore } from "@/store/useBookingStore";
 import { format } from "date-fns/format";
+import { BASE_URL } from "@/config";
 
 function formatPrice(n) {
   return n.toLocaleString();
 }
 export default function ReviewYourBooking() {
   const bookingStore = useBookingStore();
-  const [voucher, setVoucher] = useState("");
+  const [voucherCode, setVoucherCode] = useState("");
   const [discountCode, setDiscountCode] = useState("");
   const [clubId, setClubId] = useState("");
+  const [creating, setCreating] = useState(false);
+  const navigate = useNavigate();
 
   const applyVoucher = () => alert("Demo: voucher applied");
   const applyDiscount = () => alert("Demo: discount applied");
   const applyClub = () => alert("Demo: 100Club applied");
+
+  // API: Create booking
+  const handleConfirmBooking = async () => {
+    try {
+      setCreating(true);
+      const response = await fetch(`${BASE_URL}/bookings`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          dates: bookingStore.draft.dates,
+          contact: bookingStore.draft.contact,
+          podId: bookingStore.draft.pod?.id,
+          boardType: bookingStore.draft.mealPlan?.boardType || "fullBoard",
+          guests: bookingStore.draft.guests,
+          popUpBeds: bookingStore.draft.popUpBeds || 0,
+          extras: bookingStore.draft.extras || [],
+          discountCode,
+          voucherCode,
+        }),
+      });
+
+      const result = await response.json();
+      if (response.ok) {
+        navigate("/booking-confirmation", { state: { booking: result } });
+      } else {
+        console.log("Booking failed: " + (result.error || "Unknown error"));
+      }
+    } catch (error) {
+      console.error("Booking failed:", error);
+    } finally {
+      setCreating(false);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-[#F7F5F0] text-[#0A2F22]">
@@ -194,8 +230,8 @@ export default function ReviewYourBooking() {
                         <Label className="text-sm">Voucher Code</Label>
                         <Input
                           placeholder="Enter Voucher Code"
-                          value={voucher}
-                          onChange={(e) => setVoucher(e.target.value)}
+                          value={voucherCode}
+                          onChange={(e) => setVoucherCode(e.target.value)}
                           className="mt-1"
                         />
                       </div>
@@ -258,8 +294,12 @@ export default function ReviewYourBooking() {
                 </div>
               </div>
               <div className="mt-6 space-y-3">
-                <Button className="w-full bg-[#09432B] hover:bg-[#09432B] text-white font-semibold py-3">
-                  <Link to="/booking-confirmation">Pay Now with Squad</Link>
+                <Button
+                  onClick={handleConfirmBooking}
+                  disabled={creating}
+                  className="w-full bg-[#09432B] hover:bg-[#09432B] text-white font-semibold py-3"
+                >
+                  {creating ? "Creating..." : "Pay Now with Squad"}
                 </Button>
 
                 <div className="md:flex  gap-3">

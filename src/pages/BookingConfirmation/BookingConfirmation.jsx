@@ -3,9 +3,13 @@ import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { CheckCircle, Mail, Calendar, MapPin } from "lucide-react";
 import CommonNavbar from "@/components/shared/common/CommonNavbar/CommonNavbar";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 
 export default function BookingConfirmation() {
+  const location = useLocation();
+  const { bookingReference } = location.state?.booking || {
+    bookingReference: "N/A",
+  };
   return (
     <div className="min-h-screen bg-[#F7F5EF] ">
       <CommonNavbar />
@@ -30,7 +34,7 @@ export default function BookingConfirmation() {
                 Your Booking Reference
               </p>
               <p className="text-xl md:text-2xl font-bold tracking-wide text-[#0A4C30]">
-                LUF-12345678
+                {bookingReference}
               </p>
             </div>
             <div className="bg-[#F0EDDD] rounded-xl p-4 md:p-6 mt-6 space-y-4">
