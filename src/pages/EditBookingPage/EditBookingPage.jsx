@@ -104,6 +104,42 @@ export default function EditBookingPage() {
     }
   }, [bookingStore]);
 
+  // API: Update booking
+  const handleEditBooking = useCallback(async () => {
+    try {
+      const response = await fetch(
+        `${BASE_URL}/bookings/${bookingStore.draft.id}`,
+        {
+          method: "PUT", // Changed from POST to PUT
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            dates: bookingStore.draft.dates,
+            contact: bookingStore.draft.contact,
+            podId: bookingStore.draft.pod?.id,
+            boardType:
+              bookingStore.draft.mealPlan?.boardType || BoardType.FULL_BOARD,
+            guests: bookingStore.draft.guests,
+            popUpBeds: bookingStore.draft.popUpBeds || 0,
+            extras: bookingStore.draft.extras || [],
+          }),
+        }
+      );
+
+      const result = await response.json();
+      if (response.ok) {
+        console.log("Booking update successful:", result);
+        // You might want to update the store with the returned booking data
+        // bookingStore.updateDraft(result.booking);
+      } else {
+        console.log(
+          "Booking update failed: " + (result.error || "Unknown error")
+        );
+      }
+    } catch (error) {
+      console.error("Booking update failed:", error);
+    }
+  }, [bookingStore.draft]);
+
   const setStayDates = (dates) => {
     function parseDate(ddmmyyyy) {
       const [day, month, year] = ddmmyyyy.split("/");
@@ -122,6 +158,13 @@ export default function EditBookingPage() {
         ...bookingStore.draft.guests,
         adults: parseInt(dates.guests.match(/(\d+)/)[1]) || 1,
       },
+      subTotal:
+        format(bookingStore.draft.dates.checkIn, "yyyy-MM-dd") !==
+          format(parseDate(dates.checkIn), "yyyy-MM-dd") ||
+        format(bookingStore.draft.dates.checkOut, "yyyy-MM-dd") !==
+          format(parseDate(dates.checkOut), "yyyy-MM-dd")
+          ? bookingStore.draft.subTotal + 25000
+          : bookingStore.draft.subTotal,
     });
     checkPodAvalability();
   };
@@ -158,6 +201,10 @@ export default function EditBookingPage() {
     fetchExtras();
     setIsApiDataLoaded(true);
   }, [checkPodAvalability, fetchExtras, fetchMealPlans, isApiDataLoaded]);
+
+  useEffect(() => {
+    handleEditBooking();
+  }, [bookingStore.draft, handleEditBooking]);
 
   console.log("Booking Draft:", bookingStore.draft);
 

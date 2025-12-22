@@ -1,7 +1,7 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 
-enum BoardType {
+export enum BoardType {
   FULL_BOARD = "fullBoard",
   HALF_BOARD = "halfBoard",
 }
@@ -43,6 +43,9 @@ type BoardOption = {
 };
 
 type BookingDraft = {
+  id?: string;
+  reference?: string;
+  status?: string;
   dates?: {
     checkIn: Date;
     checkOut: Date;
@@ -53,11 +56,13 @@ type BookingDraft = {
     infants: number;
   };
   numberOfNights?: number;
-  availablePods?: Pod[];
   basePrice?: number;
+  availablePods?: Pod[];
   pod?: Pod;
+  availableMealPlans?: BoardOption[];
   mealPlan?: BoardOption;
   subTotal?: number;
+  availableExtras?: Extras[];
   extras?: Extras[];
   contact?: {
     firstName: string;
