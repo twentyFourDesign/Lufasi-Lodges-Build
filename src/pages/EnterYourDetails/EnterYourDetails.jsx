@@ -1,7 +1,6 @@
 import React from "react";
 import { useForm } from "react-hook-form";
 import CommonNavbar from "@/components/shared/common/CommonNavbar/CommonNavbar";
-import { DevTool } from "@hookform/devtools";
 import {
   Form,
   FormField,
