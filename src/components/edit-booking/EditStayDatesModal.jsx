@@ -24,13 +24,21 @@ export default function EditStayDatesModal({
   onSave,
 }) {
   const [local, setLocal] = useState(
-    value || { checkIn: "", checkOut: "", nights: 1, guests: "2 Guests" }
+    value || {
+      checkIn: "",
+      checkOut: "",
+      guests: "2 Guests",
+    }
   );
 
   useEffect(
     () =>
       setLocal(
-        value || { checkIn: "", checkOut: "", nights: 1, guests: "2 Guests" }
+        value || {
+          checkIn: "",
+          checkOut: "",
+          guests: "2 Guests",
+        }
       ),
     [value, open]
   );

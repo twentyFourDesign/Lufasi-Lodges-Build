@@ -7,6 +7,8 @@ import EditPodModal from "@/components/edit-booking/EditPodModal";
 import EditGuestsModal from "@/components/edit-booking/EditGuestsModal";
 import EditMealPlanModal from "@/components/edit-booking/EditMealPlanModal";
 import EditExtrasModal from "@/components/edit-booking/EditExtrasModal";
+import { format, differenceInCalendarDays } from "date-fns";
+import { BoardType, useBookingStore } from "@/store/useBookingStore";
 
 const Row = ({ icon, title, subtitle, onClick }) => (
   <div className="w-full border border-[#E5E5E5] rounded-xl bg-white px-4 py-4 flex items-center justify-between">
@@ -32,25 +34,50 @@ const Row = ({ icon, title, subtitle, onClick }) => (
 );
 
 export default function EditBookingPage() {
-  const [stayDates, setStayDates] = useState({
-    checkIn: "01/02/2025",
-    checkOut: "03/02/2025",
-    nights: 2,
-  });
-  const [pod, setPod] = useState({
-    id: "pod-1",
-    title: "Sunset Vista - King Bed",
-    price: 400000,
-  });
-  const [guests, setGuests] = useState({ adults: 2 });
-  const [mealPlan, setMealPlan] = useState("Half Board");
-  const [extras, setExtras] = useState([]);
+  const bookingStore = useBookingStore();
   const [stayOpen, setStayOpen] = useState(false);
-  const [podOpen, setPodOpen] = useState(false);
-  const [guestOpen, setGuestOpen] = useState(false);
-  const [mealOpen, setMealOpen] = useState(false);
-  const [extrasOpen, setExtrasOpen] = useState(false);
 
+  const setStayDates = (dates) => {
+    function parseDate(ddmmyyyy) {
+      const [day, month, year] = ddmmyyyy.split("/");
+      return new Date(`${year}-${month}-${day}`);
+    }
+    bookingStore.updateDraft({
+      dates: {
+        checkIn: parseDate(dates.checkIn),
+        checkOut: parseDate(dates.checkOut),
+      },
+      numberOfNights: differenceInCalendarDays(
+        parseDate(dates.checkOut),
+        parseDate(dates.checkIn)
+      ),
+      guests: {
+        ...bookingStore.draft.guests,
+        adults: parseInt(dates.guests.match(/(\d+)/)[1]) || 1,
+      },
+    });
+  };
+  console.log("Booking Draft:", bookingStore.draft);
+  // const setPod = (pod) => {
+  //   bookingStore.updateDraft({
+  //     pod,
+  //   });
+  // };
+  // const setGuests = (guests) => {
+  //   bookingStore.updateDraft({
+  //     guests,
+  //   });
+  // };
+  // const setMealPlan = (mealPlan) => {
+  //   bookingStore.updateDraft({
+  //     mealPlan,
+  //   });
+  // };
+  // const setExtras = (extras) => {
+  //   bookingStore.updateDraft({
+  //     extras,
+  //   });
+  // };
   return (
     <div className="min-h-screen bg-[#F7F5F0] pb-12">
       <CommonNavbar />
@@ -65,50 +92,65 @@ export default function EditBookingPage() {
           <Row
             icon={<Calendar size={18} className="text-[#09432B]" />}
             title="Stay Dates"
-            subtitle={`Check in: ${stayDates.checkIn}    Check out: ${stayDates.checkOut}    • ${stayDates.nights} Nights`}
+            subtitle={`Check in: ${format(
+              bookingStore.draft.dates.checkIn,
+              "dd/MM/yyyy"
+            )}  
+            Check out: ${format(
+              bookingStore.draft.dates.checkOut,
+              "dd/MM/yyyy"
+            )} • ${bookingStore.draft.numberOfNights} Nights`}
             onClick={() => setStayOpen(true)}
           />
-          <Row
+          {/* <Row
             icon={<Home size={18} className="text-[#09432B]" />}
             title="Your Pod"
-            subtitle={pod.title}
+            subtitle={`${bookingStore.draft.pod.title} - King Bed`}
             onClick={() => setPodOpen(true)}
           />
           <Row
             icon={<Users size={18} className="text-[#09432B]" />}
             title="Guests"
-            subtitle={`${guests.adults} Adults (18+)`}
+            subtitle={`${bookingStore.draftguests.adults} Adults (18+)`}
             onClick={() => setGuestOpen(true)}
           />
           <Row
             icon={<Utensils size={18} className="text-[#09432B]" />}
             title="Meal Plan"
-            subtitle={mealPlan}
+            subtitle={bookingStore.draft.mealPlan?.title}
             onClick={() => setMealOpen(true)}
           />
           <Row
             icon={<Gift size={18} className="text-[#09432B]" />}
             title="Extras"
-            subtitle={extras.length > 0 ? extras.join(", ") : "N/A"}
+            subtitle={
+              bookingStore.draft.extras?.length > 0
+                ? bookingStore.draft.extras
+                    .map((extra) => extra.type)
+                    .join(", ")
+                : "N/A"
+            }
             onClick={() => setExtrasOpen(true)}
-          />
+          /> */}
         </div>
         <div className="mt-6 border border-[#E5E5E5] bg-white rounded-xl p-5">
           <h3 className="text-[#09432B] font-semibold pb-2">Price Summary</h3>
 
           <p className="text-xs text-[#737373]">
-            Pod & Meals ({stayDates.nights} Nights)
+            Pod & Meals ({bookingStore.draft.numberOfNights} Nights)
           </p>
 
           <div className="mt-4 space-y-3 text-sm font-medium">
             <div className="flex justify-between">
               <span>Sub Total:</span>
-              <span>₦{pod.price.toLocaleString()}</span>
+              <span>₦{bookingStore.draft.subTotal.toLocaleString()}</span>
             </div>
 
             <div className="flex justify-between">
               <span>After consumption tax and VAT(12.5%)</span>
-              <span>₦12,500</span>
+              <span>
+                ₦{(bookingStore.draft.subTotal * 0.125).toLocaleString()}
+              </span>
             </div>
             <div className="bg-[#DFFBFF] px-4 py-3 rounded-lg flex justify-between">
               <span>Discount:</span>
@@ -116,7 +158,9 @@ export default function EditBookingPage() {
             </div>
             <div className="flex justify-between border-t pt-3 font-semibold">
               <span>Total:</span>
-              <span>₦412,500</span>
+              <span>
+                ₦{(bookingStore.draft.subTotal * 1.125).toLocaleString()}
+              </span>
             </div>
           </div>
         </div>
@@ -139,37 +183,42 @@ export default function EditBookingPage() {
       <EditStayDatesModal
         open={stayOpen}
         onOpenChange={setStayOpen}
-        value={stayDates}
+        value={{
+          checkIn: format(bookingStore.draft.dates.checkIn, "dd/MM/yyyy"),
+          checkOut: format(bookingStore.draft.dates.checkOut, "dd/MM/yyyy"),
+          numberOfNights: bookingStore.draft.numberOfNights,
+          guests: `${bookingStore.draft.guests.adults} Guests`,
+        }}
         onSave={setStayDates}
       />
 
-      <EditPodModal
+      {/* <EditPodModal
         open={podOpen}
         onOpenChange={setPodOpen}
-        value={pod}
+        value={bookingStore.draft.pod}
         onSave={setPod}
       />
 
       <EditGuestsModal
         open={guestOpen}
         onOpenChange={setGuestOpen}
-        value={guests}
+        value={bookingStore.draft.guests}
         onSave={setGuests}
       />
 
       <EditMealPlanModal
         open={mealOpen}
         onOpenChange={setMealOpen}
-        value={mealPlan}
+        value={bookingStore.draft.mealPlan}
         onSave={setMealPlan}
       />
 
       <EditExtrasModal
         open={extrasOpen}
         onOpenChange={setExtrasOpen}
-        value={extras}
+        value={bookingStore.draft.extras}
         onSave={setExtras}
-      />
+      /> */}
     </div>
   );
 }
