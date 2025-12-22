@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import CommonNavbar from "@/components/shared/common/CommonNavbar/CommonNavbar";
 import { Button } from "@/components/ui/button";
 import { Calendar, Home, Users, Utensils, Gift, Pencil } from "lucide-react";
@@ -39,8 +39,10 @@ export default function EditBookingPage() {
   const [stayOpen, setStayOpen] = useState(false);
   const [podOpen, setPodOpen] = useState(false);
   const [guestOpen, setGuestOpen] = useState(false);
+  const [mealOpen, setMealOpen] = useState(false);
+  const [isApiDataLoaded, setIsApiDataLoaded] = useState(false);
 
-  const checkPodAvalability = async () => {
+  const checkPodAvalability = useCallback(async () => {
     try {
       const response = await fetch(`${BASE_URL}/availability/check`, {
         method: "POST",
@@ -65,7 +67,25 @@ export default function EditBookingPage() {
     } catch (error) {
       console.error("Error checking availability:", error);
     }
-  };
+  }, [bookingStore]);
+
+  const fetchMealPlans = useCallback(async () => {
+    try {
+      const response = await fetch(`${BASE_URL}/meal-plans`);
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data = await response.json();
+      bookingStore.updateDraft({
+        availableMealPlans: data,
+      });
+    } catch (error) {
+      console.error("Error fetching meal plans:", error);
+    }
+  }, [bookingStore]);
+
   const setStayDates = (dates) => {
     function parseDate(ddmmyyyy) {
       const [day, month, year] = ddmmyyyy.split("/");
@@ -100,16 +120,25 @@ export default function EditBookingPage() {
     });
   };
 
-  // const setMealPlan = (mealPlan) => {
-  //   bookingStore.updateDraft({
-  //     mealPlan,
-  //   });
-  // };
+  const setMealPlan = (mealPlan) => {
+    bookingStore.updateDraft({
+      mealPlan,
+    });
+  };
+
   // const setExtras = (extras) => {
   //   bookingStore.updateDraft({
   //     extras,
   //   });
   // };
+
+  useEffect(() => {
+    if (isApiDataLoaded) return;
+
+    checkPodAvalability();
+    fetchMealPlans();
+    setIsApiDataLoaded(true);
+  }, [checkPodAvalability, fetchMealPlans, isApiDataLoaded]);
 
   console.log("Booking Draft:", bookingStore.draft);
 
@@ -149,13 +178,13 @@ export default function EditBookingPage() {
             subtitle={`${bookingStore.draft.guests.adults} Adults (18+)`}
             onClick={() => setGuestOpen(true)}
           />
-          {/*<Row
+          <Row
             icon={<Utensils size={18} className="text-[#09432B]" />}
             title="Meal Plan"
             subtitle={bookingStore.draft.mealPlan?.title}
             onClick={() => setMealOpen(true)}
           />
-          <Row
+          {/*<Row
             icon={<Gift size={18} className="text-[#09432B]" />}
             title="Extras"
             subtitle={
@@ -244,14 +273,17 @@ export default function EditBookingPage() {
         onSave={setGuests}
       />
 
-      {/* <EditMealPlanModal
+      <EditMealPlanModal
         open={mealOpen}
         onOpenChange={setMealOpen}
-        value={bookingStore.draft.mealPlan}
+        value={{
+          availableMealPlans: bookingStore.draft.availableMealPlans || [],
+          mealPlan: bookingStore.draft.mealPlan,
+        }}
         onSave={setMealPlan}
       />
 
-      <EditExtrasModal
+      {/*<EditExtrasModal
         open={extrasOpen}
         onOpenChange={setExtrasOpen}
         value={bookingStore.draft.extras}

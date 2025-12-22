@@ -1,5 +1,4 @@
-/* eslint-disable react-hooks/set-state-in-effect */
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import {
   Dialog,
   DialogContent,
@@ -15,16 +14,9 @@ export default function EditMealPlanModal({
   value,
   onSave,
 }) {
-  const PLANS = [
-    "Room Only",
-    "Bed & Breakfast",
-    "Half Board",
-    "Full Board",
-    "All Inclusive",
-  ];
-  const [selected, setSelected] = useState(value || "Half Board");
-
-  useEffect(() => setSelected(value || "Half Board"), [value, open]);
+  const [selected, setSelected] = useState(
+    value?.mealPlan || { id: "", title: "Full Board" }
+  );
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -41,24 +33,22 @@ export default function EditMealPlanModal({
           </p>
 
           <div className="space-y-2">
-            {PLANS.map((p) => (
+            {value.availableMealPlans.map((p) => (
               <label
-                key={p}
+                key={p.id}
                 className="flex items-center gap-3 border rounded-md px-3 py-2"
               >
                 <input
                   type="radio"
                   name="meal"
-                  checked={selected === p}
+                  checked={selected.title === p.title}
                   onChange={() => setSelected(p)}
                 />
                 <div>
                   <div className="text-sm font-semibold text-[#09432B]">
-                    {p}
+                    {p.title}
                   </div>
-                  <div className="text-xs text-[#737373]">
-                    Description for {p} (short)
-                  </div>
+                  <div className="text-xs text-[#737373]">{p.subtitle}</div>
                 </div>
               </label>
             ))}
