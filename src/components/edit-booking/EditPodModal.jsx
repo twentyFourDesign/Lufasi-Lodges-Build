@@ -31,7 +31,7 @@ export default function EditPodModal({ open, onOpenChange, value, onSave }) {
           <p className="text-sm text-[#737373]">Edit your perfect sanctuary</p>
 
           <div className="space-y-3">
-            {value.availablePods.map((p) => (
+            {value?.availablePods?.map((p) => (
               <div
                 key={p.id}
                 className={`rounded-lg border ${
@@ -106,7 +106,7 @@ export default function EditPodModal({ open, onOpenChange, value, onSave }) {
                     className="w-full border border-[#0F5B45] rounded-md px-3 py-2"
                     defaultValue={value.pod.title}
                   >
-                    {value.availablePods.map((p) => (
+                    {value?.availablePods?.map((p) => (
                       <option key={p.id} disabled={!p.available}>
                         {p.title}
                       </option>
@@ -122,7 +122,7 @@ export default function EditPodModal({ open, onOpenChange, value, onSave }) {
                     className="w-full border border-[#0F5B45] rounded-md px-3 py-2"
                     defaultValue={value.pod.title}
                   >
-                    {value.availablePods.map((p) => (
+                    {value?.availablePods?.map((p) => (
                       <option key={p.id} disabled={!p.available}>
                         {p.title}
                       </option>
