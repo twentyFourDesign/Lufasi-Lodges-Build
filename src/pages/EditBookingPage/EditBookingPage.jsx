@@ -51,12 +51,8 @@ export default function EditBookingPage() {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          startDate: bookingStore.draft.dates.checkIn
-            .toISOString()
-            .split("T")[0], // "2025-12-20"
-          endDate: bookingStore.draft.dates.checkOut
-            .toISOString()
-            .split("T")[0], // "2025-12-22"
+          startDate: format(bookingStore.draft.dates.checkIn, "yyyy-MM-dd"), // "2025-12-20"
+          endDate: format(bookingStore.draft.dates.checkOut, "yyyy-MM-dd"), // "2025-12-20"
           adults: parseInt(bookingStore.draft.guests.adults) || 1, // Extract number from "2 Guests"
         }),
       });
