@@ -43,6 +43,12 @@
 
 :root {
   --radius: 0.625rem;
+  
+  /* Lufasi Admin Theme Colors */
+  --lufasi-teal: #008080;
+  --lufasi-cream: #FFF9F2;
+  --lufasi-dark: #333333;
+  
   --background: oklch(1 0 0);
   --foreground: oklch(0.145 0 0);
   --card: oklch(1 0 0);
