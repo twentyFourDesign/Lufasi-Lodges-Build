@@ -17,18 +17,14 @@ import BookingsPage from "@/pages/admin/BookingsPage";
 import BookingDetailsPage from "@/pages/admin/BookingDetailsPage";
 import SettingsPage from "@/pages/admin/SettingsPage";
 import PricingPage from "@/pages/admin/PricingPage";
-
-// Placeholder component for pages not yet implemented
-function PlaceholderPage({ title }) {
-  return (
-    <div className="flex items-center justify-center h-64">
-      <div className="text-center">
-        <h1 className="text-2xl font-bold text-[#333333] mb-2">{title}</h1>
-        <p className="text-gray-500">Coming soon...</p>
-      </div>
-    </div>
-  );
-}
+import GuestPaymentsPage from "@/pages/admin/GuestPaymentsPage";
+import BookingLogPage from "@/pages/admin/BookingLogPage";
+import PageContentSettingsPage from "@/pages/admin/PageContentSettingsPage";
+import PodsManagementPage from "@/pages/admin/PodsManagementPage";
+import AdminExtrasPage from "@/pages/admin/ExtrasPage";
+import MealsPage from "@/pages/admin/MealsPage";
+import ReportsPage from "@/pages/admin/ReportsPage";
+import VouchersPage from "@/pages/admin/VouchersPage";
 
 export default function AppRoutes() {
   return (
@@ -72,7 +68,7 @@ export default function AppRoutes() {
           </ProtectedRoute>
         }
       />
-      {/* Alternate route for bookings (user prefers this URL structure) */}
+      {/* Alternate route for bookings */}
       <Route
         path="/bookings/admin/:id"
         element={
@@ -89,13 +85,11 @@ export default function AppRoutes() {
           </ProtectedRoute>
         }
       />
-
-      {/* Placeholder routes for future pages */}
       <Route
         path="/admin/booking-page"
         element={
           <ProtectedRoute>
-            <AdminDashboard />
+            <BookingLogPage />
           </ProtectedRoute>
         }
       />
@@ -108,26 +102,18 @@ export default function AppRoutes() {
         }
       />
       <Route
-        path="/admin/payments"
+        path="/admin/guest-payments"
         element={
           <ProtectedRoute>
-            <AdminDashboard />
+            <GuestPaymentsPage />
           </ProtectedRoute>
         }
       />
       <Route
-        path="/admin/vouchers"
+        path="/admin/page-settings"
         element={
-          <ProtectedRoute>
-            <AdminDashboard />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/admin/extras"
-        element={
-          <ProtectedRoute>
-            <AdminDashboard />
+          <ProtectedRoute allowedRoles={["admin"]}>
+            <PageContentSettingsPage />
           </ProtectedRoute>
         }
       />
@@ -135,7 +121,31 @@ export default function AppRoutes() {
         path="/admin/pods"
         element={
           <ProtectedRoute>
-            <AdminDashboard />
+            <PodsManagementPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/admin/vouchers"
+        element={
+          <ProtectedRoute>
+            <VouchersPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/admin/extras"
+        element={
+          <ProtectedRoute>
+            <AdminExtrasPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/admin/meals"
+        element={
+          <ProtectedRoute>
+            <MealsPage />
           </ProtectedRoute>
         }
       />
@@ -143,10 +153,12 @@ export default function AppRoutes() {
         path="/admin/reports"
         element={
           <ProtectedRoute>
-            <AdminDashboard />
+            <ReportsPage />
           </ProtectedRoute>
         }
       />
     </Routes>
   );
 }
+
+

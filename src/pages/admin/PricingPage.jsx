@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { Link } from "react-router-dom";
 import { BASE_URL } from "@/config";
 import useAuthStore from "@/store/useAuthStore";
 import AdminLayout from "@/components/admin/AdminLayout";
@@ -6,30 +7,21 @@ import AdminLayout from "@/components/admin/AdminLayout";
 export default function PricingPage() {
     const { token } = useAuthStore();
     const [loading, setLoading] = useState(true);
-    const [pods, setPods] = useState([]);
+    const [meals, setMeals] = useState([]);
     const [error, setError] = useState(null);
-    const [showEditModal, setShowEditModal] = useState(false);
-    const [editingPod, setEditingPod] = useState(null);
 
     useEffect(() => {
-        fetchPods();
+        fetchMeals();
     }, []);
 
-    const fetchPods = async () => {
+    const fetchMeals = async () => {
         setLoading(true);
         try {
-            const response = await fetch(`${BASE_URL}/pods`, {
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                },
+            const response = await fetch(`${BASE_URL}/meal-plans`, {
+                headers: { Authorization: `Bearer ${token}` },
             });
-
-            if (!response.ok) {
-                throw new Error("Failed to fetch pods");
-            }
-
             const data = await response.json();
-            setPods(data.pods || data || []);
+            setMeals(data.mealPlans || []);
         } catch (err) {
             setError(err.message);
         } finally {
@@ -45,11 +37,6 @@ export default function PricingPage() {
         }).format(amount || 0);
     };
 
-    const handleEdit = (pod) => {
-        setEditingPod(pod);
-        setShowEditModal(true);
-    };
-
     return (
         <AdminLayout>
             <div className="space-y-6">
@@ -58,132 +45,85 @@ export default function PricingPage() {
                     <h1 className="text-2xl font-bold text-[#333333]">Pricing & Configuration</h1>
                 </div>
 
-                {/* Pod Pricing Card */}
+                {/* Quick Links */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <Link
+                        to="/admin/pods"
+                        className="bg-white rounded-lg border border-gray-100 shadow-sm p-4 hover:border-[#008080] transition-colors"
+                    >
+                        <h3 className="font-semibold text-[#333333]">Pod Pricing</h3>
+                        <p className="text-sm text-gray-500 mt-1">Manage pod rates and settings</p>
+                    </Link>
+                    <Link
+                        to="/admin/meals"
+                        className="bg-white rounded-lg border border-gray-100 shadow-sm p-4 hover:border-[#008080] transition-colors"
+                    >
+                        <h3 className="font-semibold text-[#333333]">Meal Plans</h3>
+                        <p className="text-sm text-gray-500 mt-1">Configure meal plan pricing</p>
+                    </Link>
+                    <Link
+                        to="/admin/extras"
+                        className="bg-white rounded-lg border border-gray-100 shadow-sm p-4 hover:border-[#008080] transition-colors"
+                    >
+                        <h3 className="font-semibold text-[#333333]">Extras</h3>
+                        <p className="text-sm text-gray-500 mt-1">Manage add-on services</p>
+                    </Link>
+                </div>
+
+                {/* Meal Plan Pricing */}
                 <div className="bg-white rounded-lg border border-gray-100 shadow-sm">
                     <div className="p-4 md:p-5 border-b border-gray-100 flex justify-between items-center">
-                        <h2 className="text-lg font-semibold text-[#333333]">Pod Pricing</h2>
-                        <span className="text-sm text-gray-500">
-                            {pods.length} pod{pods.length !== 1 ? "s" : ""}
-                        </span>
+                        <h2 className="text-lg font-semibold text-[#333333]">Meal Plan Pricing</h2>
+                        <Link
+                            to="/admin/meals"
+                            className="text-[#008080] text-sm hover:underline"
+                        >
+                            Manage Meals →
+                        </Link>
                     </div>
-
                     {loading ? (
                         <div className="flex items-center justify-center py-12">
                             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#008080]"></div>
                         </div>
                     ) : error ? (
                         <div className="text-center py-12 text-red-500">{error}</div>
-                    ) : pods.length === 0 ? (
-                        <div className="text-center py-12 text-gray-500">No pods found</div>
+                    ) : meals.length === 0 ? (
+                        <div className="text-center py-12 text-gray-500">
+                            No meal plans configured.{" "}
+                            <Link to="/admin/meals" className="text-[#008080] hover:underline">
+                                Add one
+                            </Link>
+                        </div>
                     ) : (
-                        <div className="overflow-x-auto p-4">
-                            <table className="w-full text-sm">
-                                {/* Dark Header - Table Design System */}
-                                <thead>
-                                    <tr className="bg-[#333333] text-white">
-                                        <th className="py-3 px-4 text-left font-medium rounded-l-lg">Pod Name</th>
-                                        <th className="py-3 px-4 text-left font-medium">Description</th>
-                                        <th className="py-3 px-4 text-left font-medium">Price/Night</th>
-                                        <th className="py-3 px-4 text-left font-medium">Max Guests</th>
-                                        <th className="py-3 px-4 text-left font-medium">Status</th>
-                                        <th className="py-3 px-4 text-left font-medium rounded-r-lg"></th>
-                                    </tr>
-                                </thead>
-                                {/* Alternating Cyan Rows */}
-                                <tbody>
-                                    {pods.map((pod, index) => (
-                                        <tr
-                                            key={pod.id}
-                                            className={index % 2 === 1 ? "bg-[#00FFFF]/20" : ""}
-                                        >
-                                            <td className="py-3 px-4 text-[#333333] font-medium">
-                                                {pod.podName || pod.name}
-                                            </td>
-                                            <td className="py-3 px-4 text-gray-600 max-w-xs truncate">
-                                                {pod.description || "-"}
-                                            </td>
-                                            <td className="py-3 px-4 text-[#333333] font-medium">
-                                                {formatCurrency(pod.basePrice || pod.pricePerNight)}
-                                            </td>
-                                            <td className="py-3 px-4 text-gray-600">
-                                                {pod.maxGuests || pod.capacity || "-"}
-                                            </td>
-                                            <td className="py-3 px-4">
-                                                <span className={`font-medium ${pod.isActive !== false ? "text-green-600" : "text-red-600"}`}>
-                                                    {pod.isActive !== false ? "Active" : "Inactive"}
-                                                </span>
-                                            </td>
-                                            <td className="py-3 px-4">
-                                                <button
-                                                    onClick={() => handleEdit(pod)}
-                                                    className="text-[#008080] hover:underline"
-                                                >
-                                                    Edit
-                                                </button>
-                                            </td>
+                        <div className="p-4">
+                            <div className="overflow-x-auto">
+                                <table className="w-full text-sm">
+                                    <thead>
+                                        <tr className="bg-[#333333] text-white">
+                                            <th className="py-3 px-4 text-left font-medium rounded-l-lg">Meal Plan</th>
+                                            <th className="py-3 px-4 text-left font-medium">Description</th>
+                                            <th className="py-3 px-4 text-left font-medium">Price/Person/Night</th>
+                                            <th className="py-3 px-4 text-left font-medium rounded-r-lg">Status</th>
                                         </tr>
-                                    ))}
-                                </tbody>
-                            </table>
+                                    </thead>
+                                    <tbody>
+                                        {meals.map((meal, index) => (
+                                            <tr key={meal.id} className={index % 2 === 1 ? "bg-[#00FFFF]/20" : ""}>
+                                                <td className="py-3 px-4 text-[#333333] font-medium">{meal.title}</td>
+                                                <td className="py-3 px-4 text-gray-600">{meal.subtitle || "-"}</td>
+                                                <td className="py-3 px-4 text-[#333333] font-medium">{formatCurrency(meal.price)}</td>
+                                                <td className="py-3 px-4">
+                                                    <span className={`font-medium ${meal.isActive ? "text-green-600" : "text-red-600"}`}>
+                                                        {meal.isActive ? "Active" : "Inactive"}
+                                                    </span>
+                                                </td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            </div>
                         </div>
                     )}
-                </div>
-
-                {/* Meal Plan Pricing */}
-                <div className="bg-white rounded-lg border border-gray-100 shadow-sm">
-                    <div className="p-4 md:p-5 border-b border-gray-100">
-                        <h2 className="text-lg font-semibold text-[#333333]">Meal Plan Pricing</h2>
-                    </div>
-                    <div className="p-4">
-                        <div className="overflow-x-auto">
-                            <table className="w-full text-sm">
-                                <thead>
-                                    <tr className="bg-[#333333] text-white">
-                                        <th className="py-3 px-4 text-left font-medium rounded-l-lg">Meal Plan</th>
-                                        <th className="py-3 px-4 text-left font-medium">Description</th>
-                                        <th className="py-3 px-4 text-left font-medium">Price/Person/Night</th>
-                                        <th className="py-3 px-4 text-left font-medium">Status</th>
-                                        <th className="py-3 px-4 text-left font-medium rounded-r-lg"></th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <tr>
-                                        <td className="py-3 px-4 text-[#333333] font-medium">Breakfast Only</td>
-                                        <td className="py-3 px-4 text-gray-600">Continental breakfast included</td>
-                                        <td className="py-3 px-4 text-[#333333] font-medium">₦15,000</td>
-                                        <td className="py-3 px-4">
-                                            <span className="text-green-600 font-medium">Active</span>
-                                        </td>
-                                        <td className="py-3 px-4">
-                                            <button className="text-[#008080] hover:underline">Edit</button>
-                                        </td>
-                                    </tr>
-                                    <tr className="bg-[#00FFFF]/20">
-                                        <td className="py-3 px-4 text-[#333333] font-medium">Half Board</td>
-                                        <td className="py-3 px-4 text-gray-600">Breakfast + Dinner</td>
-                                        <td className="py-3 px-4 text-[#333333] font-medium">₦25,000</td>
-                                        <td className="py-3 px-4">
-                                            <span className="text-green-600 font-medium">Active</span>
-                                        </td>
-                                        <td className="py-3 px-4">
-                                            <button className="text-[#008080] hover:underline">Edit</button>
-                                        </td>
-                                    </tr>
-                                    <tr>
-                                        <td className="py-3 px-4 text-[#333333] font-medium">Full Board</td>
-                                        <td className="py-3 px-4 text-gray-600">All meals included</td>
-                                        <td className="py-3 px-4 text-[#333333] font-medium">₦35,000</td>
-                                        <td className="py-3 px-4">
-                                            <span className="text-green-600 font-medium">Active</span>
-                                        </td>
-                                        <td className="py-3 px-4">
-                                            <button className="text-[#008080] hover:underline">Edit</button>
-                                        </td>
-                                    </tr>
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
                 </div>
 
                 {/* Tax Configuration */}
@@ -222,36 +162,6 @@ export default function PricingPage() {
                     </div>
                 </div>
             </div>
-
-            {/* Edit Modal (placeholder) */}
-            {showEditModal && (
-                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-                    <div className="bg-white rounded-lg p-6 w-full max-w-md mx-4">
-                        <div className="flex justify-between items-center mb-4">
-                            <h2 className="text-xl font-semibold text-[#333333]">
-                                Edit Pod: {editingPod?.podName || editingPod?.name}
-                            </h2>
-                            <button
-                                onClick={() => setShowEditModal(false)}
-                                className="text-gray-400 hover:text-gray-600"
-                            >
-                                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                                </svg>
-                            </button>
-                        </div>
-                        <p className="text-gray-500 mb-4">
-                            Edit functionality coming soon. This will allow you to update pod pricing and settings.
-                        </p>
-                        <button
-                            onClick={() => setShowEditModal(false)}
-                            className="w-full py-2 bg-[#008080] text-white rounded-lg hover:bg-[#006666]"
-                        >
-                            Close
-                        </button>
-                    </div>
-                </div>
-            )}
         </AdminLayout>
     );
 }
