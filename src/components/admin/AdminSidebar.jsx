@@ -6,9 +6,10 @@ const navItems = [
     { name: "Bookings", path: "/admin/bookings", icon: "bookings" },
     { name: "Booking Page", path: "/admin/booking-page", icon: "booking-page" },
     { name: "Pricing & Configuration", path: "/admin/pricing", icon: "pricing" },
-    { name: "Guest Payments", path: "/admin/payments", icon: "payments" },
+    { name: "Guest Payments", path: "/admin/guest-payments", icon: "payments" },
     { name: "Vouchers & Discount", path: "/admin/vouchers", icon: "vouchers" },
     { name: "Extras", path: "/admin/extras", icon: "extras" },
+    { name: "Meals", path: "/admin/meals", icon: "meals" },
     { name: "Pods", path: "/admin/pods", icon: "pods" },
     { name: "Reports", path: "/admin/reports", icon: "reports" },
 ];
@@ -47,6 +48,11 @@ const icons = {
     extras: (
         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+        </svg>
+    ),
+    meals: (
+        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
         </svg>
     ),
     pods: (
@@ -127,8 +133,8 @@ export default function AdminSidebar({ isOpen, onClose }) {
                                         to={item.path}
                                         onClick={handleNavClick}
                                         className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200 ${isActive
-                                                ? "bg-[#008080] text-white"
-                                                : "text-gray-300 hover:bg-white/10 hover:text-white"
+                                            ? "bg-[#008080] text-white"
+                                            : "text-gray-300 hover:bg-white/10 hover:text-white"
                                             }`}
                                     >
                                         {icons[item.icon]}
@@ -148,8 +154,8 @@ export default function AdminSidebar({ isOpen, onClose }) {
                             to="/admin/settings"
                             onClick={handleNavClick}
                             className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200 ${location.pathname === "/admin/settings"
-                                    ? "bg-[#008080] text-white"
-                                    : "text-gray-300 hover:bg-white/10 hover:text-white"
+                                ? "bg-[#008080] text-white"
+                                : "text-gray-300 hover:bg-white/10 hover:text-white"
                                 }`}
                         >
                             {icons.settings}
