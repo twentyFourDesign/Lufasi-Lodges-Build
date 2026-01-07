@@ -11,14 +11,17 @@ export default function ProtectedRoute({ children, allowedRoles = ["admin", "sta
         return <Navigate to="/" replace />;
     }
 
+    // Determine login redirect path based on subdomain
+    const loginPath = isAdminSubdomain() ? "/login" : "/admin/login";
+
     if (!isAuthenticated) {
         // Redirect to login page with return url
-        return <Navigate to="/admin/login" state={{ from: location }} replace />;
+        return <Navigate to={loginPath} state={{ from: location }} replace />;
     }
 
     // Check if user has required role
     if (allowedRoles.length > 0 && !allowedRoles.includes(user?.role)) {
-        return <Navigate to="/admin/login" replace />;
+        return <Navigate to={loginPath} replace />;
     }
 
     return children;
