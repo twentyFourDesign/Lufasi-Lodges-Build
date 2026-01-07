@@ -1,6 +1,16 @@
 {
     "rewrites": [
         {
+            "source": "/",
+            "has": [
+                {
+                    "type": "host",
+                    "value": "admin.lufasilodges.com"
+                }
+            ],
+            "destination": "/admin-login"
+        },
+        {
             "source": "/(.*)",
             "destination": "/index.html"
         }
