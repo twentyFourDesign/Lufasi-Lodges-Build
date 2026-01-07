@@ -1,4 +1,4 @@
-import { Routes, Route } from "react-router-dom";
+import { Routes, Route, Navigate } from "react-router-dom";
 import Home from "../pages/Home/Home";
 import BookYourStay from "@/pages/BookYourStay/BookYourStay";
 import NewBooking from "@/pages/NewBooking/NewBooking";
@@ -25,6 +25,24 @@ import AdminExtrasPage from "@/pages/admin/ExtrasPage";
 import MealsPage from "@/pages/admin/MealsPage";
 import ReportsPage from "@/pages/admin/ReportsPage";
 import VouchersPage from "@/pages/admin/VouchersPage";
+import { isAdminSubdomain, isBookingSubdomain } from "@/utils/subdomain";
+
+// Component to block admin access on booking subdomain
+function AdminRoute({ children }) {
+  // If on booking subdomain, redirect to home
+  if (isBookingSubdomain() && !isAdminSubdomain()) {
+    return <Navigate to="/" replace />;
+  }
+  return children;
+}
+
+// Admin login route - only accessible on admin subdomain
+function AdminLoginRoute() {
+  if (isBookingSubdomain() && !isAdminSubdomain()) {
+    return <Navigate to="/" replace />;
+  }
+  return <AdminLogin />;
+}
 
 export default function AppRoutes() {
   return (
@@ -41,7 +59,10 @@ export default function AppRoutes() {
       <Route path="/review-your-booking" element={<ReviewYourBooking />} />
       <Route path="/booking-confirmation" element={<BookingConfirmation />} />
       <Route path="/edit-your-booking" element={<EditBookingPage />} />
-      <Route path="/admin-login" element={<AdminLogin />} />
+
+      {/* Admin Login Routes - blocked on booking subdomain */}
+      <Route path="/admin-login" element={<AdminLoginRoute />} />
+      <Route path="/admin/login" element={<AdminLoginRoute />} />
 
       {/* Protected Admin Routes */}
       <Route

@@ -6,7 +6,7 @@ export default function App() {
   const location = useLocation();
 
   // Routes that need full-screen layout (no padding)
-  const fullScreenRoutes = ["/admin-login"];
+  const fullScreenRoutes = ["/admin-login", "/admin/login"];
   const isAdminRoute = location.pathname.startsWith("/admin");
   const isFullScreen = fullScreenRoutes.includes(location.pathname) || isAdminRoute;
 
