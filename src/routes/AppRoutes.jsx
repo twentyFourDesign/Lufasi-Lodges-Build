@@ -26,10 +26,11 @@ import MealsPage from "@/pages/admin/MealsPage";
 import ReportsPage from "@/pages/admin/ReportsPage";
 import VouchersPage from "@/pages/admin/VouchersPage";
 import { isAdminSubdomain, isBookingSubdomain } from "@/utils/subdomain";
+import useAuthStore from "@/store/useAuthStore";
 
 // Component to block admin access on booking subdomain
 function AdminRoute({ children }) {
-  // If on booking subdomain, redirect to home
+  // If on booking subdomain (not admin), redirect to home
   if (isBookingSubdomain() && !isAdminSubdomain()) {
     return <Navigate to="/" replace />;
   }
@@ -38,17 +39,43 @@ function AdminRoute({ children }) {
 
 // Admin login route - only accessible on admin subdomain
 function AdminLoginRoute() {
+  const { isAuthenticated } = useAuthStore();
+
+  // If on booking subdomain (not admin), redirect to home
   if (isBookingSubdomain() && !isAdminSubdomain()) {
     return <Navigate to="/" replace />;
   }
+
+  // If already authenticated on admin subdomain, redirect to dashboard
+  if (isAdminSubdomain() && isAuthenticated) {
+    return <Navigate to="/dashboard" replace />;
+  }
+
   return <AdminLogin />;
+}
+
+// Home route - handles subdomain-specific behavior
+function HomeRoute() {
+  const { isAuthenticated } = useAuthStore();
+
+  // If on admin subdomain, redirect based on auth state
+  if (isAdminSubdomain()) {
+    if (isAuthenticated) {
+      return <Navigate to="/dashboard" replace />;
+    } else {
+      return <Navigate to="/login" replace />;
+    }
+  }
+
+  // Normal booking subdomain - show home page
+  return <Home />;
 }
 
 export default function AppRoutes() {
   return (
     <Routes>
-      {/* Public Routes */}
-      <Route path="/" element={<Home />} />
+      {/* Root Route - handles subdomain-specific behavior */}
+      <Route path="/" element={<HomeRoute />} />
       <Route path="/manage-your-booking" element={<ManageBooking />} />
       <Route path="/book-your-stay" element={<BookYourStay />} />
       <Route path="/new-booking" element={<NewBooking />} />
@@ -63,6 +90,17 @@ export default function AppRoutes() {
       {/* Admin Login Routes - blocked on booking subdomain */}
       <Route path="/admin-login" element={<AdminLoginRoute />} />
       <Route path="/admin/login" element={<AdminLoginRoute />} />
+      <Route path="/login" element={<AdminLoginRoute />} />
+
+      {/* Admin Dashboard Route - for admin subdomain clean URL */}
+      <Route
+        path="/dashboard"
+        element={
+          <ProtectedRoute>
+            <AdminDashboard />
+          </ProtectedRoute>
+        }
+      />
 
       {/* Protected Admin Routes */}
       <Route

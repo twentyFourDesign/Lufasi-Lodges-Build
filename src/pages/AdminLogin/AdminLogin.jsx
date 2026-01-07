@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import useAuthStore from "@/store/useAuthStore";
+import { isAdminSubdomain } from "@/utils/subdomain";
 
 export default function AdminLogin() {
     const navigate = useNavigate();
@@ -49,7 +50,9 @@ export default function AdminLogin() {
         const result = await login(formData.email, formData.password);
 
         if (result.success) {
-            navigate("/admin/dashboard"); // Navigate to admin dashboard after login
+            // Navigate to dashboard - use clean URL on admin subdomain
+            const dashboardPath = isAdminSubdomain() ? "/dashboard" : "/admin/dashboard";
+            navigate(dashboardPath);
         }
     };
 
