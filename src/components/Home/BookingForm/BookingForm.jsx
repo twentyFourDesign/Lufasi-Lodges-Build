@@ -25,6 +25,8 @@ export default function BookingForm() {
   const [checkOut, setCheckOut] = useState();
   const [guests, setGuests] = useState("2 Guests");
   const [loading, setLoading] = useState(false);
+  const [checkInOpen, setCheckInOpen] = useState(false);
+  const [checkOutOpen, setCheckOutOpen] = useState(false);
   const bookingStore = useBookingStore();
   const navigate = useNavigate();
 
@@ -97,7 +99,7 @@ export default function BookingForm() {
       <div className="w-full md:w-1/4">
         <label className="text-gray-700 font-semibold text-sm">Check-in</label>
 
-        <Popover>
+        <Popover open={checkInOpen} onOpenChange={setCheckInOpen}>
           <PopoverTrigger asChild>
             <button
               className="
@@ -117,7 +119,10 @@ export default function BookingForm() {
             <Calendar
               mode="single"
               selected={checkIn}
-              onSelect={setCheckIn}
+              onSelect={(date) => {
+                setCheckIn(date);
+                setCheckInOpen(false);
+              }}
               disabled={(date) => date < new Date()} // Disable past dates
               className="rounded-md"
             />
@@ -129,7 +134,7 @@ export default function BookingForm() {
       <div className="w-full md:w-1/4">
         <label className="text-gray-700 font-semibold text-sm">Check-out</label>
 
-        <Popover>
+        <Popover open={checkOutOpen} onOpenChange={setCheckOutOpen}>
           <PopoverTrigger asChild>
             <button
               className="
@@ -149,7 +154,10 @@ export default function BookingForm() {
             <Calendar
               mode="single"
               selected={checkOut}
-              onSelect={setCheckOut}
+              onSelect={(date) => {
+                setCheckOut(date);
+                setCheckOutOpen(false);
+              }}
               disabled={(date) => date <= (checkIn || new Date())} // Disable dates before check-in
               className="rounded-md"
             />
@@ -209,3 +217,4 @@ export default function BookingForm() {
     </div>
   );
 }
+
