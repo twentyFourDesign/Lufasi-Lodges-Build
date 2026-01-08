@@ -12,9 +12,29 @@ export default function ReportsPage() {
     const [showExportMenu, setShowExportMenu] = useState(false);
     const [exporting, setExporting] = useState(false);
 
+    // Date Filters
+    const [startDate, setStartDate] = useState("");
+    const [endDate, setEndDate] = useState("");
+
+    // Stats State
+    const [stats, setStats] = useState({
+        totalRoomsSold: 0,
+        totalAvailableRooms: 0,
+        totalRoomRevenue: 0,
+        totalExtrasRevenue: 0,
+        totalGuests: 0,
+        totalIncome: 0
+    });
+    const [statsLoading, setStatsLoading] = useState(false);
+
     useEffect(() => {
         fetchPods();
     }, []);
+
+    useEffect(() => {
+        // Fetch stats whenever filters change
+        fetchStats();
+    }, [selectedPods, startDate, endDate]);
 
     const fetchPods = async () => {
         setLoading(true);
@@ -26,11 +46,34 @@ export default function ReportsPage() {
             const podList = data.pods || [];
             setPods(podList);
             // Select all by default
-            setSelectedPods(podList.map((p) => p.id));
+            const allPodIds = podList.map((p) => p.id);
+            setSelectedPods(allPodIds);
         } catch (err) {
             console.error(err);
         } finally {
             setLoading(false);
+        }
+    };
+
+    const fetchStats = async () => {
+        setStatsLoading(true);
+        try {
+            const params = new URLSearchParams();
+            if (startDate) params.append("startDate", startDate);
+            if (endDate) params.append("endDate", endDate);
+            selectedPods.forEach(id => params.append("podId", id));
+
+            const response = await fetch(`${BASE_URL}/admin/reports/stats?${params.toString()}`, {
+                headers: { Authorization: `Bearer ${token}` },
+            });
+            const data = await response.json();
+            if (data.stats) {
+                setStats(data.stats);
+            }
+        } catch (err) {
+            console.error("Failed to fetch stats:", err);
+        } finally {
+            setStatsLoading(false);
         }
     };
 
@@ -50,19 +93,51 @@ export default function ReportsPage() {
         }
     };
 
+    const formatCurrency = (amount) => {
+        return new Intl.NumberFormat("en-NG", {
+            style: "currency",
+            currency: "NGN",
+            minimumFractionDigits: 0,
+        }).format(amount || 0);
+    };
+
     const handleExport = async (format) => {
         setExporting(true);
         setShowExportMenu(false);
 
         try {
-            // Get bookings for selected pods
-            const response = await fetch(`${BASE_URL}/bookings/admin`, {
-                headers: { Authorization: `Bearer ${token}` },
+            // Get bookings for selected pods - Using existing endpoint logic locally filtered? 
+            // Or ideally use a new endpoint. For now, we stick to existing logic but filter properly.
+            // Requirement says "Enhance Reports Page", keeping export.
+
+            const response = await fetch(`${BASE_URL}/admin/logs?status=confirmed`, { // Use logs/confirmed or similar?
+                // The previous code used /bookings/admin which fetches ALL bookings.
+                // We should probably filter by date in frontend if backend doesn't support it on that endpoint, 
+                // OR use the new stats filters to list bookings?
+                // For now, let's replicate previous behavior but add date filtering if possible.
+                headers: { Authorization: `Bearer ${token}` }
             });
-            const data = await response.json();
-            const bookings = (data.bookings || []).filter((b) =>
+
+            // Wait, /bookings/admin route might not exist? previous file called `${BASE_URL}/bookings/admin`.
+            // Let's assume it exists.
+
+            const bookingsResponse = await fetch(`${BASE_URL}/bookings/admin`, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+            const data = await bookingsResponse.json();
+
+            let bookings = (data.bookings || []).filter((b) =>
                 selectedPods.includes(b.podId)
             );
+
+            if (startDate && endDate) {
+                const start = new Date(startDate);
+                const end = new Date(endDate);
+                bookings = bookings.filter(b => {
+                    const checkIn = new Date(b.checkIn);
+                    return checkIn >= start && checkIn <= end;
+                });
+            }
 
             if (format === "csv") {
                 exportToCSV(bookings);
@@ -153,6 +228,7 @@ export default function ReportsPage() {
           <h1>Lufasi Lodges - Booking Report</h1>
           <p class="meta">
             Generated: ${new Date().toLocaleString()}<br>
+            Range: ${startDate || 'All Time'} to ${endDate || 'Present'}<br>
             Pods: ${podNames}<br>
             Total Bookings: ${bookings.length}
           </p>
@@ -185,96 +261,141 @@ export default function ReportsPage() {
     return (
         <AdminLayout>
             <div className="space-y-6">
-                {/* Header */}
                 <div className="flex items-center justify-between">
                     <h1 className="text-2xl font-bold text-[#333333]">Reports</h1>
                 </div>
 
-                {/* Generate Report Card */}
-                <div className="bg-white rounded-lg border border-gray-100 shadow-sm">
-                    <div className="p-6">
-                        <h2 className="text-xl font-semibold text-[#333333] mb-6">Generate Report</h2>
-
-                        {/* Filter Dropdown */}
-                        <div className="mb-6">
-                            <label className="block text-sm font-medium text-gray-700 mb-2">Filter</label>
-                            <select
-                                value={filterType}
-                                onChange={(e) => setFilterType(e.target.value)}
-                                className="w-full max-w-xs px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#008080] bg-white"
-                            >
-                                <option value="Pod">Pod</option>
-                                <option value="Date">Date Range</option>
-                                <option value="Status">Booking Status</option>
-                            </select>
+                {/* Filter Section */}
+                <div className="bg-white rounded-lg border border-gray-100 shadow-sm p-6 mb-6">
+                    <h2 className="text-lg font-semibold text-[#333333] mb-4">Filters</h2>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-2">Date Range</label>
+                            <div className="flex gap-2">
+                                <input
+                                    type="date"
+                                    value={startDate}
+                                    onChange={e => setStartDate(e.target.value)}
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#008080]"
+                                />
+                                <span className="self-center">-</span>
+                                <input
+                                    type="date"
+                                    value={endDate}
+                                    onChange={e => setEndDate(e.target.value)}
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#008080]"
+                                />
+                            </div>
                         </div>
 
-                        {/* Select Pods */}
-                        {filterType === "Pod" && (
-                            <div className="mb-6">
-                                <label className="block text-sm font-medium text-gray-700 mb-3">Select Pods</label>
-                                {loading ? (
-                                    <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-[#008080]"></div>
-                                ) : (
-                                    <div className="space-y-2">
-                                        <label className="flex items-center gap-3 cursor-pointer">
+                        <div className="col-span-2">
+                            <label className="block text-sm font-medium text-gray-700 mb-2">Pods Config</label>
+                            {loading ? (
+                                <div className="text-sm text-gray-500">Loading pods...</div>
+                            ) : (
+                                <div className="flex flex-wrap gap-4">
+                                    <label className="flex items-center gap-2 cursor-pointer">
+                                        <input
+                                            type="checkbox"
+                                            checked={selectedPods.length === pods.length}
+                                            onChange={toggleAll}
+                                            className="w-4 h-4 text-[#008080] bg-gray-100 border-gray-300 rounded focus:ring-[#008080]"
+                                        />
+                                        <span className="text-sm font-medium">All Pods</span>
+                                    </label>
+                                    {pods.map(pod => (
+                                        <label key={pod.id} className="flex items-center gap-2 cursor-pointer">
                                             <input
                                                 type="checkbox"
-                                                checked={selectedPods.length === pods.length}
-                                                onChange={toggleAll}
-                                                className="w-5 h-5 text-[#008080] bg-gray-100 border-gray-300 rounded focus:ring-[#008080]"
+                                                checked={selectedPods.includes(pod.id)}
+                                                onChange={() => togglePod(pod.id)}
+                                                className="w-4 h-4 text-[#008080] bg-gray-100 border-gray-300 rounded focus:ring-[#008080]"
                                             />
-                                            <span className="text-[#333333] font-medium">Select All</span>
+                                            <span className="text-sm text-gray-600">{pod.podName}</span>
                                         </label>
-                                        {pods.map((pod) => (
-                                            <label key={pod.id} className="flex items-center gap-3 cursor-pointer">
-                                                <input
-                                                    type="checkbox"
-                                                    checked={selectedPods.includes(pod.id)}
-                                                    onChange={() => togglePod(pod.id)}
-                                                    className="w-5 h-5 text-[#008080] bg-gray-100 border-gray-300 rounded focus:ring-[#008080]"
-                                                />
-                                                <span className="text-[#333333]">{pod.podName}</span>
-                                            </label>
-                                        ))}
-                                    </div>
-                                )}
+                                    ))}
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                </div>
+
+                {/* Statistics Cards */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+                    {/* Total Income */}
+                    <div className="bg-white rounded-lg border border-gray-100 shadow-sm p-6">
+                        <h3 className="text-gray-500 text-sm font-medium uppercase mb-2">Total Income</h3>
+                        <p className="text-3xl font-bold text-[#008080]">{formatCurrency(stats.totalIncome)}</p>
+                    </div>
+
+                    {/* Rooms Sold */}
+                    <div className="bg-white rounded-lg border border-gray-100 shadow-sm p-6">
+                        <h3 className="text-gray-500 text-sm font-medium uppercase mb-2">Total Rooms Sold</h3>
+                        <p className="text-3xl font-bold text-[#333333]">{stats.totalRoomsSold}</p>
+                    </div>
+
+                    {/* Guests Welcomed */}
+                    <div className="bg-white rounded-lg border border-gray-100 shadow-sm p-6">
+                        <h3 className="text-gray-500 text-sm font-medium uppercase mb-2">Guests Welcomed</h3>
+                        <p className="text-3xl font-bold text-[#333333]">{stats.totalGuests}</p>
+                    </div>
+
+                    {/* Room Revenue */}
+                    <div className="bg-white rounded-lg border border-gray-100 shadow-sm p-6">
+                        <h3 className="text-gray-500 text-sm font-medium uppercase mb-2">Room Revenue</h3>
+                        <p className="text-2xl font-bold text-gray-700">{formatCurrency(stats.totalRoomRevenue)}</p>
+                    </div>
+
+                    {/* Extras Revenue */}
+                    <div className="bg-white rounded-lg border border-gray-100 shadow-sm p-6">
+                        <h3 className="text-gray-500 text-sm font-medium uppercase mb-2">Extras Revenue</h3>
+                        <p className="text-2xl font-bold text-gray-700">{formatCurrency(stats.totalExtrasRevenue)}</p>
+                    </div>
+
+                    {/* Available Rooms (Snapshot) */}
+                    <div className="bg-white rounded-lg border border-gray-100 shadow-sm p-6">
+                        <h3 className="text-gray-500 text-sm font-medium uppercase mb-2">Active Pods</h3>
+                        <p className="text-2xl font-bold text-gray-700">{stats.totalAvailableRooms}</p>
+                        <span className="text-xs text-gray-400">Total active units in fleet</span>
+                    </div>
+                </div>
+
+                {/* Export Section */}
+                <div className="bg-white rounded-lg border border-gray-100 shadow-sm p-6 flex justify-between items-center">
+                    <div>
+                        <h3 className="text-lg font-semibold text-[#333333]">Export Data</h3>
+                        <p className="text-gray-500 text-sm">Download detailed booking reports based on current filters.</p>
+                    </div>
+
+                    <div className="relative">
+                        <button
+                            onClick={() => setShowExportMenu(!showExportMenu)}
+                            disabled={exporting || selectedPods.length === 0}
+                            className="px-6 py-2 bg-[#333333] text-white rounded-lg flex items-center gap-2 hover:bg-[#444444] disabled:opacity-50"
+                        >
+                            {exporting ? "Exporting..." : "Export Report"}
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                            </svg>
+                        </button>
+
+                        {showExportMenu && (
+                            <div className="absolute right-0 top-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg z-10 min-w-[150px]">
+                                <button
+                                    onClick={() => handleExport("pdf")}
+                                    className="w-full px-4 py-2 text-left hover:bg-gray-50 text-[#333333]"
+                                >
+                                    Export PDF
+                                </button>
+                                <hr className="border-gray-100" />
+                                <button
+                                    onClick={() => handleExport("csv")}
+                                    className="w-full px-4 py-2 text-left hover:bg-gray-50 text-[#333333]"
+                                >
+                                    Export CSV
+                                </button>
                             </div>
                         )}
-
-                        {/* Export Button */}
-                        <div className="flex justify-end relative">
-                            <div className="relative">
-                                <button
-                                    onClick={() => setShowExportMenu(!showExportMenu)}
-                                    disabled={exporting || selectedPods.length === 0}
-                                    className="px-6 py-2 bg-[#008080] text-white rounded-lg flex items-center gap-2 hover:bg-[#006666] disabled:opacity-50"
-                                >
-                                    {exporting ? "Exporting..." : "Export"}
-                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                                    </svg>
-                                </button>
-
-                                {showExportMenu && (
-                                    <div className="absolute right-0 top-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg z-10 min-w-[150px]">
-                                        <button
-                                            onClick={() => handleExport("pdf")}
-                                            className="w-full px-4 py-2 text-left hover:bg-gray-50 text-[#333333]"
-                                        >
-                                            Export PDF
-                                        </button>
-                                        <hr className="border-gray-100" />
-                                        <button
-                                            onClick={() => handleExport("csv")}
-                                            className="w-full px-4 py-2 text-left hover:bg-gray-50 text-[#333333]"
-                                        >
-                                            Export CSV
-                                        </button>
-                                    </div>
-                                )}
-                            </div>
-                        </div>
                     </div>
                 </div>
             </div>

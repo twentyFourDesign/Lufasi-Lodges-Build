@@ -17,6 +17,9 @@ export default function PodsManagementPage() {
         description: "",
         baseAdultPrice: 250000,
         maxAdults: 2,
+        minAdults: 1,
+        maxChildren: 0,
+        minChildren: 0,
         amenities: "",
     });
     const [selectedImages, setSelectedImages] = useState([]);
@@ -29,7 +32,7 @@ export default function PodsManagementPage() {
     const fetchPods = async () => {
         setLoading(true);
         try {
-            const response = await fetch(`${BASE_URL}/pods`, {
+            const response = await fetch(`${BASE_URL}/pods?includeDeleted=true`, {
                 headers: { Authorization: `Bearer ${token}` },
             });
             const data = await response.json();
@@ -59,6 +62,10 @@ export default function PodsManagementPage() {
                 podName: pod.podName,
                 description: pod.description || "",
                 baseAdultPrice: pod.baseAdultPrice,
+                maxAdults: pod.maxAdults || 2,
+                minAdults: pod.minAdults || 1,
+                maxChildren: pod.maxChildren || 0,
+                minChildren: pod.minChildren || 0,
                 amenities: pod.amenities || "",
             });
         }
@@ -97,6 +104,9 @@ export default function PodsManagementPage() {
             formData.append("description", newPod.description);
             formData.append("baseAdultPrice", newPod.baseAdultPrice);
             formData.append("maxAdults", newPod.maxAdults);
+            formData.append("minAdults", newPod.minAdults);
+            formData.append("maxChildren", newPod.maxChildren);
+            formData.append("minChildren", newPod.minChildren);
             formData.append("amenities", newPod.amenities);
 
             // Append all images
@@ -122,6 +132,9 @@ export default function PodsManagementPage() {
                 description: "",
                 baseAdultPrice: 250000,
                 maxAdults: 2,
+                minAdults: 1,
+                maxChildren: 0,
+                minChildren: 0,
                 amenities: "",
             });
             setSelectedImages([]);
@@ -183,6 +196,32 @@ export default function PodsManagementPage() {
         }
     };
 
+    const handleSoftDelete = async (pod) => {
+        if (!confirm("Are you sure you want to delete this pod?")) return;
+        try {
+            await fetch(`${BASE_URL}/pods/${pod.id}/delete`, {
+                method: "PUT",
+                headers: { Authorization: `Bearer ${token}` }
+            });
+            await fetchPods();
+        } catch (err) {
+            alert(err.message);
+        }
+    };
+
+    const handleRestore = async (pod) => {
+        if (!confirm("Are you sure you want to restore this pod?")) return;
+        try {
+            await fetch(`${BASE_URL}/pods/${pod.id}/restore`, {
+                method: "PUT",
+                headers: { Authorization: `Bearer ${token}` }
+            });
+            await fetchPods();
+        } catch (err) {
+            alert(err.message);
+        }
+    };
+
     const parseAmenities = (amenities) => {
         if (!amenities) return [];
         return amenities.split(",").map((a) => a.trim()).filter(Boolean);
@@ -215,7 +254,8 @@ export default function PodsManagementPage() {
                 {/* Pods List */}
                 <div className="space-y-4">
                     {pods.map((pod) => (
-                        <div key={pod.id} className="bg-white rounded-lg border border-gray-100 shadow-sm overflow-hidden">
+                        <div key={pod.id} className={`bg-white rounded-lg border border-gray-100 shadow-sm overflow-hidden ${pod.isDeleted ? 'opacity-75 bg-gray-50 border-red-200' : ''}`}>
+                            {pod.isDeleted && <div className="bg-red-500 text-white text-xs px-2 py-1 text-center font-bold uppercase">Deleted</div>}
                             {/* Pod Images Gallery */}
                             {pod.images && pod.images.length > 0 && (
                                 <div className="relative">
@@ -303,6 +343,13 @@ export default function PodsManagementPage() {
                                                 )}
                                             </div>
                                         </button>
+
+                                        {/* Soft Delete / Restore Actions */}
+                                        {pod.isDeleted ? (
+                                            <button onClick={() => handleRestore(pod)} className="text-green-600 hover:text-green-800 text-sm font-medium">Restore</button>
+                                        ) : (
+                                            <button onClick={() => handleSoftDelete(pod)} className="text-red-500 hover:text-red-700 text-sm font-medium">Delete</button>
+                                        )}
                                     </div>
                                 </div>
                             </div>
@@ -376,14 +423,45 @@ export default function PodsManagementPage() {
                                                 </label>
                                             </div>
                                         </div>
-                                        <div>
-                                            <label className="block text-sm font-medium text-gray-700 mb-1">Price</label>
-                                            <input
-                                                type="number"
-                                                value={editForm.baseAdultPrice}
-                                                onChange={(e) => setEditForm({ ...editForm, baseAdultPrice: parseInt(e.target.value) })}
-                                                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#008080]"
-                                            />
+                                        <div className="grid grid-cols-2 gap-4">
+                                            <div>
+                                                <label className="block text-sm font-medium text-gray-700 mb-1">Max Adults</label>
+                                                <input
+                                                    type="number"
+                                                    value={editForm.maxAdults}
+                                                    onChange={(e) => setEditForm({ ...editForm, maxAdults: parseInt(e.target.value) })}
+                                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#008080]"
+                                                />
+                                            </div>
+                                            <div>
+                                                <label className="block text-sm font-medium text-gray-700 mb-1">Min Adults</label>
+                                                <input
+                                                    type="number"
+                                                    value={editForm.minAdults || 1}
+                                                    onChange={(e) => setEditForm({ ...editForm, minAdults: parseInt(e.target.value) })}
+                                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#008080]"
+                                                />
+                                            </div>
+                                        </div>
+                                        <div className="grid grid-cols-2 gap-4">
+                                            <div>
+                                                <label className="block text-sm font-medium text-gray-700 mb-1">Max Children</label>
+                                                <input
+                                                    type="number"
+                                                    value={editForm.maxChildren || 0}
+                                                    onChange={(e) => setEditForm({ ...editForm, maxChildren: parseInt(e.target.value) })}
+                                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#008080]"
+                                                />
+                                            </div>
+                                            <div>
+                                                <label className="block text-sm font-medium text-gray-700 mb-1">Min Children</label>
+                                                <input
+                                                    type="number"
+                                                    value={editForm.minChildren || 0}
+                                                    onChange={(e) => setEditForm({ ...editForm, minChildren: parseInt(e.target.value) })}
+                                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#008080]"
+                                                />
+                                            </div>
                                         </div>
                                     </div>
                                     <div className="flex justify-end mt-4">
@@ -434,14 +512,45 @@ export default function PodsManagementPage() {
                                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#008080] resize-none"
                                 />
                             </div>
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">Price per person/night</label>
-                                <input
-                                    type="number"
-                                    value={newPod.baseAdultPrice}
-                                    onChange={(e) => setNewPod({ ...newPod, baseAdultPrice: parseInt(e.target.value) })}
-                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#008080]"
-                                />
+                            <div className="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">Max Adults</label>
+                                    <input
+                                        type="number"
+                                        value={newPod.maxAdults}
+                                        onChange={(e) => setNewPod({ ...newPod, maxAdults: parseInt(e.target.value) })}
+                                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#008080]"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">Min Adults</label>
+                                    <input
+                                        type="number"
+                                        value={newPod.minAdults}
+                                        onChange={(e) => setNewPod({ ...newPod, minAdults: parseInt(e.target.value) })}
+                                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#008080]"
+                                    />
+                                </div>
+                            </div>
+                            <div className="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">Max Children</label>
+                                    <input
+                                        type="number"
+                                        value={newPod.maxChildren}
+                                        onChange={(e) => setNewPod({ ...newPod, maxChildren: parseInt(e.target.value) })}
+                                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#008080]"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">Min Children</label>
+                                    <input
+                                        type="number"
+                                        value={newPod.minChildren}
+                                        onChange={(e) => setNewPod({ ...newPod, minChildren: parseInt(e.target.value) })}
+                                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#008080]"
+                                    />
+                                </div>
                             </div>
                             <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-1">Tags (comma separated)</label>

@@ -8,6 +8,8 @@ import ExtrasPage from "@/pages/Extras/Extras";
 import EnterYourDetails from "@/pages/EnterYourDetails/EnterYourDetails";
 import ReviewYourBooking from "@/pages/ReviewYourBooking/ReviewYourBooking";
 import BookingConfirmation from "@/pages/BookingConfirmation/BookingConfirmation";
+import PaymentPage from "@/pages/Payment/PaymentPage";
+import PaymentResult from "@/pages/Payment/PaymentResult";
 import EditBookingPage from "@/pages/EditBookingPage/EditBookingPage";
 import ManageBooking from "@/pages/ManageBooking";
 import AdminLogin from "@/pages/AdminLogin/AdminLogin";
@@ -25,6 +27,8 @@ import AdminExtrasPage from "@/pages/admin/ExtrasPage";
 import MealsPage from "@/pages/admin/MealsPage";
 import ReportsPage from "@/pages/admin/ReportsPage";
 import VouchersPage from "@/pages/admin/VouchersPage";
+import BookingLogsList from "@/pages/admin/BookingLogsList";
+import GuestDetailsPage from "@/pages/admin/GuestDetailsPage";
 import { isAdminSubdomain, isBookingSubdomain } from "@/utils/subdomain";
 import useAuthStore from "@/store/useAuthStore";
 
@@ -84,6 +88,8 @@ export default function AppRoutes() {
       <Route path="/extras" element={<ExtrasPage />} />
       <Route path="/enter-your-details" element={<EnterYourDetails />} />
       <Route path="/review-your-booking" element={<ReviewYourBooking />} />
+      <Route path="/payment" element={<PaymentPage />} />
+      <Route path="/payment/result" element={<PaymentResult />} />
       <Route path="/booking-confirmation" element={<BookingConfirmation />} />
       <Route path="/edit-your-booking" element={<EditBookingPage />} />
 
@@ -213,6 +219,22 @@ export default function AppRoutes() {
         element={
           <ProtectedRoute>
             <ReportsPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/admin/logs"
+        element={
+          <ProtectedRoute>
+            <BookingLogsList />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/admin/guests"
+        element={
+          <ProtectedRoute>
+            <GuestDetailsPage />
           </ProtectedRoute>
         }
       />

@@ -54,12 +54,22 @@ export default function ReviewYourBooking() {
 
       const result = await response.json();
       if (response.ok) {
-        navigate("/booking-confirmation", { state: { booking: result } });
+        // Navigate to payment page with payment details
+        navigate("/payment", {
+          state: {
+            paymentLink: result.paymentLink,
+            bookingReference: result.bookingReference,
+            amountDue: result.amountDue,
+            bookingId: result.bookingId,
+          },
+        });
       } else {
         console.log("Booking failed: " + (result.error || "Unknown error"));
+        alert("Booking failed: " + (result.error || "Unknown error"));
       }
     } catch (error) {
       console.error("Booking failed:", error);
+      alert("Booking failed. Please try again.");
     } finally {
       setCreating(false);
     }
@@ -301,7 +311,7 @@ export default function ReviewYourBooking() {
                   disabled={creating}
                   className="w-full bg-[#09432B] hover:bg-[#09432B] text-white font-semibold py-3"
                 >
-                  {creating ? "Creating..." : "Pay Now with Squad"}
+                  {creating ? "Creating Booking..." : "Proceed to Payment"}
                 </Button>
 
                 <div className="md:flex  gap-3">
