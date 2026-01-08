@@ -12,13 +12,13 @@ import {
   Check,
   Loader2,
 } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { BASE_URL } from "@/config";
 import { useBookingStore } from "@/store/useBookingStore";
 import { format } from "date-fns";
 
 function formatPrice(n) {
-  return n.toLocaleString();
+  return n?.toLocaleString() || "0";
 }
 
 export default function MealPlan() {
@@ -27,6 +27,14 @@ export default function MealPlan() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const bookingStore = useBookingStore();
+  const navigate = useNavigate();
+
+  // Check if booking data exists, redirect if not
+  useEffect(() => {
+    if (!bookingStore.draft.dates || !bookingStore.draft.pod) {
+      navigate("/book-your-stay", { replace: true });
+    }
+  }, [bookingStore.draft.dates, bookingStore.draft.pod, navigate]);
 
   useEffect(() => {
     fetchMealPlans();
@@ -44,7 +52,7 @@ export default function MealPlan() {
       }
 
       const data = await response.json();
-      setMealPlans(data);
+      setMealPlans(data.mealPlans || []);
     } catch (error) {
       console.error("Error fetching meal plans:", error);
       setError(error.message);
@@ -64,6 +72,11 @@ export default function MealPlan() {
         bookingStore.draft.numberOfNights,
     });
   };
+
+  // Guard: Don't render if booking data is missing (redirect will happen)
+  if (!bookingStore.draft.dates || !bookingStore.draft.pod) {
+    return null;
+  }
 
   return (
     <div className="overflow-x-hidden min-h-screen w-full bg-[#F7F5F0]">

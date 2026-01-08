@@ -241,6 +241,10 @@ export default function EnterDetails() {
                               mode="single"
                               selected={field.value}
                               onSelect={field.onChange}
+                              captionLayout="dropdown"
+                              fromYear={1920}
+                              toYear={new Date().getFullYear()}
+                              defaultMonth={field.value || new Date(2000, 0)}
                               initialFocus
                             />
                           </PopoverContent>

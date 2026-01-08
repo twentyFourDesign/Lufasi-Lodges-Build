@@ -149,12 +149,7 @@ export default function MealsPage() {
                 {/* Header */}
                 <div className="flex items-center justify-between">
                     <h1 className="text-2xl font-bold text-[#333333]">Meals Management</h1>
-                    <button
-                        onClick={handleAdd}
-                        className="px-4 py-2 bg-[#008080] text-white rounded-lg flex items-center gap-2 hover:bg-[#006666]"
-                    >
-                        Add Meal +
-                    </button>
+                    {/* Add Meal button removed */}
                 </div>
 
                 {/* Meals Card */}
@@ -181,7 +176,7 @@ export default function MealsPage() {
                                         <th className="py-3 px-4 text-left font-medium">Items</th>
                                         <th className="py-3 px-4 text-left font-medium">Price/Person/Night</th>
                                         <th className="py-3 px-4 text-left font-medium">Status</th>
-                                        <th className="py-3 px-4 text-left font-medium rounded-r-lg" colSpan={3}>Actions</th>
+                                        <th className="py-3 px-4 text-left font-medium rounded-r-lg" colSpan={2}>Actions</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -209,9 +204,7 @@ export default function MealsPage() {
                                             <td className="py-3 px-2">
                                                 <button onClick={() => handleEdit(meal)} className="text-[#008080] hover:underline">Edit</button>
                                             </td>
-                                            <td className="py-3 px-2">
-                                                <button onClick={() => handleDelete(meal)} className="text-red-500 hover:underline">Remove</button>
-                                            </td>
+                                            {/* Delete removed */}
                                         </tr>
                                     ))}
                                 </tbody>
