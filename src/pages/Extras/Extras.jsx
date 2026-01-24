@@ -231,7 +231,7 @@ export default function Extras() {
                 <h4 className="text-[#09432B] font-bold">Rooms</h4>
               </div>
               <p className="text-sm text-[#737373]">
-                {`x${bookingStore.draft.numberOfPods || 0} Rooms`}
+                {`x${bookingStore.draft.podCount || 0} Rooms`}
               </p>
             </div>
 

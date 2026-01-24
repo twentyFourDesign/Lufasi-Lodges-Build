@@ -43,7 +43,7 @@ export default function ReviewYourBooking() {
           dates: bookingStore.draft.dates,
           contact: bookingStore.draft.contact,
           podId: bookingStore.draft.availablePods[0]?.id, // Pods will be assigned manually later
-          podCount: bookingStore.draft.numberOfPods,
+          podCount: bookingStore.draft.podCount,
           boardType: bookingStore.draft.mealPlan?.boardType || "fullBoard",
           guests: bookingStore.draft.guests,
           popUpBeds: bookingStore.draft.popUpBeds || 0,
@@ -139,7 +139,7 @@ export default function ReviewYourBooking() {
                 <div>
                   <h4 className="font-semibold text-[#09432B]">Your Rooms</h4>
                   <p className="text-sm text-[#6B6B6B]">
-                    {`x${bookingStore.draft.numberOfPods || 0} Rooms`}
+                    {`x${bookingStore.draft.podCount || 0} Rooms`}
                   </p>
                 </div>
               </CardContent>

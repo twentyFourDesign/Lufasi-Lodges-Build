@@ -58,7 +58,7 @@ type BookingDraft = {
   numberOfNights?: number;
   basePrice?: number;
   availablePods?: Pod[];
-  numberOfPods?: number;
+  podCount?: number;
   availableMealPlans?: BoardOption[];
   mealPlan?: BoardOption;
   subTotal?: number;

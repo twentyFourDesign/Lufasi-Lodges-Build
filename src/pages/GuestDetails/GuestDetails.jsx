@@ -284,7 +284,7 @@ export default function GuestDetails() {
               </div>
 
               <p className="text-sm text-[#737373] font-medium">
-                {`x${bookingStore.draft.numberOfPods || 0} Rooms`}
+                {`x${bookingStore.draft.podCount || 0} Rooms`}
               </p>
             </div>
             <div className="bg-white rounded-xl border border-gray-200 px-5 py-4 shadow-sm">

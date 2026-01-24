@@ -34,7 +34,7 @@ export default function NewBooking() {
       setRoomCount(roomCount - 1);
 
       bookingStore.updateDraft({
-        numberOfPods: roomCount - 1,
+        podCount: roomCount - 1,
         subTotal:
           bookingStore.draft.availablePods[0].price *
           bookingStore.draft.guests?.adults *
@@ -43,7 +43,7 @@ export default function NewBooking() {
     } else if (type === "inc" && roomCount < availablePodsCount) {
       setRoomCount(roomCount + 1);
       bookingStore.updateDraft({
-        numberOfPods: roomCount + 1,
+        podCount: roomCount + 1,
         subTotal:
           bookingStore.draft.availablePods[0].price *
           bookingStore.draft.guests?.adults *

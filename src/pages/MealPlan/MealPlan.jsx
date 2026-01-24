@@ -31,10 +31,10 @@ export default function MealPlan() {
 
   // Check if booking data exists, redirect if not
   useEffect(() => {
-    if (!bookingStore.draft.dates || !bookingStore.draft.numberOfPods) {
+    if (!bookingStore.draft.dates || !bookingStore.draft.podCount) {
       navigate("/book-your-stay", { replace: true });
     }
-  }, [bookingStore.draft.dates, bookingStore.draft.numberOfPods, navigate]);
+  }, [bookingStore.draft.dates, bookingStore.draft.podCount, navigate]);
 
   useEffect(() => {
     fetchMealPlans();
@@ -74,7 +74,7 @@ export default function MealPlan() {
   };
 
   // Guard: Don't render if booking data is missing (redirect will happen)
-  if (!bookingStore.draft.dates || !bookingStore.draft.numberOfPods) {
+  if (!bookingStore.draft.dates || !bookingStore.draft.podCount) {
     return null;
   }
 
@@ -223,7 +223,7 @@ export default function MealPlan() {
               </div>
 
               <p className="text-sm text-[#737373] font-medium">
-                {`x${bookingStore.draft.numberOfPods || 0} Rooms`}
+                {`x${bookingStore.draft.podCount || 0} Rooms`}
               </p>
             </div>
 

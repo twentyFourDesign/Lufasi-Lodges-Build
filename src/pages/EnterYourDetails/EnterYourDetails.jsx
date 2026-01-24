@@ -384,7 +384,7 @@ export default function EnterDetails() {
                 <h4 className="text-[#09432B] font-bold">Your Rooms</h4>
               </div>
               <p className="text-sm text-[#737373]">
-                {`x${bookingStore.draft.numberOfPods || 0} Rooms`}
+                {`x${bookingStore.draft.podCount || 0} Rooms`}
               </p>
             </div>
             <div className="bg-white rounded-xl border border-gray-200 p-4 shadow-sm">
