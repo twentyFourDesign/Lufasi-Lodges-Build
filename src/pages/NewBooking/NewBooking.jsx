@@ -2,21 +2,13 @@ import React, { useState } from "react";
 import CommonNavbar from "@/components/shared/common/CommonNavbar/CommonNavbar";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import {
   Accordion,
   AccordionItem,
   AccordionTrigger,
   AccordionContent,
 } from "@/components/ui/accordion";
-import {
-  ArrowLeft,
-  ArrowRight,
-  Calendar,
-  Home,
-  Info,
-  Wallet,
-} from "lucide-react";
+import { ArrowLeft, Calendar, Home, Info, Wallet } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useBookingStore } from "@/store/useBookingStore";
 import { format } from "date-fns";
@@ -375,7 +367,7 @@ export default function NewBooking() {
                 Happy with your room let’s move ahead
               </div>
 
-              {!roomCount > 1 ? (
+              {roomCount < 1 ? (
                 <Button
                   className="w-full bg-gray-400 text-white text-base font-bold py-6 rounded-none rounded-b-xl opacity-50 cursor-not-allowed"
                   disabled={true}
