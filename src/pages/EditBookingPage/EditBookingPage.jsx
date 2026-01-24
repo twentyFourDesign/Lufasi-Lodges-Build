@@ -76,7 +76,7 @@ export default function EditBookingPage() {
 
       const data = await response.json();
       bookingStore.updateDraft({
-        availableMealPlans: data,
+        availableMealPlans: data.mealPlans,
       });
     } catch (error) {
       console.error("Error fetching meal plans:", error);
@@ -102,6 +102,7 @@ export default function EditBookingPage() {
 
   // API: Update booking
   const handleEditBooking = useCallback(async () => {
+    console.log("Updating booking with data:", bookingStore.draft);
     try {
       const response = await fetch(
         `${BASE_URL}/bookings/${bookingStore.draft.id}`,
@@ -111,14 +112,15 @@ export default function EditBookingPage() {
           body: JSON.stringify({
             dates: bookingStore.draft.dates,
             contact: bookingStore.draft.contact,
-            podId: bookingStore.draft.pod?.id,
+            podId: bookingStore.draft.availablePods[0]?.id,
+            podCount: bookingStore.draft.podCount || 0,
             boardType:
               bookingStore.draft.mealPlan?.boardType || BoardType.FULL_BOARD,
             guests: bookingStore.draft.guests,
             popUpBeds: bookingStore.draft.popUpBeds || 0,
             extras: bookingStore.draft.extras || [],
           }),
-        }
+        },
       );
 
       const result = await response.json();
@@ -128,7 +130,7 @@ export default function EditBookingPage() {
         // bookingStore.updateDraft(result.booking);
       } else {
         console.log(
-          "Booking update failed: " + (result.error || "Unknown error")
+          "Booking update failed: " + (result.error || "Unknown error"),
         );
       }
     } catch (error) {
@@ -148,7 +150,7 @@ export default function EditBookingPage() {
       },
       numberOfNights: differenceInCalendarDays(
         parseDate(dates.checkOut),
-        parseDate(dates.checkIn)
+        parseDate(dates.checkIn),
       ),
       guests: {
         ...bookingStore.draft.guests,
@@ -168,9 +170,9 @@ export default function EditBookingPage() {
     }, 2000);
   };
 
-  const setPod = (pod) => {
+  const setPodCount = (podCount) => {
     bookingStore.updateDraft({
-      pod,
+      podCount,
     });
     setTimeout(() => {
       handleEditBooking();
@@ -229,18 +231,18 @@ export default function EditBookingPage() {
             title="Stay Dates"
             subtitle={`Check in: ${format(
               bookingStore.draft.dates.checkIn,
-              "dd/MM/yyyy"
+              "dd/MM/yyyy",
             )}  
             Check out: ${format(
               bookingStore.draft.dates.checkOut,
-              "dd/MM/yyyy"
+              "dd/MM/yyyy",
             )} • ${bookingStore.draft.numberOfNights} Nights`}
             onClick={() => setStayOpen(true)}
           />
           <Row
             icon={<Home size={18} className="text-[#09432B]" />}
-            title="Your Pod"
-            subtitle={`${bookingStore.draft.pod.title} - King Bed`}
+            title="Your Rooms"
+            subtitle={`x${bookingStore.draft.podCount || 0} Rooms`}
             onClick={() => setPodOpen(true)}
           />
           <Row
@@ -332,9 +334,9 @@ export default function EditBookingPage() {
         onOpenChange={setPodOpen}
         value={{
           availablePods: bookingStore.draft.availablePods,
-          pod: bookingStore.draft.pod,
+          podCount: bookingStore.draft.podCount,
         }}
-        onSave={setPod}
+        onSave={setPodCount}
       />
 
       <EditGuestsModal

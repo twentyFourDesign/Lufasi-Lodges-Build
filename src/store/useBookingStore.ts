@@ -58,7 +58,7 @@ type BookingDraft = {
   numberOfNights?: number;
   basePrice?: number;
   availablePods?: Pod[];
-  pod?: Pod;
+  podCount?: number;
   availableMealPlans?: BoardOption[];
   mealPlan?: BoardOption;
   subTotal?: number;
@@ -110,6 +110,6 @@ export const useBookingStore = create<BookingStore>()(
           sessionStorage.removeItem(name);
         },
       }, // use localStorage if you want long-term
-    }
-  )
+    },
+  ),
 );

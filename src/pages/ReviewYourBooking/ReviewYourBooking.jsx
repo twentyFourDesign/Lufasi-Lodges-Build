@@ -42,7 +42,8 @@ export default function ReviewYourBooking() {
         body: JSON.stringify({
           dates: bookingStore.draft.dates,
           contact: bookingStore.draft.contact,
-          podId: bookingStore.draft.pod?.id,
+          podId: bookingStore.draft.availablePods[0]?.id, // Pods will be assigned manually later
+          podCount: bookingStore.draft.podCount,
           boardType: bookingStore.draft.mealPlan?.boardType || "fullBoard",
           guests: bookingStore.draft.guests,
           popUpBeds: bookingStore.draft.popUpBeds || 0,
@@ -121,7 +122,7 @@ export default function ReviewYourBooking() {
                       <div className="font-medium mt-1">
                         {format(
                           bookingStore.draft.dates.checkOut,
-                          "dd/MM/yyyy"
+                          "dd/MM/yyyy",
                         )}
                       </div>
                     </div>
@@ -136,9 +137,9 @@ export default function ReviewYourBooking() {
                   <Home className="w-4 h-4 text-[#09432B]" />
                 </div>
                 <div>
-                  <h4 className="font-semibold text-[#09432B]">Your Pod</h4>
+                  <h4 className="font-semibold text-[#09432B]">Your Rooms</h4>
                   <p className="text-sm text-[#6B6B6B]">
-                    {bookingStore.draft.pod?.title || "N/A"} — King Bed
+                    {`x${bookingStore.draft.podCount || 0} Rooms`}
                   </p>
                 </div>
               </CardContent>
@@ -212,7 +213,7 @@ export default function ReviewYourBooking() {
                   <span className="font-semibold">
                     ₦
                     {formatPrice(
-                      Math.round(bookingStore.draft.subTotal * 0.125)
+                      Math.round(bookingStore.draft.subTotal * 0.125),
                     )}
                   </span>
                 </div>
@@ -299,7 +300,7 @@ export default function ReviewYourBooking() {
                     <span>
                       ₦
                       {formatPrice(
-                        Math.round(bookingStore.draft.subTotal * 1.125)
+                        Math.round(bookingStore.draft.subTotal * 1.125),
                       )}
                     </span>
                   </div>

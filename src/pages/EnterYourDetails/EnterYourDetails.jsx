@@ -226,7 +226,7 @@ export default function EnterDetails() {
                                 variant="outline"
                                 className={cn(
                                   "w-full justify-between text-left font-normal",
-                                  !field.value && "text-muted-foreground"
+                                  !field.value && "text-muted-foreground",
                                 )}
                               >
                                 {field.value
@@ -381,10 +381,10 @@ export default function EnterDetails() {
             <div className="bg-white rounded-xl border border-gray-200 p-4 shadow-sm">
               <div className="flex items-center gap-2 mb-3">
                 <Home className="w-5 h-5 text-[#09432B]" />
-                <h4 className="text-[#09432B] font-bold">Your Pod</h4>
+                <h4 className="text-[#09432B] font-bold">Your Rooms</h4>
               </div>
               <p className="text-sm text-[#737373]">
-                {bookingStore.draft.pod?.title || "N/A"}
+                {`x${bookingStore.draft.podCount || 0} Rooms`}
               </p>
             </div>
             <div className="bg-white rounded-xl border border-gray-200 p-4 shadow-sm">
@@ -434,7 +434,7 @@ export default function EnterDetails() {
                   <span>
                     ₦
                     {formatPrice(
-                      Math.round(bookingStore.draft.subTotal * 0.125)
+                      Math.round(bookingStore.draft.subTotal * 0.125),
                     )}
                   </span>
                 </div>
@@ -449,7 +449,7 @@ export default function EnterDetails() {
                   <span>
                     ₦
                     {formatPrice(
-                      Math.round(bookingStore.draft.subTotal * 1.125)
+                      Math.round(bookingStore.draft.subTotal * 1.125),
                     )}
                   </span>
                 </div>

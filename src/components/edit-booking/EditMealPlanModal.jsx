@@ -15,7 +15,7 @@ export default function EditMealPlanModal({
   onSave,
 }) {
   const [selected, setSelected] = useState(
-    value?.mealPlan || { id: "", title: "Full Board" }
+    value?.mealPlan || { id: "", title: "Full Board" },
   );
 
   return (
@@ -33,7 +33,7 @@ export default function EditMealPlanModal({
           </p>
 
           <div className="space-y-2">
-            {value.availableMealPlans.map((p) => (
+            {value.availableMealPlans?.map((p) => (
               <label
                 key={p.id}
                 className="flex items-center gap-3 border rounded-md px-3 py-2"
