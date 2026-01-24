@@ -31,10 +31,10 @@ export default function MealPlan() {
 
   // Check if booking data exists, redirect if not
   useEffect(() => {
-    if (!bookingStore.draft.dates || !bookingStore.draft.pod) {
+    if (!bookingStore.draft.dates || !bookingStore.draft.numberOfPods) {
       navigate("/book-your-stay", { replace: true });
     }
-  }, [bookingStore.draft.dates, bookingStore.draft.pod, navigate]);
+  }, [bookingStore.draft.dates, bookingStore.draft.numberOfPods, navigate]);
 
   useEffect(() => {
     fetchMealPlans();
@@ -74,7 +74,7 @@ export default function MealPlan() {
   };
 
   // Guard: Don't render if booking data is missing (redirect will happen)
-  if (!bookingStore.draft.dates || !bookingStore.draft.pod) {
+  if (!bookingStore.draft.dates || !bookingStore.draft.numberOfPods) {
     return null;
   }
 
@@ -219,11 +219,11 @@ export default function MealPlan() {
                 <div className="w-8 h-8 bg-[#E6F2EE] rounded-full flex items-center justify-center">
                   <Home className="w-4 h-4 text-[#09432B]" />
                 </div>
-                <h4 className="text-[#09432B] font-bold">Your Pod</h4>
+                <h4 className="text-[#09432B] font-bold">Your Rooms</h4>
               </div>
 
               <p className="text-sm text-[#737373] font-medium">
-                {bookingStore.draft.pod?.title || "N/A"}
+                {`x${bookingStore.draft.numberOfPods || 0} Rooms`}
               </p>
             </div>
 
@@ -253,7 +253,7 @@ export default function MealPlan() {
                   <span>
                     ₦
                     {formatPrice(
-                      Math.round(bookingStore.draft.subTotal * 0.125)
+                      Math.round(bookingStore.draft.subTotal * 0.125),
                     )}
                   </span>
                 </div>
@@ -268,7 +268,7 @@ export default function MealPlan() {
                   <span>
                     ₦
                     {formatPrice(
-                      Math.round(bookingStore.draft.subTotal * 1.125)
+                      Math.round(bookingStore.draft.subTotal * 1.125),
                     )}
                   </span>
                 </div>

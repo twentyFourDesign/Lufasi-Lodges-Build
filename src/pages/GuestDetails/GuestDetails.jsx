@@ -32,7 +32,7 @@ export default function GuestDetails() {
       setAdults(adults - 1);
       setSubTotal(
         subTotal -
-          bookingStore.draft.basePrice * bookingStore.draft.numberOfNights
+          bookingStore.draft.basePrice * bookingStore.draft.numberOfNights,
       );
       bookingStore.updateDraft({
         guests: {
@@ -47,7 +47,7 @@ export default function GuestDetails() {
       setAdults(adults + 1);
       setSubTotal(
         subTotal +
-          bookingStore.draft.basePrice * bookingStore.draft.numberOfNights
+          bookingStore.draft.basePrice * bookingStore.draft.numberOfNights,
       );
       bookingStore.updateDraft({
         guests: {
@@ -68,7 +68,7 @@ export default function GuestDetails() {
         subTotal -
           0.75 *
             bookingStore.draft.basePrice *
-            bookingStore.draft.numberOfNights
+            bookingStore.draft.numberOfNights,
       );
       bookingStore.updateDraft({
         guests: {
@@ -87,7 +87,7 @@ export default function GuestDetails() {
         subTotal +
           0.75 *
             bookingStore.draft.basePrice *
-            bookingStore.draft.numberOfNights
+            bookingStore.draft.numberOfNights,
       );
       bookingStore.updateDraft({
         guests: {
@@ -280,11 +280,11 @@ export default function GuestDetails() {
                 <div className="w-8 h-8 bg-[#E6F2EE] rounded-full flex items-center justify-center">
                   <Home className="w-4 h-4 text-[#09432B]" />
                 </div>
-                <h4 className="text-[#09432B] font-bold">Your Pod</h4>
+                <h4 className="text-[#09432B] font-bold">Your Rooms</h4>
               </div>
 
               <p className="text-sm text-[#737373] font-medium">
-                {bookingStore.draft.pod?.title || "N/A"}
+                {`x${bookingStore.draft.numberOfPods || 0} Rooms`}
               </p>
             </div>
             <div className="bg-white rounded-xl border border-gray-200 px-5 py-4 shadow-sm">

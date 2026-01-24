@@ -228,10 +228,10 @@ export default function Extras() {
                 <div className="w-8 h-8 bg-[#E6F2EE] rounded-full flex items-center justify-center">
                   <Home className="w-4 h-4 text-[#09432B]" />
                 </div>
-                <h4 className="text-[#09432B] font-bold">Your Pod</h4>
+                <h4 className="text-[#09432B] font-bold">Rooms</h4>
               </div>
               <p className="text-sm text-[#737373]">
-                {bookingStore.draft.pod.title}
+                {`x${bookingStore.draft.numberOfPods || 0} Rooms`}
               </p>
             </div>
 
@@ -296,7 +296,7 @@ export default function Extras() {
                   <span>
                     ₦
                     {formatPrice(
-                      Math.round(bookingStore.draft.subTotal * 0.125)
+                      Math.round(bookingStore.draft.subTotal * 0.125),
                     )}
                   </span>
                 </div>
@@ -311,7 +311,7 @@ export default function Extras() {
                   <span>
                     ₦
                     {formatPrice(
-                      Math.round(bookingStore.draft.subTotal * 1.125)
+                      Math.round(bookingStore.draft.subTotal * 1.125),
                     )}
                   </span>
                 </div>
