@@ -27,19 +27,49 @@ function formatPrice(n) {
 }
 
 export default function NewBooking() {
-  const [selectedPod, setSelectedPod] = useState(null);
   const bookingStore = useBookingStore();
 
-  const onSelectPod = (pod) => {
-    setSelectedPod(pod);
-    bookingStore.updateDraft({
-      pod: pod,
-      basePrice: pod.price,
-      subTotal:
-        pod.price *
-        bookingStore.draft.guests?.adults *
-        bookingStore.draft.numberOfNights,
-    });
+  // Count available pods
+  const availablePodsCount = bookingStore.draft.availablePods
+    ? bookingStore.draft.availablePods.filter((pod) => pod.available === true)
+        .length
+    : 0;
+  const [roomCount, setRoomCount] = useState(availablePodsCount > 0 ? 1 : 0);
+
+  const podTags = ["Lake View", "Private Pool", "King Size Bed"];
+
+  const onChangeRooms = (type) => {
+    if (type === "dec" && roomCount > 1) {
+      setRoomCount(roomCount - 1);
+      // setSubTotal(
+      //   subTotal -
+      //     bookingStore.draft.basePrice * bookingStore.draft.numberOfNights,
+      // );
+      // bookingStore.updateDraft({
+      //   guests: {
+      //     ...bookingStore.draft.guests,
+      //     adults: adults - 1,
+      //   },
+      //   subTotal:
+      //     bookingStore.draft.subTotal -
+      //     bookingStore.draft.basePrice * bookingStore.draft.numberOfNights,
+      // });
+    } else if (type === "inc" && roomCount < availablePodsCount) {
+      setRoomCount(roomCount + 1);
+      // setSubTotal(
+      //   subTotal +
+      //     bookingStore.draft.basePrice * bookingStore.draft.numberOfNights,
+      // );
+      // bookingStore.updateDraft({
+      //   guests: {
+      //     ...bookingStore.draft.guests,
+      //     adults: adults + 1,
+      //   },
+      //   subTotal:
+      //     bookingStore.draft.subTotal +
+      //     bookingStore.draft.basePrice * bookingStore.draft.numberOfNights,
+      // });
+    }
   };
 
   return (
@@ -55,7 +85,7 @@ export default function NewBooking() {
           <Link to="/">Back to Home</Link>
         </Button>
         <h2 className="text-2xl md:text-5xl font-bold text-[#09432B] text-center">
-          Choose Your Eco Pod
+          Select Rooms
         </h2>
 
         <p className="text-center text-sm md:text-lg font-medium text-[#737373] mt-2 mb-6">
@@ -73,103 +103,96 @@ export default function NewBooking() {
             >
               <Info className="w-4 h-4" />
               <span className="text-sm font-medium">
-                Some nights may require different pods due to availability
+                You can only select the number of rooms that are currently
+                available for your chosen dates.
               </span>
             </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mt-6">
-              {bookingStore.draft.availablePods.map((pod) => (
-                <Card
-                  key={pod.id}
-                  className={`bg-white rounded-xl shadow-sm overflow-hidden transition-all ${
-                    pod.available ? "opacity-100" : "opacity-60"
-                  }`}
-                >
-                  <CardContent className="p-0">
-                    <div className="w-full h-48 relative overflow-hidden">
-                      <img
-                        src={pod.img}
-                        className="w-full h-full object-cover"
-                        alt={pod.title}
-                      />
-
-                      <div className="absolute top-3 left-3">
-                        {pod.available ? (
-                          <Badge className="bg-[#09432B] text-white">
-                            Live view
-                          </Badge>
-                        ) : (
-                          <Badge className="bg-red-100 text-red-700">
-                            Unavailable
-                          </Badge>
-                        )}
-                      </div>
+            <Card className="bg-white rounded-xl shadow-sm overflow-hidden transition-all opacity-100 mt-5">
+              <CardContent className="p-0">
+                <div className="p-5">
+                  <div className="flex items-center gap-2 mb-3">
+                    <div
+                      className="w-8 h-8 rounded-full flex items-center justify-center"
+                      style={{
+                        background:
+                          "linear-gradient(135deg, rgba(181,171,132,0.18) 0%, rgba(161,146,87,0.18) 100%)",
+                        border: "1px solid rgba(181,171,132,0.35)",
+                      }}
+                    >
+                      <Home className="w-4 h-4 text-[#09432B]" />
                     </div>
-                    <div className="p-5">
-                      <h3 className="text-lg font-semibold text-[#09432B]">
-                        {pod.title}
-                      </h3>
+                    <h3 className="text-lg font-semibold text-[#09432B]">
+                      Room selection
+                    </h3>
+                  </div>
 
-                      <p className="text-sm text-[#737373] mt-1">{pod.desc}</p>
+                  <p className="text-sm text-[#737373] mt-1">
+                    Wake up to stunning lake views with your private plunge pool
+                    steps from your bed.
+                  </p>
 
-                      <div className="flex flex-wrap gap-2 mt-3">
-                        {pod.tags.map((tag) => (
-                          <span
-                            key={tag}
-                            className="text-xs bg-[#E6F2EE] text-[#09432B] px-3 py-1 rounded-full"
-                          >
-                            {tag}
-                          </span>
-                        ))}
-                      </div>
-                      <div className="mt-6">
-                        <span className="text-sm text-[#737373] font-bold whitespace-nowrap">
-                          ₦{formatPrice(pod.price)}{" "}
-                          <span className="font-normal">per person/night</span>
-                        </span>
-                      </div>
-                      <div className="flex items-center justify-end mt-2">
-                        {/* === DESKTOP & TABLET BUTTON WITH ARROW === */}
-                        <Button
-                          onClick={() => onSelectPod(pod)}
-                          disabled={!pod.available}
-                          className={`
-      hidden sm:flex items-center gap-2
-      px-0 py-0 font-semibold text-[#09432B]
-      hover:bg-transparent
-      ${pod.available ? "" : "opacity-50 cursor-not-allowed"}
-    `}
-                          variant="ghost"
-                        >
-                          Select Pod
-                          <ArrowRight className="w-4 h-4 text-[#09432B]" />
-                        </Button>
+                  <div className="flex flex-wrap gap-2 mt-3">
+                    {podTags.map((tag) => (
+                      <span
+                        key={tag}
+                        className="text-xs bg-[#E6F2EE] text-[#09432B] px-3 py-1 rounded-full"
+                      >
+                        {tag}
+                      </span>
+                    ))}
+                  </div>
+                  <div className="mt-3">
+                    <span className="text-sm text-[#737373] font-bold whitespace-nowrap">
+                      ₦{formatPrice(250000)}{" "}
+                      <span className="font-normal">per person/night</span>
+                    </span>
+                  </div>
 
-                        {/* === MOBILE CHECKBOX VERSION === */}
-                        <div className="flex items-center gap-2 sm:hidden">
-                          <span className="text-sm font-semibold text-[#09432B] whitespace-nowrap">
-                            Select Pod
-                          </span>
+                  <div
+                    className="flex flex-col items-center text-center rounded-md p-4 mt-3"
+                    style={{
+                      background:
+                        "linear-gradient(135deg, rgba(181,171,132,0.18) 0%, rgba(161,146,87,0.18) 100%)",
+                      border: "1px solid rgba(181,171,132,0.35)",
+                    }}
+                  >
+                    <span className="text-lg font-semibold text-[#09432B] pb-4">
+                      Select the number of rooms
+                    </span>
 
-                          <Checkbox
-                            checked={selectedPod?.id === pod.id}
-                            onCheckedChange={() =>
-                              onSelectPod(
-                                selectedPod?.id === pod.id ? null : pod
-                              )
-                            }
-                            disabled={!pod.available}
-                            className={`
-        border-[#09432B] text-[#09432B]
-        ${pod.available ? "cursor-pointer" : "opacity-50 cursor-not-allowed"}
-      `}
-                          />
-                        </div>
-                      </div>
+                    <div className="flex items-center gap-6 mt-4 sm:mt-0">
+                      <button
+                        onClick={() => onChangeRooms("dec")}
+                        className="w-12 h-12 rounded-full border-2 border-[#0F5B45] flex items-center justify-center text-[#0F5B45] text-xl"
+                      >
+                        –
+                      </button>
+
+                      <span className="text-2xl font-bold text-[#09432B] w-8 text-center">
+                        {roomCount}
+                      </span>
+
+                      <button
+                        onClick={() => onChangeRooms("inc")}
+                        className="w-12 h-12 rounded-full border-2 border-[#0F5B45] flex items-center justify-center text-[#0F5B45] text-xl"
+                      >
+                        +
+                      </button>
                     </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
+                  </div>
+                  <div className="rounded-lg border px-4 py-3 flex items-center justify-between gap-2 bg-[#E6F2EE] text-[#09432B] mt-5">
+                    <span className="text-sm font-medium">Total:</span>
+                    <span className="text-sm font-medium">
+                      {`${roomCount}x${formatPrice(250000)} = `}
+                      <span className="font-bold">
+                        ₦${formatPrice(roomCount * 250000)}
+                      </span>
+                    </span>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
             <div className="mt-12 mb-12">
               <Accordion type="single" collapsible defaultValue="multi">
                 <AccordionItem
@@ -204,7 +227,7 @@ export default function NewBooking() {
                         Multi Night Assignment: 2 Nights Selected
                       </p>
                       <p className="text-sm text-[#444]">
-                        Select pods for each night based on availability
+                        Select rooms for each night based on availability
                       </p>
                     </div>
 
@@ -236,7 +259,7 @@ export default function NewBooking() {
 
                       <div className="relative">
                         <select className="w-full border border-[#0F5B45] rounded-md px-3 py-3 text-sm appearance-none">
-                          <option>Select A different pod</option>
+                          <option>Select A different room</option>
                           {bookingStore.draft.availablePods.map((p) => (
                             <option key={p.id + "-2"}>{p.title}</option>
                           ))}
@@ -297,11 +320,11 @@ export default function NewBooking() {
                 <div className="w-8 h-8 bg-[#E6F2EE] rounded-full flex items-center justify-center">
                   <Home className="w-4 h-4 text-[#09432B]" />
                 </div>
-                <h4 className="text-[#09432B] font-bold">Your Pod</h4>
+                <h4 className="text-[#09432B] font-bold">Your Rooms</h4>
               </div>
 
               <p className="text-sm text-[#737373] font-medium">
-                {selectedPod ? selectedPod.title : "N/A"}
+                {`x${roomCount} Rooms`}
               </p>
             </div>
             <div className="bg-white rounded-xl border border-gray-200 px-5 py-4 shadow-sm">
@@ -313,14 +336,14 @@ export default function NewBooking() {
               </div>
 
               <p className="text-xs font-medium text-[#737373] mb-3">
-                Pod & Meals ({bookingStore.draft.numberOfNights} Nights)
+                Rooms x {roomCount}
               </p>
 
               <div className="space-y-3 text-sm font-semibold text-[#09432B]">
                 <div className="flex justify-between">
                   <span>Sub Total:</span>
                   <span className="text-[#09432B] font-semibold">
-                    ₦{selectedPod ? bookingStore.draft.subTotal : "0"}
+                    ₦{roomCount ? bookingStore.draft.subTotal : "0"}
                   </span>
                 </div>
 
@@ -330,9 +353,9 @@ export default function NewBooking() {
                   </span>
                   <span className="text-[#09432B] font-semibold">
                     ₦
-                    {selectedPod
+                    {roomCount
                       ? Math.round(
-                          (bookingStore.draft.subTotal || 0) * 0.125
+                          (bookingStore.draft.subTotal || 0) * 0.125,
                         ).toLocaleString()
                       : "0"}
                   </span>
@@ -347,9 +370,9 @@ export default function NewBooking() {
                   <span>Total:</span>
                   <span>
                     ₦
-                    {selectedPod
+                    {roomCount
                       ? Math.round(
-                          (bookingStore.draft.subTotal || 0) * 1.125
+                          (bookingStore.draft.subTotal || 0) * 1.125,
                         ).toLocaleString()
                       : "0"}
                   </span>
@@ -361,10 +384,10 @@ export default function NewBooking() {
                 className="px-4 py-3 text-[#0A4C30] text-sm font-medium"
                 style={{ backgroundColor: "#B7FFFF" }}
               >
-                Happy with your pod let’s move ahead
+                Happy with your room let’s move ahead
               </div>
 
-              {!selectedPod ? (
+              {!roomCount > 1 ? (
                 <Button
                   className="w-full bg-gray-400 text-white text-base font-bold py-6 rounded-none rounded-b-xl opacity-50 cursor-not-allowed"
                   disabled={true}
