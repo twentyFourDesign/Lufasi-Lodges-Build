@@ -18,7 +18,6 @@ import {
   Wallet,
 } from "lucide-react";
 import { Link } from "react-router-dom";
-import { Checkbox } from "@/components/ui/checkbox";
 import { useBookingStore } from "@/store/useBookingStore";
 import { format } from "date-fns";
 
@@ -34,41 +33,30 @@ export default function NewBooking() {
     ? bookingStore.draft.availablePods.filter((pod) => pod.available === true)
         .length
     : 0;
-  const [roomCount, setRoomCount] = useState(availablePodsCount > 0 ? 1 : 0);
+  const [roomCount, setRoomCount] = useState(0);
 
   const podTags = ["Lake View", "Private Pool", "King Size Bed"];
 
   const onChangeRooms = (type) => {
     if (type === "dec" && roomCount > 1) {
       setRoomCount(roomCount - 1);
-      // setSubTotal(
-      //   subTotal -
-      //     bookingStore.draft.basePrice * bookingStore.draft.numberOfNights,
-      // );
-      // bookingStore.updateDraft({
-      //   guests: {
-      //     ...bookingStore.draft.guests,
-      //     adults: adults - 1,
-      //   },
-      //   subTotal:
-      //     bookingStore.draft.subTotal -
-      //     bookingStore.draft.basePrice * bookingStore.draft.numberOfNights,
-      // });
+
+      bookingStore.updateDraft({
+        numberOfPods: roomCount - 1,
+        subTotal:
+          bookingStore.draft.availablePods[0].price *
+          bookingStore.draft.guests?.adults *
+          bookingStore.draft.numberOfNights,
+      });
     } else if (type === "inc" && roomCount < availablePodsCount) {
       setRoomCount(roomCount + 1);
-      // setSubTotal(
-      //   subTotal +
-      //     bookingStore.draft.basePrice * bookingStore.draft.numberOfNights,
-      // );
-      // bookingStore.updateDraft({
-      //   guests: {
-      //     ...bookingStore.draft.guests,
-      //     adults: adults + 1,
-      //   },
-      //   subTotal:
-      //     bookingStore.draft.subTotal +
-      //     bookingStore.draft.basePrice * bookingStore.draft.numberOfNights,
-      // });
+      bookingStore.updateDraft({
+        numberOfPods: roomCount + 1,
+        subTotal:
+          bookingStore.draft.availablePods[0].price *
+          bookingStore.draft.guests?.adults *
+          bookingStore.draft.numberOfNights,
+      });
     }
   };
 
