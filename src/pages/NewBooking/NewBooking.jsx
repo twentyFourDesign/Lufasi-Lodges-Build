@@ -136,7 +136,6 @@ export default function NewBooking() {
               <CardContent className="p-5">
                 <div className="flex flex-col items-start gap-2 justify-between md:flex-row md:items-center pb-3">
                   <div>
-                    <Star className="w-8 h-8 color-green" />
                     <div className="flex items-center gap-2">
                       <h3 className="text-lg font-semibold text-[#09432B]">
                         Nature Pod - Standard
@@ -146,6 +145,16 @@ export default function NewBooking() {
                           Sold
                         </span>
                       )}
+                    </div>
+                    <div className="flex gap-1 mt-1">
+                      <Star className="w-5 h-5 text-[#09432B] fill-[#43EE00]" />
+                      <Star className="w-5 h-5 text-[#09432B] fill-[#43EE00]" />
+                      <Star className="w-5 h-5 text-[#09432B] fill-[#43EE00]" />
+                      <Star className="w-5 h-5 text-[#09432B] fill-[#43EE00]" />
+                      <Star className="w-5 h-5 text-[#09432B] fill-[#43EE00]" />
+                      <span className="text-sm text-[#09432B] font-semibold ml-2">
+                        (5 stars)
+                      </span>
                     </div>
                   </div>
                   <span className="text-sm text-[#737373] font-bold whitespace-nowrap">
@@ -363,7 +372,7 @@ export default function NewBooking() {
                 className="px-4 py-3 text-[#0A4C30] text-sm font-medium"
                 style={{ backgroundColor: "#B7FFFF" }}
               >
-                Happy with your room let’s move ahead
+                Happy with your room let's move ahead
               </div>
 
               {roomCount < 1 ? (
