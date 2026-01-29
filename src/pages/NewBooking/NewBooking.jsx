@@ -2,12 +2,14 @@ import React, { useState, useCallback } from "react";
 import CommonNavbar from "@/components/shared/common/CommonNavbar/CommonNavbar";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Calendar, Home, Info, Wallet } from "lucide-react";
+import { ArrowLeft, Calendar, Home, Info, Star, Wallet } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useBookingStore } from "@/store/useBookingStore";
 import { format, differenceInCalendarDays } from "date-fns";
 import { BASE_URL } from "@/config";
 import EditStayDatesModal from "@/components/edit-booking/EditStayDatesModal";
+import gardenHaven from "@/assets/garden-retreat.svg";
+import forestRetreat from "@/assets/forest-haven.svg";
 
 function formatPrice(n) {
   return n.toLocaleString();
@@ -24,7 +26,7 @@ export default function NewBooking() {
     : 0;
   const [roomCount, setRoomCount] = useState(0);
 
-  const podTags = ["Lake View", "Private Pool", "King Size Bed"];
+  const podTags = ["Air conditioning", "Wifi", "Forest View"];
 
   const onChangeRooms = (type) => {
     if (type === "dec" && roomCount > 1) {
@@ -132,25 +134,37 @@ export default function NewBooking() {
             </div>
             <Card className="bg-white rounded-xl shadow-sm overflow-hidden transition-all opacity-100 mt-5">
               <CardContent className="p-5">
-                <div className="flex items-center gap-2 mb-3">
-                  <div
-                    className="w-8 h-8 rounded-full flex items-center justify-center"
-                    style={{
-                      background:
-                        "linear-gradient(135deg, rgba(181,171,132,0.18) 0%, rgba(161,146,87,0.18) 100%)",
-                      border: "1px solid rgba(181,171,132,0.35)",
-                    }}
-                  >
-                    <Home className="w-4 h-4 text-[#09432B]" />
+                <div className="flex flex-col items-start gap-2 justify-between md:flex-row md:items-center pb-3">
+                  <div>
+                    <Star className="w-8 h-8 color-green" />
+                    <div className="flex items-center gap-2">
+                      <h3 className="text-lg font-semibold text-[#09432B]">
+                        Nature Pod - Standard
+                      </h3>
+                      {availablePodsCount < 1 && (
+                        <span className="text-xs px-3 py-1 rounded-full bg-red-500 text-white font-semibold">
+                          Sold
+                        </span>
+                      )}
+                    </div>
                   </div>
-                  <h3 className="text-lg font-semibold text-[#09432B]">
-                    Room selection
-                  </h3>
+                  <span className="text-sm text-[#737373] font-bold whitespace-nowrap">
+                    ₦{formatPrice(250000)}{" "}
+                    <span className="font-normal">per person/night</span>
+                  </span>
+                </div>
+                <div className="flex items-center gap-2 mb-3">
+                  <img src={gardenHaven} alt="Garden Retreat" />
+                  <img
+                    src={forestRetreat}
+                    alt="Forest Retreat"
+                    className="sm:block hidden"
+                  />
                 </div>
 
                 <p className="text-sm text-[#737373] mt-1">
-                  Wake up to stunning lake views with your private plunge pool
-                  steps from your bed.
+                  The perfect escape into the nature. Timber construction with
+                  modern amenities sleeps 2 people.
                 </p>
 
                 <div className="flex flex-wrap gap-2 mt-3">
@@ -162,12 +176,6 @@ export default function NewBooking() {
                       {tag}
                     </span>
                   ))}
-                </div>
-                <div className="mt-3">
-                  <span className="text-sm text-[#737373] font-bold whitespace-nowrap">
-                    ₦{formatPrice(250000)}{" "}
-                    <span className="font-normal">per person/night</span>
-                  </span>
                 </div>
 
                 {availablePodsCount > 0 ? (
