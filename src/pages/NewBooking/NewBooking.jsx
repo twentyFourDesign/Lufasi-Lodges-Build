@@ -221,7 +221,9 @@ export default function NewBooking() {
                       </button>
                     </div>
                     <span className="text-md text-[#09432B] pt-4">
-                      Only {availablePodsCount - roomCount} left for your dates
+                      {availablePodsCount - roomCount === 0
+                        ? "Max availability reached for these dates."
+                        : `Only ${availablePodsCount - roomCount} left for your dates`}
                     </span>
                   </div>
                 ) : (
