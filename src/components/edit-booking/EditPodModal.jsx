@@ -51,155 +51,104 @@ export default function EditPodModal({ open, onOpenChange, value, onSave }) {
         </DialogHeader>
 
         <div className="mt-4 space-y-4">
-          <div className="space-y-3">
-            <div
-              className="rounded-lg border border-[#C7C3B5] px-4 py-3 flex items-center gap-2 text-[#09432B]"
-              style={{
-                background:
-                  "linear-gradient(135deg, rgba(181,171,132,0.28) 0%, rgba(161,146,87,0.28) 100%)",
-              }}
-            >
-              <Info className="w-4 h-4" />
-              <span className="text-sm font-medium">
-                You can only select the number of rooms that are currently
-                available for your chosen dates.
-              </span>
-            </div>
-            <Card className="bg-white rounded-xl shadow-sm overflow-hidden transition-all opacity-100 mt-5">
-              <CardContent className="p-0">
-                <div className="p-5">
-                  <div className="flex items-center gap-2 mb-3">
-                    <div
-                      className="w-8 h-8 rounded-full flex items-center justify-center"
-                      style={{
-                        background:
-                          "linear-gradient(135deg, rgba(181,171,132,0.18) 0%, rgba(161,146,87,0.18) 100%)",
-                        border: "1px solid rgba(181,171,132,0.35)",
-                      }}
-                    >
-                      <Home className="w-4 h-4 text-[#09432B]" />
-                    </div>
-                    <h3 className="text-lg font-semibold text-[#09432B]">
-                      Room selection
-                    </h3>
-                  </div>
-
-                  <p className="text-sm text-[#737373] mt-1">
-                    Wake up to stunning lake views with your private plunge pool
-                    steps from your bed.
-                  </p>
-
-                  <div className="flex flex-wrap gap-2 mt-3">
-                    {podTags.map((tag) => (
-                      <span
-                        key={tag}
-                        className="text-xs bg-[#E6F2EE] text-[#09432B] px-3 py-1 rounded-full"
-                      >
-                        {tag}
-                      </span>
-                    ))}
-                  </div>
-                  <div className="mt-3">
-                    <span className="text-sm text-[#737373] font-bold whitespace-nowrap">
-                      ₦{formatPrice(250000)}{" "}
-                      <span className="font-normal">per person/night</span>
-                    </span>
-                  </div>
-
+          <div
+            className="rounded-lg border border-[#C7C3B5] px-4 py-3 flex items-center gap-2 text-[#09432B]"
+            style={{
+              background:
+                "linear-gradient(135deg, rgba(181,171,132,0.28) 0%, rgba(161,146,87,0.28) 100%)",
+            }}
+          >
+            <Info className="w-4 h-4" />
+            <span className="text-sm font-medium">
+              You can only select the number of rooms that are currently
+              available for your chosen dates.
+            </span>
+          </div>
+          <Card className="bg-white rounded-xl shadow-sm overflow-hidden transition-all opacity-100 mt-5">
+            <CardContent className="p-0">
+              <div className="p-5">
+                <div className="flex items-center gap-2 mb-3">
                   <div
-                    className="flex flex-col items-center text-center rounded-md p-4 mt-3"
+                    className="w-8 h-8 rounded-full flex items-center justify-center"
                     style={{
                       background:
                         "linear-gradient(135deg, rgba(181,171,132,0.18) 0%, rgba(161,146,87,0.18) 100%)",
                       border: "1px solid rgba(181,171,132,0.35)",
                     }}
                   >
-                    <span className="text-lg font-semibold text-[#09432B] pb-4">
-                      Select the number of rooms
+                    <Home className="w-4 h-4 text-[#09432B]" />
+                  </div>
+                  <h3 className="text-lg font-semibold text-[#09432B]">
+                    Room selection
+                  </h3>
+                </div>
+
+                <p className="text-sm text-[#737373] mt-1">
+                  Wake up to stunning lake views with your private plunge pool
+                  steps from your bed.
+                </p>
+
+                <div className="flex flex-wrap gap-2 mt-3">
+                  {podTags.map((tag) => (
+                    <span
+                      key={tag}
+                      className="text-xs bg-[#E6F2EE] text-[#09432B] px-3 py-1 rounded-full"
+                    >
+                      {tag}
+                    </span>
+                  ))}
+                </div>
+                <div className="mt-3">
+                  <span className="text-sm text-[#737373] font-bold whitespace-nowrap">
+                    ₦{formatPrice(250000)}{" "}
+                    <span className="font-normal">per person/night</span>
+                  </span>
+                </div>
+
+                <div
+                  className="flex flex-col items-center text-center rounded-md p-4 mt-3"
+                  style={{
+                    background:
+                      "linear-gradient(135deg, rgba(181,171,132,0.18) 0%, rgba(161,146,87,0.18) 100%)",
+                    border: "1px solid rgba(181,171,132,0.35)",
+                  }}
+                >
+                  <span className="text-lg font-semibold text-[#09432B] pb-4">
+                    Select the number of rooms
+                  </span>
+
+                  <div className="flex items-center gap-6 mt-4 sm:mt-0">
+                    <button
+                      onClick={() => onChangeRooms("dec")}
+                      className="w-12 h-12 rounded-full border-2 border-[#0F5B45] flex items-center justify-center text-[#0F5B45] text-xl"
+                    >
+                      –
+                    </button>
+
+                    <span className="text-2xl font-bold text-[#09432B] w-8 text-center">
+                      {roomCount}
                     </span>
 
-                    <div className="flex items-center gap-6 mt-4 sm:mt-0">
-                      <button
-                        onClick={() => onChangeRooms("dec")}
-                        className="w-12 h-12 rounded-full border-2 border-[#0F5B45] flex items-center justify-center text-[#0F5B45] text-xl"
-                      >
-                        –
-                      </button>
-
-                      <span className="text-2xl font-bold text-[#09432B] w-8 text-center">
-                        {roomCount}
-                      </span>
-
-                      <button
-                        onClick={() => onChangeRooms("inc")}
-                        className="w-12 h-12 rounded-full border-2 border-[#0F5B45] flex items-center justify-center text-[#0F5B45] text-xl"
-                      >
-                        +
-                      </button>
-                    </div>
+                    <button
+                      onClick={() => onChangeRooms("inc")}
+                      className="w-12 h-12 rounded-full border-2 border-[#0F5B45] flex items-center justify-center text-[#0F5B45] text-xl"
+                    >
+                      +
+                    </button>
                   </div>
-                  <div className="rounded-lg border px-4 py-3 flex items-center justify-between gap-2 bg-[#E6F2EE] text-[#09432B] mt-5">
-                    <span className="text-sm font-medium">Total:</span>
-                    <span className="text-sm font-medium">
-                      {`${roomCount}x${formatPrice(250000)} = `}
-                      <span className="font-bold">
-                        ₦${formatPrice(roomCount * 250000)}
-                      </span>
+                </div>
+                <div className="rounded-lg border px-4 py-3 flex items-center justify-between gap-2 bg-[#E6F2EE] text-[#09432B] mt-5">
+                  <span className="text-sm font-medium">Total:</span>
+                  <span className="text-sm font-medium">
+                    {`${roomCount}x${formatPrice(250000)} = `}
+                    <span className="font-bold">
+                      ₦${formatPrice(roomCount * 250000)}
                     </span>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            <div
-              className="rounded-md p-3 border"
-              style={{
-                background:
-                  "linear-gradient(135deg, rgba(181,171,132,0.08) 0%, rgba(161,146,87,0.08) 100%)",
-              }}
-            >
-              <div className="text-sm font-semibold text-[#09432B] mb-1">
-                Multi Room Assignment
-              </div>
-              <div className="text-sm text-[#444]">
-                Select pods for each night based on availability
-              </div>
-
-              <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div>
-                  <label className="text-sm text-[#09432B] block mb-1">
-                    Day 1
-                  </label>
-                  <select
-                    className="w-full border border-[#0F5B45] rounded-md px-3 py-2"
-                    defaultValue=""
-                  >
-                    {value?.availablePods?.map((p) => (
-                      <option key={p.id} disabled={!p.available}>
-                        {p.title}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                <div>
-                  <label className="text-sm text-[#09432B] block mb-1">
-                    Day 2
-                  </label>
-                  <select
-                    className="w-full border border-[#0F5B45] rounded-md px-3 py-2"
-                    defaultValue=""
-                  >
-                    {value?.availablePods?.map((p) => (
-                      <option key={p.id} disabled={!p.available}>
-                        {p.title}
-                      </option>
-                    ))}
-                  </select>
+                  </span>
                 </div>
               </div>
-            </div>
-          </div>
+            </CardContent>
+          </Card>
         </div>
 
         <DialogFooter className="mt-6 flex items-center justify-between">

@@ -1,17 +1,15 @@
-import React, { useState } from "react";
+import React, { useState, useCallback } from "react";
 import CommonNavbar from "@/components/shared/common/CommonNavbar/CommonNavbar";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import {
-  Accordion,
-  AccordionItem,
-  AccordionTrigger,
-  AccordionContent,
-} from "@/components/ui/accordion";
-import { ArrowLeft, Calendar, Home, Info, Wallet } from "lucide-react";
+import { ArrowLeft, Calendar, Home, Info, Star, Wallet } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useBookingStore } from "@/store/useBookingStore";
-import { format } from "date-fns";
+import { format, differenceInCalendarDays } from "date-fns";
+import { BASE_URL } from "@/config";
+import EditStayDatesModal from "@/components/edit-booking/EditStayDatesModal";
+import gardenHaven from "@/assets/garden-retreat.svg";
+import forestRetreat from "@/assets/forest-haven.svg";
 
 function formatPrice(n) {
   return n.toLocaleString();
@@ -19,6 +17,7 @@ function formatPrice(n) {
 
 export default function NewBooking() {
   const bookingStore = useBookingStore();
+  const [stayOpen, setStayOpen] = useState(false);
 
   // Count available pods
   const availablePodsCount = bookingStore.draft.availablePods
@@ -27,7 +26,7 @@ export default function NewBooking() {
     : 0;
   const [roomCount, setRoomCount] = useState(0);
 
-  const podTags = ["Lake View", "Private Pool", "King Size Bed"];
+  const podTags = ["Air conditioning", "Wifi", "Forest View"];
 
   const onChangeRooms = (type) => {
     if (type === "dec" && roomCount > 1) {
@@ -50,6 +49,52 @@ export default function NewBooking() {
           bookingStore.draft.numberOfNights,
       });
     }
+  };
+
+  const checkPodAvalability = useCallback(async () => {
+    try {
+      const response = await fetch(`${BASE_URL}/availability/check`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          startDate: format(bookingStore.draft.dates.checkIn, "yyyy-MM-dd"), // "2025-12-20"
+          endDate: format(bookingStore.draft.dates.checkOut, "yyyy-MM-dd"), // "2025-12-20"
+          adults: parseInt(bookingStore.draft.guests.adults) || 1, // Extract number from "2 Guests"
+        }),
+      });
+      const data = await response.json();
+
+      bookingStore.updateDraft({
+        availablePods: data,
+      });
+    } catch (error) {
+      console.error("Error checking availability:", error);
+    }
+  }, [bookingStore]);
+
+  const setStayDates = (dates) => {
+    function parseDate(ddmmyyyy) {
+      const [day, month, year] = ddmmyyyy.split("/");
+      return new Date(`${year}-${month}-${day}`);
+    }
+    bookingStore.updateDraft({
+      dates: {
+        checkIn: parseDate(dates.checkIn),
+        checkOut: parseDate(dates.checkOut),
+      },
+      numberOfNights: differenceInCalendarDays(
+        parseDate(dates.checkOut),
+        parseDate(dates.checkIn),
+      ),
+      guests: {
+        ...bookingStore.draft.guests,
+        adults: parseInt(dates.guests.match(/(\d+)/)[1]) || 1,
+      },
+    });
+    checkPodAvalability();
+    setStayOpen(false);
   };
 
   return (
@@ -88,46 +133,61 @@ export default function NewBooking() {
               </span>
             </div>
             <Card className="bg-white rounded-xl shadow-sm overflow-hidden transition-all opacity-100 mt-5">
-              <CardContent className="p-0">
-                <div className="p-5">
-                  <div className="flex items-center gap-2 mb-3">
-                    <div
-                      className="w-8 h-8 rounded-full flex items-center justify-center"
-                      style={{
-                        background:
-                          "linear-gradient(135deg, rgba(181,171,132,0.18) 0%, rgba(161,146,87,0.18) 100%)",
-                        border: "1px solid rgba(181,171,132,0.35)",
-                      }}
-                    >
-                      <Home className="w-4 h-4 text-[#09432B]" />
+              <CardContent className="p-5">
+                <div className="flex flex-col items-start gap-2 justify-between md:flex-row md:items-center pb-3">
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <h3 className="text-lg font-semibold text-[#09432B]">
+                        Nature Pod - Standard
+                      </h3>
+                      {availablePodsCount < 1 && (
+                        <span className="text-xs px-3 py-1 rounded-full bg-red-500 text-white font-semibold">
+                          Sold
+                        </span>
+                      )}
                     </div>
-                    <h3 className="text-lg font-semibold text-[#09432B]">
-                      Room selection
-                    </h3>
-                  </div>
-
-                  <p className="text-sm text-[#737373] mt-1">
-                    Wake up to stunning lake views with your private plunge pool
-                    steps from your bed.
-                  </p>
-
-                  <div className="flex flex-wrap gap-2 mt-3">
-                    {podTags.map((tag) => (
-                      <span
-                        key={tag}
-                        className="text-xs bg-[#E6F2EE] text-[#09432B] px-3 py-1 rounded-full"
-                      >
-                        {tag}
+                    <div className="flex gap-1 mt-1">
+                      <Star className="w-5 h-5 text-[#09432B] fill-[#43EE00]" />
+                      <Star className="w-5 h-5 text-[#09432B] fill-[#43EE00]" />
+                      <Star className="w-5 h-5 text-[#09432B] fill-[#43EE00]" />
+                      <Star className="w-5 h-5 text-[#09432B] fill-[#43EE00]" />
+                      <Star className="w-5 h-5 text-[#09432B] fill-[#43EE00]" />
+                      <span className="text-sm text-[#09432B] font-semibold ml-2">
+                        (5 stars)
                       </span>
-                    ))}
+                    </div>
                   </div>
-                  <div className="mt-3">
-                    <span className="text-sm text-[#737373] font-bold whitespace-nowrap">
-                      ₦{formatPrice(250000)}{" "}
-                      <span className="font-normal">per person/night</span>
-                    </span>
-                  </div>
+                  <span className="text-sm text-[#737373] font-bold whitespace-nowrap">
+                    ₦{formatPrice(250000)}{" "}
+                    <span className="font-normal">per person/night</span>
+                  </span>
+                </div>
+                <div className="flex items-center gap-2 mb-3">
+                  <img src={gardenHaven} alt="Garden Retreat" />
+                  <img
+                    src={forestRetreat}
+                    alt="Forest Retreat"
+                    className="sm:block hidden"
+                  />
+                </div>
 
+                <p className="text-sm text-[#737373] mt-1">
+                  The perfect escape into the nature. Timber construction with
+                  modern amenities sleeps 2 people.
+                </p>
+
+                <div className="flex flex-wrap gap-2 mt-3">
+                  {podTags.map((tag) => (
+                    <span
+                      key={tag}
+                      className="text-xs bg-[#E6F2EE] text-[#09432B] px-3 py-1 rounded-full"
+                    >
+                      {tag}
+                    </span>
+                  ))}
+                </div>
+
+                {availablePodsCount > 0 ? (
                   <div
                     className="flex flex-col items-center text-center rounded-md p-4 mt-3"
                     style={{
@@ -137,7 +197,7 @@ export default function NewBooking() {
                     }}
                   >
                     <span className="text-lg font-semibold text-[#09432B] pb-4">
-                      Select the number of rooms
+                      How many rooms do you need?
                     </span>
 
                     <div className="flex items-center gap-6 mt-4 sm:mt-0">
@@ -154,112 +214,60 @@ export default function NewBooking() {
 
                       <button
                         onClick={() => onChangeRooms("inc")}
-                        className="w-12 h-12 rounded-full border-2 border-[#0F5B45] flex items-center justify-center text-[#0F5B45] text-xl"
+                        className="w-12 h-12 rounded-full border-2 border-[#0F5B45] flex items-center justify-center text-[#0F5B45] text-xl  disabled:pointer-events-none disabled:opacity-50"
+                        disabled={roomCount === availablePodsCount}
                       >
                         +
                       </button>
                     </div>
-                  </div>
-                  <div className="rounded-lg border px-4 py-3 flex items-center justify-between gap-2 bg-[#E6F2EE] text-[#09432B] mt-5">
-                    <span className="text-sm font-medium">Total:</span>
-                    <span className="text-sm font-medium">
-                      {`${roomCount}x${formatPrice(250000)} = `}
-                      <span className="font-bold">
-                        ₦${formatPrice(roomCount * 250000)}
-                      </span>
+                    <span className="text-md text-[#09432B] pt-4">
+                      Only {availablePodsCount - roomCount} left for your dates
                     </span>
                   </div>
-                </div>
+                ) : (
+                  <div
+                    className="flex flex-col rounded-md p-4 mt-3"
+                    style={{
+                      background:
+                        "linear-gradient(135deg, rgba(181,171,132,0.18) 0%, rgba(161,146,87,0.18) 100%)",
+                      border: "1px solid rgba(181,171,132,0.35)",
+                    }}
+                  >
+                    <span className="text-md font-semibold text-[#09432B] pb-4">
+                      No Rooms Available
+                    </span>
+                    <span className="text-md text-[#09432B] pb-4">
+                      There are no rooms available for your selected dates.
+                      Please try a different date.
+                    </span>
+                    <button
+                      onClick={() => setStayOpen(true)}
+                      className="border-2 border-[#0F5B45] rounded-xs transition font-semibold px-6 py-2 text-sm max-width p-2 self-end"
+                    >
+                      Change dates
+                    </button>
+                    <EditStayDatesModal
+                      open={stayOpen}
+                      onOpenChange={setStayOpen}
+                      value={{
+                        checkIn: format(
+                          bookingStore.draft.dates.checkIn,
+                          "dd/MM/yyyy",
+                        ),
+                        checkOut: format(
+                          bookingStore.draft.dates.checkOut,
+                          "dd/MM/yyyy",
+                        ),
+                        numberOfNights: bookingStore.draft.numberOfNights,
+                        guests: `${bookingStore.draft.guests.adults} Guests`,
+                      }}
+                      onSave={setStayDates}
+                      showPenaltyInfo={false}
+                    />
+                  </div>
+                )}
               </CardContent>
             </Card>
-
-            <div className="mt-12 mb-12">
-              <Accordion type="single" collapsible defaultValue="multi">
-                <AccordionItem
-                  value="multi"
-                  className="border border-[#0F5B45] rounded-xl overflow-hidden"
-                >
-                  {/* HEADER - sits INSIDE border, not clipping top */}
-                  <AccordionTrigger
-                    className="
-          flex items-center justify-between
-          w-full px-4 py-4
-          text-left text-[#09432B] font-semibold
-          hover:no-underline
-          bg-[#F7F5F0]
-        "
-                  >
-                    Multi Room Assignment
-                  </AccordionTrigger>
-
-                  {/* CONTENT */}
-                  <AccordionContent className="px-4 pb-6 pt-4 bg-white">
-                    {/* Beige Info Box */}
-                    <div
-                      className="rounded-md p-4 mb-6 text-[#09432B]"
-                      style={{
-                        background:
-                          "linear-gradient(135deg, rgba(181,171,132,0.18) 0%, rgba(161,146,87,0.18) 100%)",
-                        border: "1px solid rgba(181,171,132,0.35)",
-                      }}
-                    >
-                      <p className="text-sm font-semibold mb-1">
-                        Multi Night Assignment: 2 Nights Selected
-                      </p>
-                      <p className="text-sm text-[#444]">
-                        Select rooms for each night based on availability
-                      </p>
-                    </div>
-
-                    {/* DAY 1 */}
-                    <div className="mb-6">
-                      <label className="text-sm font-semibold text-[#09432B] block mb-2">
-                        Day 1
-                      </label>
-
-                      <div className="relative">
-                        <select className="w-full border border-[#0F5B45] rounded-md px-3 py-3 text-sm appearance-none">
-                          <option>Forest Haven</option>
-                          {bookingStore.draft.availablePods.map((p) => (
-                            <option key={p.id}>{p.title}</option>
-                          ))}
-                        </select>
-
-                        <span className="absolute right-4 top-3.5 text-[#09432B] text-lg">
-                          ▼
-                        </span>
-                      </div>
-                    </div>
-
-                    {/* DAY 2 */}
-                    <div>
-                      <label className="text-sm font-semibold text-[#09432B] block mb-2">
-                        Day 2
-                      </label>
-
-                      <div className="relative">
-                        <select className="w-full border border-[#0F5B45] rounded-md px-3 py-3 text-sm appearance-none">
-                          <option>Select A different room</option>
-                          {bookingStore.draft.availablePods.map((p) => (
-                            <option key={p.id + "-2"}>{p.title}</option>
-                          ))}
-                        </select>
-
-                        {/* Chevron */}
-                        <span className="absolute right-4 top-3.5 text-[#09432B] text-lg">
-                          ▼
-                        </span>
-
-                        {/* Unavailable Badge */}
-                        <span className="absolute right-2 -top-7 bg-red-600 text-white text-xs px-3 py-1 rounded-full">
-                          Unavailable
-                        </span>
-                      </div>
-                    </div>
-                  </AccordionContent>
-                </AccordionItem>
-              </Accordion>
-            </div>
           </div>
           <div className="md:col-span-4 space-y-4">
             <div className="bg-white rounded-xl border border-gray-200 p-4 shadow-sm">
@@ -364,7 +372,7 @@ export default function NewBooking() {
                 className="px-4 py-3 text-[#0A4C30] text-sm font-medium"
                 style={{ backgroundColor: "#B7FFFF" }}
               >
-                Happy with your room let’s move ahead
+                Happy with your room let's move ahead
               </div>
 
               {roomCount < 1 ? (

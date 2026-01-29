@@ -22,13 +22,14 @@ export default function EditStayDatesModal({
   onOpenChange,
   value,
   onSave,
+  showPenaltyInfo = true,
 }) {
   const [local, setLocal] = useState(
     value || {
       checkIn: "",
       checkOut: "",
       guests: "2 Guests",
-    }
+    },
   );
 
   useEffect(
@@ -38,9 +39,9 @@ export default function EditStayDatesModal({
           checkIn: "",
           checkOut: "",
           guests: "2 Guests",
-        }
+        },
       ),
-    [value, open]
+    [value, open],
   );
 
   return (
@@ -53,20 +54,22 @@ export default function EditStayDatesModal({
         </DialogHeader>
 
         <div className="mt-4 space-y-4">
-          <div
-            className="rounded-md p-4 mb-2 text-[#09432B]"
-            style={{
-              background:
-                "linear-gradient(135deg, rgba(181,171,132,0.18) 0%, rgba(161,146,87,0.18) 100%)",
-              border: "1px solid rgba(181,171,132,0.35)",
-            }}
-          >
-            <p className="text-sm font-semibold mb-1">Penalty Fee Added</p>
-            <p className="text-sm">
-              You have to pay a penalty fee of ₦25,000 for changing your stay
-              dates.
-            </p>
-          </div>
+          {showPenaltyInfo && (
+            <div
+              className="rounded-md p-4 mb-2 text-[#09432B]"
+              style={{
+                background:
+                  "linear-gradient(135deg, rgba(181,171,132,0.18) 0%, rgba(161,146,87,0.18) 100%)",
+                border: "1px solid rgba(181,171,132,0.35)",
+              }}
+            >
+              <p className="text-sm font-semibold mb-1">Penalty Fee Added</p>
+              <p className="text-sm">
+                You have to pay a penalty fee of ₦25,000 for changing your stay
+                dates.
+              </p>
+            </div>
+          )}
 
           <div>
             <label className="block text-sm font-medium text-[#09432B] mb-1">
