@@ -77,6 +77,7 @@ export default function BookingLogsList() {
                                     <th className="py-3 px-4 text-left font-medium text-gray-500">Timestamp</th>
                                     <th className="py-3 px-4 text-left font-medium text-gray-500">Booking Ref</th>
                                     <th className="py-3 px-4 text-left font-medium text-gray-500">Guest Name</th>
+                                    <th className="py-3 px-4 text-left font-medium text-gray-500">Action</th>
                                     <th className="py-3 px-4 text-left font-medium text-gray-500">Status</th>
                                     <th className="py-3 px-4 text-left font-medium text-gray-500">Error Message</th>
                                 </tr>
@@ -84,11 +85,11 @@ export default function BookingLogsList() {
                             <tbody className="divide-y divide-gray-100">
                                 {loading ? (
                                     <tr>
-                                        <td colSpan="5" className="py-8 text-center text-gray-500">Loading logs...</td>
+                                        <td colSpan="6" className="py-8 text-center text-gray-500">Loading logs...</td>
                                     </tr>
                                 ) : logs.length === 0 ? (
                                     <tr>
-                                        <td colSpan="5" className="py-8 text-center text-gray-500">No logs found</td>
+                                        <td colSpan="6" className="py-8 text-center text-gray-500">No logs found</td>
                                     </tr>
                                 ) : (
                                     logs.map((log) => (
@@ -102,13 +103,16 @@ export default function BookingLogsList() {
                                             <td className="py-3 px-4 text-sm text-gray-900">
                                                 {log.guestName}
                                             </td>
+                                            <td className="py-3 px-4 text-sm text-gray-600">
+                                                {log.action || "-"}
+                                            </td>
                                             <td className="py-3 px-4">
                                                 <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium capitalize
-                                                    ${log.status === 'confirmed' || log.status === 'paid' ? 'bg-green-100 text-green-800' :
+                                                    ${log.status === 'confirmed' || log.status === 'paid' || log.status === 'ready_for_checkin' ? 'bg-green-100 text-green-800' :
                                                         log.status === 'failed' ? 'bg-red-100 text-red-800' :
                                                             log.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
                                                                 'bg-gray-100 text-gray-800'}`}>
-                                                    {log.status || 'Unknown'}
+                                                    {log.status?.replace(/_/g, ' ') || 'Unknown'}
                                                 </span>
                                             </td>
                                             <td className="py-3 px-4 text-sm text-red-600 break-words max-w-xs">

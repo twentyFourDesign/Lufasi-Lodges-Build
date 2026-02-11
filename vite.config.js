@@ -12,4 +12,7 @@ export default defineConfig({
       "@": path.resolve(__dirname, "./src"),
     },
   },
+  server: {
+    allowedHosts: ["unamazedly-unpetrifying-sherie.ngrok-free.dev", "localhost"],
+  },
 });

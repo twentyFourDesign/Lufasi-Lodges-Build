@@ -26,10 +26,28 @@ export default function ReportsPage() {
         totalIncome: 0
     });
     const [statsLoading, setStatsLoading] = useState(false);
+    const [recentLogs, setRecentLogs] = useState([]);
+    const [logsLoading, setLogsLoading] = useState(false);
 
     useEffect(() => {
         fetchPods();
+        fetchRecentLogs();
     }, []);
+
+    const fetchRecentLogs = async () => {
+        setLogsLoading(true);
+        try {
+            const response = await fetch(`${BASE_URL}/admin/logs`, {
+                headers: { Authorization: `Bearer ${token}` },
+            });
+            const data = await response.json();
+            setRecentLogs(data.logs?.slice(0, 10) || []);
+        } catch (err) {
+            console.error("Failed to fetch logs:", err);
+        } finally {
+            setLogsLoading(false);
+        }
+    };
 
     useEffect(() => {
         // Fetch stats whenever filters change
@@ -358,6 +376,75 @@ export default function ReportsPage() {
                         <p className="text-2xl font-bold text-gray-700">{stats.totalAvailableRooms}</p>
                         <span className="text-xs text-gray-400">Total active units in fleet</span>
                     </div>
+                </div>
+
+                {/* Accountability Logs Section */}
+                <div className="bg-white rounded-lg border border-gray-100 shadow-sm p-6 mb-6">
+                    <div className="flex items-center justify-between mb-4">
+                        <h2 className="text-lg font-semibold text-[#333333]">System Accountability Logs</h2>
+                        <button 
+                            onClick={fetchRecentLogs}
+                            className="text-sm text-[#008080] hover:underline"
+                        >
+                            Refresh
+                        </button>
+                    </div>
+                    
+                    {logsLoading ? (
+                        <div className="py-4 text-center text-gray-500">Loading logs...</div>
+                    ) : recentLogs.length === 0 ? (
+                        <div className="py-4 text-center text-gray-500">No recent activity logs.</div>
+                    ) : (
+                        <div className="overflow-x-auto">
+                            <table className="w-full text-sm">
+                                <thead className="bg-gray-50 text-gray-500 font-medium border-b border-gray-100">
+                                    <tr>
+                                        <th className="py-2 px-4 text-left">Timestamp</th>
+                                        <th className="py-2 px-4 text-left">Action</th>
+                                        <th className="py-2 px-4 text-left">Guest Name</th>
+                                        <th className="py-2 px-4 text-left">Reference</th>
+                                        <th className="py-2 px-4 text-left">Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody className="divide-y divide-gray-100">
+                                    {recentLogs.map((log) => (
+                                        <tr key={log.id} className="hover:bg-gray-50">
+                                            <td className="py-3 px-4 text-gray-500 whitespace-nowrap">
+                                                {new Date(log.timestamp).toLocaleString([], { 
+                                                    month: 'short', 
+                                                    day: 'numeric',
+                                                    hour: '2-digit', 
+                                                    minute: '2-digit' 
+                                                })}
+                                            </td>
+                                            <td className="py-3 px-4 font-medium text-gray-700">{log.action || "System Update"}</td>
+                                            <td className="py-3 px-4 text-gray-600">{log.guestName || "N/A"}</td>
+                                            <td className="py-3 px-4 text-gray-600 font-mono text-xs">{log.bookingReference || "N/A"}</td>
+                                            <td className="py-3 px-4">
+                                                <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${
+                                                    log.status === "ready_for_checkin" 
+                                                        ? "bg-green-100 text-green-800"
+                                                        : log.status === "confirmed"
+                                                        ? "bg-blue-100 text-blue-800"
+                                                        : "bg-gray-100 text-gray-800"
+                                                }`}>
+                                                    {log.status?.replace(/_/g, " ") || "N/A"}
+                                                </span>
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                            <div className="mt-4 text-right">
+                                <a href="/admin/logs" className="text-sm text-[#008080] font-medium hover:underline inline-flex items-center gap-1">
+                                    View Full Audit Trail
+                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                                    </svg>
+                                </a>
+                            </div>
+                        </div>
+                    )}
                 </div>
 
                 {/* Export Section */}
