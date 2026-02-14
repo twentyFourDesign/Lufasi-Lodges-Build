@@ -1,5 +1,6 @@
 /* eslint-disable react-hooks/set-state-in-effect */
 import React, { useState, useEffect } from "react";
+import { addDays, format, parse } from "date-fns";
 import {
   Dialog,
   DialogContent,
@@ -77,7 +78,28 @@ export default function EditStayDatesModal({
             </label>
             <Input
               value={local.checkIn}
-              onChange={(e) => setLocal({ ...local, checkIn: e.target.value })}
+              onChange={(e) => {
+                const newCheckIn = e.target.value;
+                const newLocal = { ...local, checkIn: newCheckIn };
+
+                // Auto-calculate check-out if valid DD/MM/YYYY
+                if (newCheckIn.length === 10) {
+                  try {
+                    const parsedDate = parse(
+                      newCheckIn,
+                      "dd/MM/yyyy",
+                      new Date(),
+                    );
+                    if (!isNaN(parsedDate.getTime())) {
+                      const autoCheckOut = addDays(parsedDate, 2);
+                      newLocal.checkOut = format(autoCheckOut, "dd/MM/yyyy");
+                    }
+                  } catch (err) {
+                    // Ignore parsing errors
+                  }
+                }
+                setLocal(newLocal);
+              }}
               placeholder="DD/MM/YYYY"
             />
           </div>

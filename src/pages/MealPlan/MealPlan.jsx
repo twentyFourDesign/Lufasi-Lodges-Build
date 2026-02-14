@@ -23,11 +23,12 @@ function formatPrice(n) {
 
 export default function MealPlan() {
   const [mealPlans, setMealPlans] = useState([]);
-  const [selectedMealPlan, setSelectedMealPlan] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const bookingStore = useBookingStore();
   const navigate = useNavigate();
+
+  const selectedMealPlan = bookingStore.draft.mealPlan;
 
   // Check if booking data exists, redirect if not
   useEffect(() => {
@@ -62,14 +63,13 @@ export default function MealPlan() {
   };
 
   const handleSelectMealPlan = (plan) => {
-    setSelectedMealPlan(plan);
     bookingStore.updateDraft({
       mealPlan: plan,
       basePrice: plan.price,
       subTotal:
         plan.price *
-        bookingStore.draft.guests?.adults *
-        bookingStore.draft.numberOfNights,
+        (bookingStore.draft.guests?.adults || 0) *
+        (bookingStore.draft.numberOfNights || 0),
     });
   };
 
@@ -120,64 +120,90 @@ export default function MealPlan() {
             )}
             {!loading &&
               !error &&
-              mealPlans.map((plan) => (
-                <Card
-                  key={plan.id}
-                  className="bg-white rounded-xl shadow-sm px-6 py-6"
-                >
-                  <CardContent className="p-0">
-                    <div className="flex items-start gap-4">
-                      <div className="w-12 h-12 bg-[#E6F2EE] rounded-full flex items-center justify-center">
-                        <img
-                          src={mealIcon}
-                          className="w-5 h-5"
-                          alt="Meal Icon"
-                        />
-                      </div>
+              mealPlans.map((plan) => {
+                const isSelected = selectedMealPlan?.id === plan.id;
+                return (
+                  <Card
+                    key={plan.id}
+                    className={`bg-white rounded-xl shadow-sm px-6 py-6 transition-all cursor-pointer border-2 ${
+                      isSelected
+                        ? "border-[#09432B] ring-1 ring-[#09432B]"
+                        : "border-transparent"
+                    }`}
+                    onClick={() => handleSelectMealPlan(plan)}
+                  >
+                    <CardContent className="p-0">
+                      <div className="flex items-start justify-between gap-4">
+                        <div className="flex items-start gap-4">
+                          <div
+                            className={`w-12 h-12 rounded-full flex items-center justify-center transition-colors ${
+                              isSelected
+                                ? "bg-[#09432B] text-white"
+                                : "bg-[#E6F2EE]"
+                            }`}
+                          >
+                            <img
+                              src={mealIcon}
+                              className={`w-5 h-5 ${isSelected ? "brightness-0 invert" : ""}`}
+                              alt="Meal Icon"
+                            />
+                          </div>
 
-                      <div>
-                        <h3 className="text-xl font-bold text-[#09432B] leading-tight">
-                          {plan.title}
-                        </h3>
-                        <p className="text-sm text-[#737373] mt-1">
-                          {plan.subtitle}
-                        </p>
-                      </div>
-                    </div>
-                    <div className="mt-5 space-y-3">
-                      {plan.items.map((item) => (
-                        <div key={item} className="flex items-center gap-2">
-                          <Check className="w-4 h-4 text-[#09432B]" />
-                          <span className="text-sm text-[#09432B]">{item}</span>
+                          <div>
+                            <h3 className="text-xl font-bold text-[#09432B] leading-tight">
+                              {plan.title}
+                            </h3>
+                            <p className="text-sm text-[#737373] mt-1">
+                              {plan.subtitle}
+                            </p>
+                          </div>
                         </div>
-                      ))}
-                    </div>
-                    <div className="mt-8 flex-col items-start gap-4 flex sm:flex-row sm:items-center sm:justify-between">
-                      <span className="text-lg font-bold text-[#09432B] whitespace-nowrap">
-                        ₦{formatPrice(plan.price)}
-                        <span className="text-sm font-normal text-[#737373] ml-1">
-                          per person/night
+                        {isSelected && (
+                          <div className="bg-[#09432B] text-white rounded-full p-1">
+                            <Check className="w-4 h-4" />
+                          </div>
+                        )}
+                      </div>
+                      <div className="mt-5 space-y-3">
+                        {plan.items.map((item) => (
+                          <div key={item} className="flex items-center gap-2">
+                            <Check
+                              className={`w-4 h-4 ${isSelected ? "text-[#09432B]" : "text-[#09432B]"}`}
+                            />
+                            <span className="text-sm text-[#09432B]">
+                              {item}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                      <div className="mt-8 flex-col items-start gap-4 flex sm:flex-row sm:items-center sm:justify-between">
+                        <span className="text-lg font-bold text-[#09432B] whitespace-nowrap">
+                          ₦{formatPrice(plan.price)}
+                          <span className="text-sm font-normal text-[#737373] ml-1">
+                            per person/night
+                          </span>
                         </span>
-                      </span>
-                      <Button
-                        variant="ghost"
-                        className="
-                        text-[#09432B] font-bold flex items-center gap-2 hover:bg-transparent
-                        w-full justify-end px-0 py-2
-                        sm:w-auto sm:justify-end sm:px-0 sm:py-0
-                      "
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleSelectMealPlan(plan);
-                        }}
-                      >
-                        Select Meal Plan
-                        <ArrowRight className="w-4 h-4 mt-1" />
-                      </Button>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
+                        <Button
+                          variant="ghost"
+                          className={`
+                            font-bold flex items-center gap-2 hover:bg-transparent
+                            w-full justify-end px-0 py-2
+                            sm:w-auto sm:justify-end sm:px-0 sm:py-0
+                            ${isSelected ? "text-[#09432B]" : "text-[#737373]"}
+                          `}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleSelectMealPlan(plan);
+                          }}
+                        >
+                          {isSelected ? "Selected" : "Select Meal Plan"}
+                          <ArrowRight className="w-4 h-4 mt-1" />
+                        </Button>
+                      </div>
+                    </CardContent>
+                  </Card>
+                );
+              })}
           </div>
 
           <div className="md:col-span-4 space-y-4">

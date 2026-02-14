@@ -61,9 +61,14 @@ function AdminLoginRoute() {
 // Home route - handles subdomain-specific behavior
 function HomeRoute() {
   const { isAuthenticated } = useAuthStore();
+  const hostname = window.location.hostname;
 
-  // If on admin subdomain, redirect based on auth state
-  if (isAdminSubdomain()) {
+  // If on a real admin subdomain (not localhost/ngrok), redirect based on auth state
+  if (
+    isAdminSubdomain() &&
+    !hostname.includes("localhost") &&
+    !hostname.includes("ngrok-free.dev")
+  ) {
     if (isAuthenticated) {
       return <Navigate to="/dashboard" replace />;
     } else {
@@ -71,7 +76,7 @@ function HomeRoute() {
     }
   }
 
-  // Normal booking subdomain - show home page
+  // On localhost, ngrok, or booking subdomain - show home page
   return <Home />;
 }
 
@@ -241,5 +246,3 @@ export default function AppRoutes() {
     </Routes>
   );
 }
-
-

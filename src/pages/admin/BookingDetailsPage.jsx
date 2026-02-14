@@ -13,6 +13,8 @@ export default function BookingDetailsPage() {
   const [error, setError] = useState(null);
   const [sendingEmail, setSendingEmail] = useState(false);
   const [emailMessage, setEmailMessage] = useState(null);
+  const [showCancelModal, setShowCancelModal] = useState(false);
+  const [cancelling, setCancelling] = useState(false);
   const [availablePods, setAvailablePods] = useState([]);
   const [selectedPodIds, setSelectedPodIds] = useState([]);
   const [allocating, setAllocating] = useState(false);
@@ -255,6 +257,38 @@ export default function BookingDetailsPage() {
       setEmailMessage({ type: "error", text: err.message });
     } finally {
       setSendingEmail(false);
+    }
+  };
+
+  const handleCancelBooking = async () => {
+    setCancelling(true);
+    setEmailMessage(null);
+
+    try {
+      const response = await fetch(`${BASE_URL}/bookings/${id}/cancel`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || "Failed to cancel booking");
+      }
+
+      setEmailMessage({
+        type: "success",
+        text: "Booking cancelled successfully!",
+      });
+      setShowCancelModal(false);
+      fetchBooking(); // Refresh booking details
+    } catch (err) {
+      setEmailMessage({ type: "error", text: err.message });
+    } finally {
+      setCancelling(false);
     }
   };
 
@@ -721,18 +755,18 @@ export default function BookingDetailsPage() {
             )}
 
             {/* Action Buttons */}
-            <div className="flex gap-4">
+            <div className="flex flex-wrap gap-4">
               <button
                 onClick={handleResendInvoice}
                 disabled={sendingEmail || booking.bookingStatus === "cancelled"}
-                className="flex-1 py-3 border border-gray-300 rounded-lg text-[#333333] hover:bg-gray-50 font-medium disabled:opacity-50"
+                className="flex-1 min-w-[150px] py-3 border border-gray-300 rounded-lg text-[#333333] hover:bg-gray-50 font-medium disabled:opacity-50 transition-colors"
               >
                 {sendingEmail ? "Sending..." : "Resend Invoice"}
               </button>
               <button
                 onClick={handleSendConfirmation}
                 disabled={sendingEmail}
-                className={`flex-1 py-3 rounded-lg font-medium disabled:opacity-50 ${
+                className={`flex-1 min-w-[150px] py-3 rounded-lg font-medium disabled:opacity-50 transition-colors ${
                   booking.bookingStatus === "cancelled"
                     ? "bg-red-500 text-white hover:bg-red-600"
                     : "bg-[#008080] text-white hover:bg-[#006666]"
@@ -744,10 +778,81 @@ export default function BookingDetailsPage() {
                     ? "Send Cancellation Email"
                     : "Send Confirmation Email"}
               </button>
+              {booking.bookingStatus !== "cancelled" && (
+                <button
+                  onClick={() => setShowCancelModal(true)}
+                  className="flex-1 min-w-[150px] py-3 bg-white border border-red-200 text-red-600 rounded-lg font-medium hover:bg-red-50 transition-colors"
+                >
+                  Cancel Booking
+                </button>
+              )}
             </div>
           </div>
         </div>
       </div>
+
+      {/* Cancellation Confirmation Modal */}
+      {showCancelModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+          <div className="bg-white rounded-xl shadow-xl max-w-md w-full p-6 animate-in fade-in zoom-in duration-200">
+            <div className="flex items-center gap-3 text-red-600 mb-4">
+              <div className="w-12 h-12 rounded-full bg-red-100 flex items-center justify-center">
+                <svg
+                  className="w-6 h-6"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+                  />
+                </svg>
+              </div>
+              <h3 className="text-xl font-bold">Cancel Booking?</h3>
+            </div>
+
+            <p className="text-gray-600 mb-6">
+              Are you sure you want to cancel this booking for{" "}
+              <span className="font-semibold text-gray-900">
+                {guest.fullName}
+              </span>
+              ? This action will:
+              <ul className="list-disc ml-5 mt-2 space-y-1 text-sm">
+                <li>Mark the booking as cancelled</li>
+                <li>Release the pod for the selected dates</li>
+                <li>Send a cancellation email to the guest</li>
+              </ul>
+            </p>
+
+            <div className="flex gap-3">
+              <button
+                onClick={() => setShowCancelModal(false)}
+                disabled={cancelling}
+                className="flex-1 py-2.5 border border-gray-300 rounded-lg text-gray-700 font-medium hover:bg-gray-50 disabled:opacity-50"
+              >
+                Go Back
+              </button>
+              <button
+                onClick={handleCancelBooking}
+                disabled={cancelling}
+                className="flex-1 py-2.5 bg-red-600 text-white rounded-lg font-medium hover:bg-red-700 disabled:opacity-50 flex items-center justify-center gap-2"
+              >
+                {cancelling ? (
+                  <>
+                    <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                    Cancelling...
+                  </>
+                ) : (
+                  "Yes, Cancel Booking"
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </AdminLayout>
   );
 }

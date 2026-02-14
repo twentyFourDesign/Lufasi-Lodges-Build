@@ -11,6 +11,10 @@ export default function BookingsPage() {
   const [filteredBookings, setFilteredBookings] = useState([]);
   const [error, setError] = useState(null);
 
+  // Email/Action states
+  const [sendingAction, setSendingAction] = useState(null); // id of booking being processed
+  const [actionMessage, setActionMessage] = useState(null);
+
   // Pagination
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
@@ -21,6 +25,12 @@ export default function BookingsPage() {
     status: "",
     search: "",
   });
+
+  // Cancellation State
+  const [showCancelModal, setShowCancelModal] = useState(false);
+  const [selectedBooking, setSelectedBooking] = useState(null);
+  const [cancelling, setCancelling] = useState(false);
+  const [cancelError, setCancelError] = useState(null);
 
   useEffect(() => {
     fetchBookings();
@@ -118,6 +128,94 @@ export default function BookingsPage() {
     }
   };
 
+  const handleResendInvoice = async (bookingId) => {
+    setSendingAction(bookingId);
+    setActionMessage(null);
+    try {
+      const response = await fetch(
+        `${BASE_URL}/bookings/${bookingId}/resend-invoice`,
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        },
+      );
+      if (!response.ok) throw new Error("Failed to resend invoice");
+      setActionMessage({
+        type: "success",
+        text: "Invoice resent successfully",
+      });
+      setTimeout(() => setActionMessage(null), 3000);
+    } catch (err) {
+      setActionMessage({ type: "error", text: err.message });
+    } finally {
+      setSendingAction(null);
+    }
+  };
+
+  const handleSendConfirmation = async (bookingId) => {
+    setSendingAction(bookingId);
+    setActionMessage(null);
+    try {
+      const response = await fetch(
+        `${BASE_URL}/bookings/${bookingId}/send-confirmation`,
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        },
+      );
+      if (!response.ok) throw new Error("Failed to send confirmation");
+      setActionMessage({
+        type: "success",
+        text: "Confirmation email sent successfully",
+      });
+      setTimeout(() => setActionMessage(null), 3000);
+    } catch (err) {
+      setActionMessage({ type: "error", text: err.message });
+    } finally {
+      setSendingAction(null);
+    }
+  };
+
+  const handleCancel = async () => {
+    if (!selectedBooking) return;
+
+    setCancelling(true);
+    setCancelError(null);
+
+    try {
+      const response = await fetch(
+        `${BASE_URL}/bookings/${selectedBooking.id}/cancel`,
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        },
+      );
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || "Failed to cancel booking");
+      }
+
+      setShowCancelModal(false);
+      setSelectedBooking(null);
+      fetchBookings(); // Refresh list
+    } catch (err) {
+      setCancelError(err.message);
+    } finally {
+      setCancelling(false);
+    }
+  };
+
   // Pagination calculations
   const totalPages = Math.ceil(filteredBookings.length / itemsPerPage);
   const startIndex = (currentPage - 1) * itemsPerPage;
@@ -164,6 +262,46 @@ export default function BookingsPage() {
             Filter
           </button>
         </div>
+
+        {/* Action Message Toast */}
+        {actionMessage && (
+          <div
+            className={`fixed top-5 right-5 z-[100] p-4 rounded-lg shadow-lg animate-in slide-in-from-right duration-300 ${
+              actionMessage.type === "success"
+                ? "bg-green-600 text-white"
+                : "bg-red-600 text-white"
+            }`}
+          >
+            <div className="flex items-center gap-2">
+              {actionMessage.type === "success" ? (
+                <svg
+                  className="w-5 h-5"
+                  fill="currentColor"
+                  viewBox="0 0 20 20"
+                >
+                  <path
+                    fillRule="evenodd"
+                    d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                    clipRule="evenodd"
+                  />
+                </svg>
+              ) : (
+                <svg
+                  className="w-5 h-5"
+                  fill="currentColor"
+                  viewBox="0 0 20 20"
+                >
+                  <path
+                    fillRule="evenodd"
+                    d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
+                    clipRule="evenodd"
+                  />
+                </svg>
+              )}
+              <span className="font-medium">{actionMessage.text}</span>
+            </div>
+          </div>
+        )}
 
         {/* Filter Panel */}
         {showFilter && (
@@ -256,9 +394,10 @@ export default function BookingsPage() {
                       <th className="py-3 px-4 text-left font-medium">
                         Status
                       </th>
-                      <th className="py-3 px-4 text-left font-medium"></th>
-                      <th className="py-3 px-4 text-left font-medium"></th>
-                      {/* <th className="py-3 px-4 text-left font-medium rounded-r-lg"></th> */}
+                      <th className="py-3 px-4 text-left font-medium">
+                        Actions
+                      </th>
+                      <th className="py-3 px-4 text-left font-medium rounded-r-lg"></th>
                     </tr>
                   </thead>
                   {/* Alternating Cyan Rows */}
@@ -291,26 +430,46 @@ export default function BookingsPage() {
                           </span>
                         </td>
                         <td className="py-3 px-4">
-                          <Link
-                            to={`/bookings/admin/${booking.id}`}
-                            className="text-[#008080] hover:underline"
-                          >
-                            View
-                          </Link>
+                          <div className="flex items-center gap-3">
+                            <Link
+                              to={`/bookings/admin/${booking.id}`}
+                              className="text-[#008080] hover:underline font-medium"
+                            >
+                              View
+                            </Link>
+                            <button
+                              onClick={() => handleResendInvoice(booking.id)}
+                              disabled={sendingAction === booking.id}
+                              className="text-[#008080] hover:underline font-medium disabled:opacity-50 whitespace-nowrap"
+                            >
+                              {sendingAction === booking.id
+                                ? "..."
+                                : "Resend Invoice"}
+                            </button>
+                            <button
+                              onClick={() => handleSendConfirmation(booking.id)}
+                              disabled={sendingAction === booking.id}
+                              className="text-[#008080] hover:underline font-medium disabled:opacity-50 whitespace-nowrap"
+                            >
+                              {sendingAction === booking.id
+                                ? "..."
+                                : "Send Confirmation"}
+                            </button>
+                            {(booking.bookingStatus || booking.status) !==
+                              "cancelled" && (
+                              <button
+                                onClick={() => {
+                                  setSelectedBooking(booking);
+                                  setShowCancelModal(true);
+                                }}
+                                className="text-red-500 hover:text-red-700 hover:underline font-medium"
+                              >
+                                Cancel
+                              </button>
+                            )}
+                          </div>
                         </td>
-                        <td className="py-3 px-4">
-                          <button className="text-[#008080] hover:underline">
-                            Edit
-                          </button>
-                        </td>
-                        {/* <td className="py-3 px-4">
-                                                    <button
-                                                        onClick={() => handleDelete(booking.id)}
-                                                        className="text-red-500 hover:underline"
-                                                    >
-                                                        Delete
-                                                    </button>
-                                                </td> */}
+                        <td className="py-3 px-4"></td>
                       </tr>
                     ))}
                   </tbody>
@@ -375,6 +534,79 @@ export default function BookingsPage() {
           )}
         </div>
       </div>
+
+      {/* Cancellation Confirmation Modal */}
+      {showCancelModal && selectedBooking && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+          <div className="bg-white rounded-xl shadow-xl max-w-md w-full p-6 animate-in fade-in zoom-in duration-200">
+            <div className="flex items-center gap-3 text-red-600 mb-4">
+              <div className="w-12 h-12 rounded-full bg-red-100 flex items-center justify-center">
+                <svg
+                  className="w-6 h-6"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+                  />
+                </svg>
+              </div>
+              <h3 className="text-xl font-bold">Cancel Booking?</h3>
+            </div>
+
+            <p className="text-gray-600 mb-6">
+              Are you sure you want to cancel the booking{" "}
+              <span className="font-semibold text-gray-900">
+                {selectedBooking.bookingReference || selectedBooking.id}
+              </span>{" "}
+              for{" "}
+              <span className="font-semibold text-gray-900">
+                {selectedBooking.GuestDirectory?.fullName ||
+                  selectedBooking.guestName}
+              </span>
+              ?
+            </p>
+
+            {cancelError && (
+              <div className="mb-4 p-3 bg-red-50 text-red-700 text-sm rounded-lg">
+                {cancelError}
+              </div>
+            )}
+
+            <div className="flex gap-3">
+              <button
+                onClick={() => {
+                  setShowCancelModal(false);
+                  setSelectedBooking(null);
+                  setCancelError(null);
+                }}
+                disabled={cancelling}
+                className="flex-1 py-2.5 border border-gray-300 rounded-lg text-gray-700 font-medium hover:bg-gray-50 disabled:opacity-50"
+              >
+                Go Back
+              </button>
+              <button
+                onClick={handleCancel}
+                disabled={cancelling}
+                className="flex-1 py-2.5 bg-red-600 text-white rounded-lg font-medium hover:bg-red-700 disabled:opacity-50 flex items-center justify-center gap-2"
+              >
+                {cancelling ? (
+                  <>
+                    <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                    Cancelling...
+                  </>
+                ) : (
+                  "Yes, Cancel"
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </AdminLayout>
   );
 }

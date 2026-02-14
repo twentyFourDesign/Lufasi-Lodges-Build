@@ -197,7 +197,7 @@ export default function NewBooking() {
                     }}
                   >
                     <span className="text-lg font-semibold text-[#09432B] pb-4">
-                      How many rooms do you need?
+                      How many Pods do you need?
                     </span>
 
                     <div className="flex items-center gap-6 mt-4 sm:mt-0">

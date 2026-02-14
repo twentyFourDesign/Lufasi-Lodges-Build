@@ -14,7 +14,7 @@ import {
   SelectContent,
   SelectItem,
 } from "@/components/ui/select";
-import { differenceInCalendarDays } from "date-fns";
+import { addDays, differenceInCalendarDays } from "date-fns";
 
 import { BASE_URL } from "@/config";
 import { useBookingStore } from "@/store/useBookingStore";
@@ -67,7 +67,7 @@ export default function BookingForm() {
         },
         numberOfNights: differenceInCalendarDays(
           checkOut.toISOString().split("T")[0],
-          checkIn.toISOString().split("T")[0]
+          checkIn.toISOString().split("T")[0],
         ),
         availablePods: data,
       });
@@ -122,6 +122,11 @@ export default function BookingForm() {
               onSelect={(date) => {
                 setCheckIn(date);
                 setCheckInOpen(false);
+                // Auto-select checkout date 2 days after check-in
+                if (date) {
+                  const nextCheckout = addDays(date, 2);
+                  setCheckOut(nextCheckout);
+                }
               }}
               disabled={(date) => date < new Date()} // Disable past dates
               className="rounded-md"
@@ -217,4 +222,3 @@ export default function BookingForm() {
     </div>
   );
 }
-
