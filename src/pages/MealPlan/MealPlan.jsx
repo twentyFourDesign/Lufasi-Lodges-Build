@@ -30,16 +30,29 @@ export default function MealPlan() {
 
   const selectedMealPlan = bookingStore.draft.mealPlan;
 
-  // Check if booking data exists, redirect if not
   useEffect(() => {
     if (!bookingStore.draft.dates || !bookingStore.draft.podCount) {
       navigate("/book-your-stay", { replace: true });
+      return;
     }
-  }, [bookingStore.draft.dates, bookingStore.draft.podCount, navigate]);
 
-  useEffect(() => {
-    fetchMealPlans();
-  }, []);
+    const fullBoard = {
+      id: "FULL_BOARD",
+      boardType: "fullBoard",
+      title: "Full Board",
+      subtitle: "Includes Breakfast, Lunch, and Dinner.",
+      items: ["Breakfast included", "Lunch included", "Dinner included"],
+      price: 0,
+      isActive: true,
+    };
+
+    setMealPlans([fullBoard]);
+    bookingStore.updateDraft({
+      mealPlan: fullBoard,
+      basePrice: 400000,
+    });
+    setLoading(false);
+  }, [bookingStore, navigate]);
 
   const fetchMealPlans = async () => {
     try {
@@ -92,11 +105,11 @@ export default function MealPlan() {
         </Button>
 
         <h2 className="text-2xl md:text-5xl font-bold text-[#09432B] text-center">
-          Choose Your Meal Plan
+          Your Meal Plan
         </h2>
 
         <p className="text-center text-sm md:text-lg font-medium text-[#737373] mt-2 mb-10">
-          Step 2 of 6 – Select your dining experience
+          Step 2 of 6 – Full Board is included with your stay
         </p>
 
         <div className="grid grid-cols-1 md:grid-cols-12 gap-8">
@@ -121,16 +134,11 @@ export default function MealPlan() {
             {!loading &&
               !error &&
               mealPlans.map((plan) => {
-                const isSelected = selectedMealPlan?.id === plan.id;
+                const isSelected = true;
                 return (
                   <Card
                     key={plan.id}
-                    className={`bg-white rounded-xl shadow-sm px-6 py-6 transition-all cursor-pointer border-2 ${
-                      isSelected
-                        ? "border-[#09432B] ring-1 ring-[#09432B]"
-                        : "border-transparent"
-                    }`}
-                    onClick={() => handleSelectMealPlan(plan)}
+                    className="bg-white rounded-xl shadow-sm px-6 py-6 border-2 border-[#09432B] ring-1 ring-[#09432B]"
                   >
                     <CardContent className="p-0">
                       <div className="flex items-start justify-between gap-4">
@@ -158,11 +166,9 @@ export default function MealPlan() {
                             </p>
                           </div>
                         </div>
-                        {isSelected && (
-                          <div className="bg-[#09432B] text-white rounded-full p-1">
-                            <Check className="w-4 h-4" />
-                          </div>
-                        )}
+                        <div className="bg-[#09432B] text-white rounded-full p-1">
+                          <Check className="w-4 h-4" />
+                        </div>
                       </div>
                       <div className="mt-5 space-y-3">
                         {plan.items.map((item) => (
@@ -178,27 +184,11 @@ export default function MealPlan() {
                       </div>
                       <div className="mt-8 flex-col items-start gap-4 flex sm:flex-row sm:items-center sm:justify-between">
                         <span className="text-lg font-bold text-[#09432B] whitespace-nowrap">
-                          ₦{formatPrice(plan.price)}
+                          Full Board Included
                           <span className="text-sm font-normal text-[#737373] ml-1">
-                            per person/night
+                            (Mandatory for Pods)
                           </span>
                         </span>
-                        <Button
-                          variant="ghost"
-                          className={`
-                            font-bold flex items-center gap-2 hover:bg-transparent
-                            w-full justify-end px-0 py-2
-                            sm:w-auto sm:justify-end sm:px-0 sm:py-0
-                            ${isSelected ? "text-[#09432B]" : "text-[#737373]"}
-                          `}
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleSelectMealPlan(plan);
-                          }}
-                        >
-                          {isSelected ? "Selected" : "Select Meal Plan"}
-                          <ArrowRight className="w-4 h-4 mt-1" />
-                        </Button>
                       </div>
                     </CardContent>
                   </Card>
@@ -310,26 +300,17 @@ export default function MealPlan() {
                 Happy with your meal plan? let's move ahead
               </div>
 
-              {!selectedMealPlan ? (
-                <Button
-                  className="w-full bg-gray-400 text-white text-base font-bold py-6 rounded-none rounded-b-xl opacity-50 cursor-not-allowed"
-                  disabled={true}
+              <Button
+                asChild
+                className="w-full bg-[#09432B] hover:bg-[#083f28] text-white text-base font-bold py-6 rounded-none rounded-b-xl"
+              >
+                <Link
+                  to="/guest-details"
+                  className="flex items-center gap-2 justify-center"
                 >
                   Continue to Guest Details →
-                </Button>
-              ) : (
-                <Button
-                  asChild
-                  className="w-full bg-[#09432B] hover:bg-[#083f28] text-white text-base font-bold py-6 rounded-none rounded-b-xl"
-                >
-                  <Link
-                    to="/guest-details"
-                    className="flex items-center gap-2 justify-center"
-                  >
-                    Continue to Guest Details →
-                  </Link>
-                </Button>
-              )}
+                </Link>
+              </Button>
             </div>
 
             <Button

@@ -158,8 +158,10 @@ export default function NewBooking() {
                     </div>
                   </div>
                   <span className="text-sm text-[#737373] font-bold whitespace-nowrap">
-                    ₦{formatPrice(250000)}{" "}
-                    <span className="font-normal">per person/night</span>
+                    ₦{formatPrice(400000)}{" "}
+                    <span className="font-normal">
+                      From (Single Occupancy, Full Board)
+                    </span>
                   </span>
                 </div>
                 <div className="flex items-center gap-2 mb-3">
