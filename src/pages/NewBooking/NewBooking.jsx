@@ -29,24 +29,29 @@ export default function NewBooking() {
   const podTags = ["Air conditioning", "Wifi", "Forest View"];
 
   const onChangeRooms = (type) => {
+    const adults = bookingStore.draft.guests?.adults || 0;
+    let perNightBase = 0;
+    if (adults <= 1) {
+      perNightBase = 400000;
+    } else if (adults === 2) {
+      perNightBase = 500000;
+    }
+    const nights = bookingStore.draft.numberOfNights || 1;
+
     if (type === "dec" && roomCount > 1) {
-      setRoomCount(roomCount - 1);
+      const nextCount = roomCount - 1;
+      setRoomCount(nextCount);
 
       bookingStore.updateDraft({
-        podCount: roomCount - 1,
-        subTotal:
-          bookingStore.draft.availablePods[0].price *
-          bookingStore.draft.guests?.adults *
-          bookingStore.draft.numberOfNights,
+        podCount: nextCount,
+        subTotal: perNightBase * nights * nextCount,
       });
     } else if (type === "inc" && roomCount < availablePodsCount) {
-      setRoomCount(roomCount + 1);
+      const nextCount = roomCount + 1;
+      setRoomCount(nextCount);
       bookingStore.updateDraft({
-        podCount: roomCount + 1,
-        subTotal:
-          bookingStore.draft.availablePods[0].price *
-          bookingStore.draft.guests?.adults *
-          bookingStore.draft.numberOfNights,
+        podCount: nextCount,
+        subTotal: perNightBase * nights * nextCount,
       });
     }
   };
