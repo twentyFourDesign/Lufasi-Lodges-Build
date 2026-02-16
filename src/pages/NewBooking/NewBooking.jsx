@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from "react";
+import React, { useState, useCallback, useEffect } from "react";
 import CommonNavbar from "@/components/shared/common/CommonNavbar/CommonNavbar";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -28,26 +28,62 @@ export default function NewBooking() {
 
   const podTags = ["Air conditioning", "Wifi", "Forest View"];
 
-  const onChangeRooms = (type) => {
+  const getPodLimits = () => {
     const adults = bookingStore.draft.guests?.adults || 0;
-    let perNightBase = 0;
-    if (adults <= 1) {
-      perNightBase = 400000;
-    } else if (adults === 2) {
+    let guestCount = adults || 1;
+
+    let minPods = 1;
+    let maxPods = availablePodsCount;
+
+    if (guestCount === 1 || guestCount === 2) {
+      minPods = 1;
+      maxPods = 1;
+    } else if (guestCount === 3) {
+      minPods = 2;
+      maxPods = Math.min(3, availablePodsCount);
+    } else if (guestCount === 4) {
+      minPods = 2;
+      maxPods = Math.min(4, availablePodsCount);
+    }
+
+    if (maxPods < 1) {
+      maxPods = 1;
+    }
+    if (minPods > maxPods) {
+      minPods = maxPods;
+    }
+
+    return { guestCount, minPods, maxPods };
+  };
+
+  const onChangeRooms = (type) => {
+    const { guestCount, minPods, maxPods } = getPodLimits();
+
+    let perNightBase = 400000;
+    if (guestCount >= 2) {
       perNightBase = 500000;
     }
     const nights = bookingStore.draft.numberOfNights || 1;
 
-    if (type === "dec" && roomCount > 1) {
+    if (type === "dec") {
+      if (roomCount <= minPods) {
+        return;
+      }
       const nextCount = roomCount - 1;
       setRoomCount(nextCount);
-
       bookingStore.updateDraft({
         podCount: nextCount,
         subTotal: perNightBase * nights * nextCount,
       });
-    } else if (type === "inc" && roomCount < availablePodsCount) {
-      const nextCount = roomCount + 1;
+    } else if (type === "inc") {
+      let nextCount = roomCount;
+      if (roomCount < minPods) {
+        nextCount = minPods;
+      } else if (roomCount < maxPods) {
+        nextCount = roomCount + 1;
+      } else {
+        return;
+      }
       setRoomCount(nextCount);
       bookingStore.updateDraft({
         podCount: nextCount,
@@ -55,6 +91,29 @@ export default function NewBooking() {
       });
     }
   };
+
+  useEffect(() => {
+    if (availablePodsCount <= 0) {
+      return;
+    }
+    if (roomCount !== 0) {
+      return;
+    }
+    const { guestCount, minPods } = getPodLimits();
+    if (minPods < 1) {
+      return;
+    }
+    const nights = bookingStore.draft.numberOfNights || 1;
+    let perNightBase = 400000;
+    if (guestCount >= 2) {
+      perNightBase = 500000;
+    }
+    setRoomCount(minPods);
+    bookingStore.updateDraft({
+      podCount: minPods,
+      subTotal: perNightBase * nights * minPods,
+    });
+  }, [availablePodsCount, roomCount, bookingStore]);
 
   const checkPodAvalability = useCallback(async () => {
     try {
@@ -222,7 +281,10 @@ export default function NewBooking() {
                       <button
                         onClick={() => onChangeRooms("inc")}
                         className="w-12 h-12 rounded-full border-2 border-[#0F5B45] flex items-center justify-center text-[#0F5B45] text-xl  disabled:pointer-events-none disabled:opacity-50"
-                        disabled={roomCount === availablePodsCount}
+                        disabled={
+                          getPodLimits().maxPods > 0 &&
+                          roomCount >= getPodLimits().maxPods
+                        }
                       >
                         +
                       </button>

@@ -16,6 +16,14 @@ import CommonNavbar from "@/components/shared/common/CommonNavbar/CommonNavbar";
 import { useBookingStore } from "@/store/useBookingStore";
 import { format } from "date-fns/format";
 import { BASE_URL } from "@/config";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from "@/components/ui/dialog";
 
 function formatPrice(n) {
   return n.toLocaleString();
@@ -26,11 +34,13 @@ export default function ReviewYourBooking() {
   const [discountCode, setDiscountCode] = useState("");
   const [clubId, setClubId] = useState("");
   const [creating, setCreating] = useState(false);
+  const [errorDialogOpen, setErrorDialogOpen] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
   const navigate = useNavigate();
 
-  const applyVoucher = () => alert("Demo: voucher applied");
-  const applyDiscount = () => alert("Demo: discount applied");
-  const applyClub = () => alert("Demo: 100Club applied");
+  const applyVoucher = () => {};
+  const applyDiscount = () => {};
+  const applyClub = () => {};
 
   // API: Create booking
   const handleConfirmBooking = async () => {
@@ -66,11 +76,13 @@ export default function ReviewYourBooking() {
         });
       } else {
         console.log("Booking failed: " + (result.error || "Unknown error"));
-        alert("Booking failed: " + (result.error || "Unknown error"));
+        setErrorMessage(result.error || "Booking failed. Please try again.");
+        setErrorDialogOpen(true);
       }
     } catch (error) {
       console.error("Booking failed:", error);
-      alert("Booking failed. Please try again.");
+      setErrorMessage("Booking failed. Please try again.");
+      setErrorDialogOpen(true);
     } finally {
       setCreating(false);
     }
@@ -78,6 +90,17 @@ export default function ReviewYourBooking() {
 
   return (
     <div className="min-h-screen bg-[#F7F5F0] text-[#0A2F22]">
+      <Dialog open={errorDialogOpen} onOpenChange={setErrorDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Booking issue</DialogTitle>
+            <DialogDescription>{errorMessage}</DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button onClick={() => setErrorDialogOpen(false)}>Close</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
       <CommonNavbar />
       <div className="max-w-5xl mx-auto px-4 md:px-6 lg:px-8 py-10">
         <div className="mb-4">
