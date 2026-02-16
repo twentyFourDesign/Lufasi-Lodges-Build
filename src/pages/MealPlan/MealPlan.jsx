@@ -52,7 +52,7 @@ export default function MealPlan() {
       basePrice: 400000,
     });
     setLoading(false);
-  }, [bookingStore, navigate]);
+  }, [bookingStore.draft.dates, bookingStore.draft.podCount, navigate]);
 
   const fetchMealPlans = async () => {
     try {
@@ -325,4 +325,3 @@ export default function MealPlan() {
     </div>
   );
 }
-
