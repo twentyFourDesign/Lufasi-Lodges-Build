@@ -127,9 +127,18 @@ export default function EditStayDatesModal({
                 <SelectValue placeholder="Select guests" />
               </SelectTrigger>
               <SelectContent>
+                <SelectItem value="1 Guest">1 Guest</SelectItem>
                 <SelectItem value="2 Guests">2 Guests</SelectItem>
                 <SelectItem value="3 Guests">3 Guests</SelectItem>
                 <SelectItem value="4 Guests">4 Guests</SelectItem>
+                <SelectItem value="5 Guests">5 Guests</SelectItem>
+                <SelectItem value="6 Guests">6 Guests</SelectItem>
+                <SelectItem value="7 Guests">7 Guests</SelectItem>
+                <SelectItem value="8 Guests">8 Guests</SelectItem>
+                <SelectItem value="9 Guests">9 Guests</SelectItem>
+                <SelectItem value="10 Guests">10 Guests</SelectItem>
+                <SelectItem value="11 Guests">11 Guests</SelectItem>
+                <SelectItem value="12 Guests">12 Guests</SelectItem>
               </SelectContent>
             </Select>
           </div>
