@@ -43,7 +43,7 @@ export default function NewBooking() {
       maxPods = Math.min(3, availablePodsCount);
     } else if (guestCount === 4) {
       minPods = 2;
-      maxPods = Math.min(4, availablePodsCount);
+      maxPods = Math.min(5, availablePodsCount);
     }
 
     if (maxPods < 1) {
