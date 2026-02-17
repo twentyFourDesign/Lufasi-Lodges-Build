@@ -729,6 +729,60 @@ export default function BookingDetailsPage() {
               </div>
             </div>
 
+            <div className="mb-6 p-4 bg-gray-50 rounded-lg">
+              <h4 className="font-medium text-[#333333] mb-2">
+                Pricing Configuration At Booking Time
+              </h4>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-sm">
+                <div className="flex justify-between">
+                  <span className="text-gray-500">Base Price Per Pod:</span>
+                  <span className="font-semibold text-gray-800">
+                    {booking.configBasePricePerPod != null
+                      ? `₦${parseFloat(booking.configBasePricePerPod).toLocaleString()}`
+                      : "N/A"}
+                  </span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-500">Extra Guest Fee:</span>
+                  <span className="font-semibold text-gray-800">
+                    {booking.configExtraGuestFee != null
+                      ? `₦${parseFloat(booking.configExtraGuestFee).toLocaleString()}`
+                      : "N/A"}
+                  </span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-500">Max Guests Per Pod:</span>
+                  <span className="font-semibold text-gray-800">
+                    {booking.configMaxGuestsPerPod != null
+                      ? booking.configMaxGuestsPerPod
+                      : "N/A"}
+                  </span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-500">Min Guests Per Booking:</span>
+                  <span className="font-semibold text-gray-800">
+                    {booking.configMinGuestsPerPod != null
+                      ? booking.configMinGuestsPerPod
+                      : "N/A"}
+                  </span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-500">Total Pods Available:</span>
+                  <span className="font-semibold text-gray-800">
+                    {booking.configTotalPodsAvailable != null
+                      ? booking.configTotalPodsAvailable
+                      : "N/A"}
+                  </span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-500">Currency:</span>
+                  <span className="font-semibold text-gray-800">
+                    {booking.configCurrency || "N/A"}
+                  </span>
+                </div>
+              </div>
+            </div>
+
             {/* Payment Details */}
             {payment.id && (
               <div className="mb-6 p-4 bg-gray-50 rounded-lg">
