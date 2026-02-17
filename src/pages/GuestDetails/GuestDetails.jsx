@@ -22,83 +22,93 @@ function formatPrice(n) {
 
 export default function GuestDetails() {
   const bookingStore = useBookingStore();
+  const pricingConfig = bookingStore.draft.pricingConfig;
   const [adults, setAdults] = useState(bookingStore.draft.guests?.adults || 2);
   const [teens, setTeens] = useState(0);
   const [infants, setInfants] = useState(0);
   const [subTotal, setSubTotal] = useState(bookingStore.draft?.subTotal || 0);
 
+  const computeSubTotal = (guestCount, podCount, nights) => {
+    const basePricePerPod =
+      pricingConfig?.basePricePerPod !== undefined
+        ? pricingConfig.basePricePerPod
+        : 400000;
+    const extraGuestFee =
+      pricingConfig?.extraGuestFee !== undefined
+        ? pricingConfig.extraGuestFee
+        : 100000;
+    const effectiveGuests = guestCount < 1 ? 1 : guestCount;
+    const pods = podCount < 1 ? 1 : podCount;
+    const basePerNight = pods * basePricePerPod;
+    const extraGuests = effectiveGuests > pods ? effectiveGuests - pods : 0;
+    const extraPerNight = extraGuests * extraGuestFee;
+    return (basePerNight + extraPerNight) * nights;
+  };
+
   const onChangeAdults = (type) => {
     if (type === "dec" && adults > 1) {
-      setAdults(adults - 1);
-      setSubTotal(
-        subTotal -
-          bookingStore.draft.basePrice * bookingStore.draft.numberOfNights,
-      );
+      const nextAdults = adults - 1;
+      const guestCount = nextAdults + teens;
+      const nights = bookingStore.draft.numberOfNights || 1;
+      const pods = bookingStore.draft.podCount || 1;
+      const nextSubTotal = computeSubTotal(guestCount, pods, nights);
+      setAdults(nextAdults);
+      setSubTotal(nextSubTotal);
       bookingStore.updateDraft({
         guests: {
           ...bookingStore.draft.guests,
-          adults: adults - 1,
+          adults: nextAdults,
         },
-        subTotal:
-          bookingStore.draft.subTotal -
-          bookingStore.draft.basePrice * bookingStore.draft.numberOfNights,
+        subTotal: nextSubTotal,
       });
     } else if (type === "inc") {
-      setAdults(adults + 1);
-      setSubTotal(
-        subTotal +
-          bookingStore.draft.basePrice * bookingStore.draft.numberOfNights,
-      );
+      const nextAdults = adults + 1;
+      const guestCount = nextAdults + teens;
+      const nights = bookingStore.draft.numberOfNights || 1;
+      const pods = bookingStore.draft.podCount || 1;
+      const nextSubTotal = computeSubTotal(guestCount, pods, nights);
+      setAdults(nextAdults);
+      setSubTotal(nextSubTotal);
       bookingStore.updateDraft({
         guests: {
           ...bookingStore.draft.guests,
-          adults: adults + 1,
+          adults: nextAdults,
         },
-        subTotal:
-          bookingStore.draft.subTotal +
-          bookingStore.draft.basePrice * bookingStore.draft.numberOfNights,
+        subTotal: nextSubTotal,
       });
     }
   };
 
   const onChangeTeens = (type) => {
     if (type === "dec" && teens > 0) {
-      setTeens(teens - 1);
-      setSubTotal(
-        subTotal -
-          0.75 *
-            bookingStore.draft.basePrice *
-            bookingStore.draft.numberOfNights,
-      );
+      const nextTeens = teens - 1;
+      const guestCount = adults + nextTeens;
+      const nights = bookingStore.draft.numberOfNights || 1;
+      const pods = bookingStore.draft.podCount || 1;
+      const nextSubTotal = computeSubTotal(guestCount, pods, nights);
+      setTeens(nextTeens);
+      setSubTotal(nextSubTotal);
       bookingStore.updateDraft({
         guests: {
           ...bookingStore.draft.guests,
-          teenagers: teens - 1,
+          teenagers: nextTeens,
         },
-        subTotal:
-          bookingStore.draft.subTotal -
-          0.75 *
-            bookingStore.draft.basePrice *
-            bookingStore.draft.numberOfNights,
+        subTotal: nextSubTotal,
       });
     } else if (type === "inc") {
-      setTeens(teens + 1);
-      setSubTotal(
-        subTotal +
-          0.75 *
-            bookingStore.draft.basePrice *
-            bookingStore.draft.numberOfNights,
-      );
+      const nextTeens = teens + 1;
+      const guestCount = adults + nextTeens;
+      const nights = bookingStore.draft.numberOfNights || 1;
+      const pods = bookingStore.draft.podCount || 1;
+      const nextSubTotal = computeSubTotal(guestCount, pods, nights);
+      setTeens(nextTeens);
+      setSubTotal(nextSubTotal);
       bookingStore.updateDraft({
         guests: {
           ...bookingStore.draft.guests,
-          teenagers: teens + 1,
+          teenagers: nextTeens,
         },
-        subTotal:
-          bookingStore.draft.subTotal +
-          0.75 *
-            bookingStore.draft.basePrice *
-            bookingStore.draft.numberOfNights,
+        subTotal: nextSubTotal,
       });
     }
   };

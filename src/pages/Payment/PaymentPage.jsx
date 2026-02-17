@@ -17,6 +17,8 @@ export default function PaymentPage() {
     const [isProcessing, setIsProcessing] = useState(false);
     const [selectedGateway, setSelectedGateway] = useState(null);
     const [error, setError] = useState(null);
+    const [serverAmountDue, setServerAmountDue] = useState(null);
+    const [checkingBooking, setCheckingBooking] = useState(false);
 
     // Get payment details from navigation state
     const {
@@ -32,6 +34,29 @@ export default function PaymentPage() {
             navigate("/", { replace: true });
         }
     }, [paymentLink, bookingReference, navigate]);
+
+    useEffect(() => {
+        if (!bookingId) {
+            return;
+        }
+        async function fetchBookingAmount() {
+            try {
+                setCheckingBooking(true);
+                const response = await fetch(`${BASE_URL}/payments/check-booking/${bookingId}`);
+                const data = await response.json();
+                if (response.ok && data && typeof data.totalPrice !== "undefined") {
+                    setServerAmountDue(data.totalPrice);
+                } else if (!response.ok && data && data.error === "Booking has expired") {
+                    setError("This booking has expired due to non-payment. Please create a new booking.");
+                }
+            } catch (err) {
+                console.error("Failed to check booking for payment:", err);
+            } finally {
+                setCheckingBooking(false);
+            }
+        }
+        fetchBookingAmount();
+    }, [bookingId]);
 
     // Extract token from paymentLink
     const getPaymentToken = () => {
@@ -111,7 +136,9 @@ export default function PaymentPage() {
                             <div className="flex justify-between items-center">
                                 <span className="text-gray-600 text-sm md:text-base">Amount Due</span>
                                 <span className="font-bold text-[#0A4C30] text-xl md:text-2xl">
-                                    {formatPrice(amountDue)}
+                                    {checkingBooking
+                                        ? "Checking..."
+                                        : formatPrice(serverAmountDue != null ? serverAmountDue : amountDue)}
                                 </span>
                             </div>
                         </div>

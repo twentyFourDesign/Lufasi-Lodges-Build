@@ -57,6 +57,14 @@ type BookingDraft = {
   };
   numberOfNights?: number;
   basePrice?: number;
+  pricingConfig?: {
+    basePricePerPod: number;
+    extraGuestFee: number;
+    maxGuestsPerPod: number;
+    minGuestsPerPod: number;
+    totalPodsAvailable: number;
+    currency: string;
+  };
   availablePods?: Pod[];
   podCount?: number;
   availableMealPlans?: BoardOption[];

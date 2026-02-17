@@ -18,6 +18,7 @@ function formatPrice(n) {
 export default function NewBooking() {
   const bookingStore = useBookingStore();
   const [stayOpen, setStayOpen] = useState(false);
+  const pricingConfig = bookingStore.draft.pricingConfig;
 
   // Count available pods
   const availablePodsCount = bookingStore.draft.availablePods
@@ -86,13 +87,47 @@ export default function NewBooking() {
   };
 
   const computeSubTotal = (guestCount, podCount, nights) => {
+    const basePricePerPod =
+      pricingConfig?.basePricePerPod !== undefined
+        ? pricingConfig.basePricePerPod
+        : 400000;
+    const extraGuestFee =
+      pricingConfig?.extraGuestFee !== undefined
+        ? pricingConfig.extraGuestFee
+        : 100000;
     const effectiveGuests = guestCount < 1 ? 1 : guestCount;
     const pods = podCount < 1 ? 1 : podCount;
-    const basePerNight = pods * 400000;
+    const basePerNight = pods * basePricePerPod;
     const extraGuests = effectiveGuests > pods ? effectiveGuests - pods : 0;
-    const extraPerNight = extraGuests * 100000;
+    const extraPerNight = extraGuests * extraGuestFee;
     return (basePerNight + extraPerNight) * nights;
   };
+
+  useEffect(() => {
+    async function fetchPricingConfig() {
+      try {
+        const response = await fetch(`${BASE_URL}/config/pricing`);
+        if (!response.ok) {
+          return;
+        }
+        const data = await response.json();
+        bookingStore.updateDraft({
+          pricingConfig: {
+            basePricePerPod: data.base_price_per_pod,
+            extraGuestFee: data.extra_guest_fee,
+            maxGuestsPerPod: data.max_guests_per_pod,
+            minGuestsPerPod: data.min_guests_per_pod,
+            totalPodsAvailable: data.total_pods_available,
+            currency: data.currency,
+          },
+        });
+      } catch (error) {
+        console.error("Error fetching pricing configuration:", error);
+      }
+    }
+
+    fetchPricingConfig();
+  }, []);
 
   const onChangeRooms = (type) => {
     const { guestCount, minPods, maxPods } = getPodLimits();
@@ -252,7 +287,12 @@ export default function NewBooking() {
                     </div>
                   </div>
                   <span className="text-sm text-[#737373] font-bold whitespace-nowrap">
-                    ₦{formatPrice(400000)}{" "}
+                    ₦
+                    {formatPrice(
+                      pricingConfig?.basePricePerPod !== undefined
+                        ? pricingConfig.basePricePerPod
+                        : 400000,
+                    )}{" "}
                     <span className="font-normal">
                       From (Single Occupancy, Full Board)
                     </span>

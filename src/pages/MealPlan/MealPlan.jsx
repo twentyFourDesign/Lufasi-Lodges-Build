@@ -27,6 +27,7 @@ export default function MealPlan() {
   const [error, setError] = useState(null);
   const bookingStore = useBookingStore();
   const navigate = useNavigate();
+  const pricingConfig = bookingStore.draft.pricingConfig;
 
   const selectedMealPlan = bookingStore.draft.mealPlan;
 
@@ -49,7 +50,10 @@ export default function MealPlan() {
     setMealPlans([fullBoard]);
     bookingStore.updateDraft({
       mealPlan: fullBoard,
-      basePrice: 400000,
+      basePrice:
+        pricingConfig?.basePricePerPod !== undefined
+          ? pricingConfig.basePricePerPod
+          : 400000,
     });
     setLoading(false);
   }, [bookingStore.draft.dates, bookingStore.draft.podCount, navigate]);
@@ -78,11 +82,10 @@ export default function MealPlan() {
   const handleSelectMealPlan = (plan) => {
     bookingStore.updateDraft({
       mealPlan: plan,
-      basePrice: plan.price,
-      subTotal:
-        plan.price *
-        (bookingStore.draft.guests?.adults || 0) *
-        (bookingStore.draft.numberOfNights || 0),
+      basePrice:
+        pricingConfig?.basePricePerPod !== undefined
+          ? pricingConfig.basePricePerPod
+          : plan.price,
     });
   };
 
