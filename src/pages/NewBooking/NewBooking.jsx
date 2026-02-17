@@ -36,8 +36,43 @@ export default function NewBooking() {
     let maxPods = 0;
 
     if (availablePodsCount > 0) {
-      minPods = Math.ceil(guestCount / 2);
-      maxPods = guestCount;
+      if (guestCount === 1) {
+        minPods = 1;
+        maxPods = 1;
+      } else if (guestCount === 2) {
+        minPods = 1;
+        maxPods = 2;
+      } else if (guestCount === 3) {
+        minPods = 2;
+        maxPods = 3;
+      } else if (guestCount === 4) {
+        minPods = 2;
+        maxPods = 4;
+      } else if (guestCount === 5) {
+        minPods = 3;
+        maxPods = 5;
+      } else if (guestCount === 6) {
+        minPods = 3;
+        maxPods = 6;
+      } else if (guestCount === 7) {
+        minPods = 4;
+        maxPods = 6;
+      } else if (guestCount === 8) {
+        minPods = 4;
+        maxPods = 6;
+      } else if (guestCount === 9) {
+        minPods = 5;
+        maxPods = 6;
+      } else if (guestCount === 10) {
+        minPods = 5;
+        maxPods = 6;
+      } else if (guestCount === 11) {
+        minPods = 6;
+        maxPods = 6;
+      } else if (guestCount === 12) {
+        minPods = 6;
+        maxPods = 6;
+      }
 
       if (maxPods > availablePodsCount) {
         maxPods = availablePodsCount;
@@ -50,13 +85,18 @@ export default function NewBooking() {
     return { guestCount, minPods, maxPods };
   };
 
+  const computeSubTotal = (guestCount, podCount, nights) => {
+    const effectiveGuests = guestCount < 1 ? 1 : guestCount;
+    const pods = podCount < 1 ? 1 : podCount;
+    const basePerNight = pods * 400000;
+    const extraGuests = effectiveGuests > pods ? effectiveGuests - pods : 0;
+    const extraPerNight = extraGuests * 100000;
+    return (basePerNight + extraPerNight) * nights;
+  };
+
   const onChangeRooms = (type) => {
     const { guestCount, minPods, maxPods } = getPodLimits();
 
-    let perNightBase = 400000;
-    if (guestCount >= 2) {
-      perNightBase = 500000;
-    }
     const nights = bookingStore.draft.numberOfNights || 1;
 
     if (type === "dec") {
@@ -67,7 +107,7 @@ export default function NewBooking() {
       setRoomCount(nextCount);
       bookingStore.updateDraft({
         podCount: nextCount,
-        subTotal: perNightBase * nights * nextCount,
+        subTotal: computeSubTotal(guestCount, nextCount, nights),
       });
     } else if (type === "inc") {
       let nextCount = roomCount;
@@ -81,7 +121,7 @@ export default function NewBooking() {
       setRoomCount(nextCount);
       bookingStore.updateDraft({
         podCount: nextCount,
-        subTotal: perNightBase * nights * nextCount,
+        subTotal: computeSubTotal(guestCount, nextCount, nights),
       });
     }
   };
@@ -98,14 +138,10 @@ export default function NewBooking() {
       return;
     }
     const nights = bookingStore.draft.numberOfNights || 1;
-    let perNightBase = 400000;
-    if (guestCount >= 2) {
-      perNightBase = 500000;
-    }
     setRoomCount(minPods);
     bookingStore.updateDraft({
       podCount: minPods,
-      subTotal: perNightBase * nights * minPods,
+      subTotal: computeSubTotal(guestCount, minPods, nights),
     });
   }, [availablePodsCount, roomCount, bookingStore]);
 
