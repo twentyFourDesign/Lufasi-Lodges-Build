@@ -19,6 +19,7 @@ export default function BookingDetailsPage() {
   const [selectedPodIds, setSelectedPodIds] = useState([]);
   const [allocating, setAllocating] = useState(false);
   const [fetchingPods, setFetchingPods] = useState(false);
+  const [hasTriedPaymentRefresh, setHasTriedPaymentRefresh] = useState(false);
 
   useEffect(() => {
     fetchBooking();
@@ -144,7 +145,41 @@ export default function BookingDetailsPage() {
       }
 
       const data = await response.json();
-      setBooking(data.booking || data);
+      const loadedBooking = data.booking || data;
+      setBooking(loadedBooking);
+
+      if (!hasTriedPaymentRefresh) {
+        const payment = loadedBooking.BookingPayments?.[0];
+        const isPaidNow =
+          (payment && payment.paymentStatus === "successful") ||
+          loadedBooking.bookingStatus === "paid" ||
+          loadedBooking.bookingStatus === "confirmed";
+
+        if (payment && payment.transactionReference && !isPaidNow) {
+          setHasTriedPaymentRefresh(true);
+          try {
+            const verifyResponse = await fetch(
+              `${BASE_URL}/payments/verify/${payment.transactionReference}`,
+            );
+            if (verifyResponse.ok) {
+              const refreshedBookingResponse = await fetch(
+                `${BASE_URL}/bookings/${id}`,
+                {
+                  headers: {
+                    Authorization: `Bearer ${token}`,
+                  },
+                },
+              );
+              if (refreshedBookingResponse.ok) {
+                const refreshedData = await refreshedBookingResponse.json();
+                setBooking(refreshedData.booking || refreshedData);
+              }
+            }
+          } catch (err) {
+            console.error("Failed to refresh payment status:", err);
+          }
+        }
+      }
     } catch (err) {
       setError(err.message);
     } finally {
