@@ -30,27 +30,21 @@ export default function NewBooking() {
 
   const getPodLimits = () => {
     const adults = bookingStore.draft.guests?.adults || 0;
-    let guestCount = adults || 1;
+    const guestCount = adults > 0 ? adults : 1;
 
-    let minPods = 1;
-    let maxPods = availablePodsCount;
+    let minPods = 0;
+    let maxPods = 0;
 
-    if (guestCount === 1 || guestCount === 2) {
-      minPods = 1;
-      maxPods = 1;
-    } else if (guestCount === 3) {
-      minPods = 2;
-      maxPods = Math.min(3, availablePodsCount);
-    } else if (guestCount === 4) {
-      minPods = 2;
-      maxPods = Math.min(5, availablePodsCount);
-    }
+    if (availablePodsCount > 0) {
+      minPods = Math.ceil(guestCount / 2);
+      maxPods = guestCount;
 
-    if (maxPods < 1) {
-      maxPods = 1;
-    }
-    if (minPods > maxPods) {
-      minPods = maxPods;
+      if (maxPods > availablePodsCount) {
+        maxPods = availablePodsCount;
+      }
+      if (minPods > maxPods) {
+        minPods = maxPods;
+      }
     }
 
     return { guestCount, minPods, maxPods };
