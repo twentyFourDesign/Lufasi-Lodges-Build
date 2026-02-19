@@ -287,12 +287,9 @@ export default function NewBooking() {
                     </div>
                   </div>
                   <span className="text-sm text-[#737373] font-bold whitespace-nowrap">
-                    ₦
-                    {formatPrice(
-                      pricingConfig?.basePricePerPod !== undefined
-                        ? pricingConfig.basePricePerPod
-                        : 400000,
-                    )}{" "}
+                    {pricingConfig?.basePricePerPod != null
+                      ? `₦${formatPrice(pricingConfig.basePricePerPod)}`
+                      : "₦--"}{" "}
                     <span className="font-normal">
                       From (Single Occupancy, Full Board)
                     </span>
@@ -454,6 +451,13 @@ export default function NewBooking() {
 
               <p className="text-sm text-[#737373] font-medium">
                 {`x${roomCount} Rooms`}
+              </p>
+              <p className="text-sm text-[#737373] font-medium mt-1">
+                {`Guests: ${
+                  (bookingStore.draft.guests?.adults || 0) +
+                  (bookingStore.draft.guests?.teenagers || 0) +
+                  (bookingStore.draft.guests?.infants || 0)
+                }`}
               </p>
             </div>
             <div className="bg-white rounded-xl border border-gray-200 px-5 py-4 shadow-sm">
