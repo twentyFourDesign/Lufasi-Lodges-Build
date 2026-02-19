@@ -60,6 +60,7 @@ export default function ReviewYourBooking() {
           extras: bookingStore.draft.extras || [],
           discountCode,
           voucherCode,
+          bedConfiguration: bookingStore.draft.bedConfiguration,
         }),
       });
 
@@ -164,6 +165,11 @@ export default function ReviewYourBooking() {
                   <p className="text-sm text-[#6B6B6B]">
                     {`x${bookingStore.draft.podCount || 0} Rooms`}
                   </p>
+                  {bookingStore.draft.bedConfiguration && (
+                    <p className="text-sm text-[#6B6B6B] mt-1">
+                      {bookingStore.draft.bedConfiguration}
+                    </p>
+                  )}
                 </div>
               </CardContent>
             </Card>

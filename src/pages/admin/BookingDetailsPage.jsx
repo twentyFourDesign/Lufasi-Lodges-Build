@@ -684,6 +684,11 @@ export default function BookingDetailsPage() {
             <p className="text-sm text-gray-600">
               {getBoardTypeLabel(booking.boardType)}
             </p>
+            {booking.bedConfiguration && (
+              <p className="text-sm text-gray-600 mt-1">
+                Bed: {booking.bedConfiguration}
+              </p>
+            )}
           </div>
 
           {/* Extras */}

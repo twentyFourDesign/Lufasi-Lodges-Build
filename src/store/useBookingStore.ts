@@ -65,6 +65,7 @@ type BookingDraft = {
     totalPodsAvailable: number;
     currency: string;
   };
+  bedConfiguration?: string;
   availablePods?: Pod[];
   podCount?: number;
   availableMealPlans?: BoardOption[];

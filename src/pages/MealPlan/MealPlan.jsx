@@ -3,15 +3,9 @@ import CommonNavbar from "@/components/shared/common/CommonNavbar/CommonNavbar";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import mealIcon from "../../assets/SVG.png";
-import {
-  ArrowLeft,
-  ArrowRight,
-  Calendar,
-  Home,
-  Wallet,
-  Check,
-  Loader2,
-} from "lucide-react";
+import { ArrowLeft, Calendar, Home, Wallet, Check, Loader2 } from "lucide-react";
+import { LuBedSingle } from "react-icons/lu";
+import { IoBedOutline } from "react-icons/io5";
 import { Link, useNavigate } from "react-router-dom";
 import { BASE_URL } from "@/config";
 import { useBookingStore } from "@/store/useBookingStore";
@@ -28,8 +22,8 @@ export default function MealPlan() {
   const bookingStore = useBookingStore();
   const navigate = useNavigate();
   const pricingConfig = bookingStore.draft.pricingConfig;
-
-  const selectedMealPlan = bookingStore.draft.mealPlan;
+  const bedConfig =
+    bookingStore.draft.bedConfiguration || "1 x King Bed (6 foot)";
 
   useEffect(() => {
     if (!bookingStore.draft.dates || !bookingStore.draft.podCount) {
@@ -37,55 +31,19 @@ export default function MealPlan() {
       return;
     }
 
-    const fullBoard = {
-      id: "FULL_BOARD",
-      boardType: "fullBoard",
-      title: "Full Board",
-      subtitle: "Includes Breakfast, Lunch, and Dinner.",
-      items: ["Breakfast included", "Lunch included", "Dinner included"],
-      price: 0,
-      isActive: true,
-    };
-
-    setMealPlans([fullBoard]);
     bookingStore.updateDraft({
-      mealPlan: fullBoard,
       basePrice:
         pricingConfig?.basePricePerPod !== undefined
           ? pricingConfig.basePricePerPod
           : 400000,
+      bedConfiguration: bedConfig,
     });
     setLoading(false);
   }, [bookingStore.draft.dates, bookingStore.draft.podCount, navigate]);
 
-  const fetchMealPlans = async () => {
-    try {
-      setLoading(true);
-      setError(null);
-
-      const response = await fetch(`${BASE_URL}/meal-plans`);
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-
-      const data = await response.json();
-      setMealPlans(data.mealPlans || []);
-    } catch (error) {
-      console.error("Error fetching meal plans:", error);
-      setError(error.message);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleSelectMealPlan = (plan) => {
+  const handleSelectBedConfig = (value) => {
     bookingStore.updateDraft({
-      mealPlan: plan,
-      basePrice:
-        pricingConfig?.basePricePerPod !== undefined
-          ? pricingConfig.basePricePerPod
-          : plan.price,
+      bedConfiguration: value,
     });
   };
 
@@ -108,99 +66,107 @@ export default function MealPlan() {
         </Button>
 
         <h2 className="text-2xl md:text-5xl font-bold text-[#09432B] text-center">
-          Your Meal Plan
+          Bed Configuration
         </h2>
 
         <p className="text-center text-sm md:text-lg font-medium text-[#737373] mt-2 mb-10">
-          Step 2 of 6 – Full Board is included with your stay
+          Step 2 of 6 – Full Board meals are always included
         </p>
 
         <div className="grid grid-cols-1 md:grid-cols-12 gap-8">
           <div className="md:col-span-8 space-y-6">
-            {loading && !error && (
-              <div className="flex items-center justify-center min-h-[400px]">
-                <div className="flex items-center gap-2 text-[#09432B]">
-                  <Loader2 className="w-6 h-6 animate-spin" />
-                  <span className="text-lg font-medium">
-                    Loading meal plans...
-                  </span>
-                </div>
-              </div>
-            )}
-            {!loading && error && (
-              <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg text-center">
-                <p className="text-red-700 text-sm">
-                  Unable to load meal plans from server.
+            <Card className="bg-white rounded-xl shadow-sm px-6 py-6 border border-[#C7C3B5]">
+              <CardContent className="p-0">
+                <h3 className="text-xl font-bold text-[#09432B] leading-tight mb-3">
+                  Accommodation Details
+                </h3>
+                <p className="text-sm text-[#737373] mb-4">
+                  Six dome eco pods, each with plunge pool and en-suite bathroom.
+                  Each room sleeps two adults.
                 </p>
-              </div>
-            )}
-            {!loading &&
-              !error &&
-              mealPlans.map((plan) => {
-                const isSelected = true;
-                return (
-                  <Card
-                    key={plan.id}
-                    className="bg-white rounded-xl shadow-sm px-6 py-6 border-2 border-[#09432B] ring-1 ring-[#09432B]"
-                  >
-                    <CardContent className="p-0">
-                      <div className="flex items-start justify-between gap-4">
-                        <div className="flex items-start gap-4">
-                          <div
-                            className={`w-12 h-12 rounded-full flex items-center justify-center transition-colors ${
-                              isSelected
-                                ? "bg-[#09432B] text-white"
-                                : "bg-[#E6F2EE]"
-                            }`}
-                          >
-                            <img
-                              src={mealIcon}
-                              className={`w-5 h-5 ${isSelected ? "brightness-0 invert" : ""}`}
-                              alt="Meal Icon"
-                            />
-                          </div>
+                <p className="text-sm text-[#737373] mb-2">
+                  Choose your preferred bed setup.
+                </p>
 
-                          <div>
-                            <h3 className="text-xl font-bold text-[#09432B] leading-tight">
-                              {plan.title}
-                            </h3>
-                            <p className="text-sm text-[#737373] mt-1">
-                              {plan.subtitle}
-                            </p>
-                          </div>
-                        </div>
-                        <div className="bg-[#09432B] text-white rounded-full p-1">
-                          <Check className="w-4 h-4" />
-                        </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+                  <button
+                    type="button"
+                    onClick={() =>
+                      handleSelectBedConfig("1 x King Bed (6 foot)")
+                    }
+                    className={`w-full text-left rounded-xl border px-4 py-4 flex items-center justify-between gap-3 transition-all ${
+                      bedConfig === "1 x King Bed (6 foot)"
+                        ? "border-[#09432B] bg-[#E6F2EE]"
+                        : "border-gray-200 bg-white hover:border-[#09432B]/60"
+                    }`}
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="w-9 h-9 rounded-full bg-[#E6F2EE] flex items-center justify-center">
+                        <IoBedOutline className="w-5 h-5 text-[#09432B]" />
                       </div>
-                      <div className="mt-5 space-y-3">
-                        {plan.items.map((item) => (
-                          <div key={item} className="flex items-center gap-2">
-                            <Check
-                              className={`w-4 h-4 ${isSelected ? "text-[#09432B]" : "text-[#09432B]"}`}
-                            />
-                            <span className="text-sm text-[#09432B]">
-                              {item}
-                            </span>
-                          </div>
-                        ))}
+                      <div>
+                        <p className="font-semibold text-[#09432B]">
+                          1 x King Bed (6 foot)
+                        </p>
                       </div>
-                      <div className="mt-8 flex-col items-start gap-4 flex sm:flex-row sm:items-center sm:justify-between">
-                        <span className="text-lg font-bold text-[#09432B] whitespace-nowrap">
-                          Full Board Included
-                          <span className="text-sm font-normal text-[#737373] ml-1">
-                            (Mandatory for Pods)
-                          </span>
-                        </span>
+                    </div>
+                    <div
+                      className={`w-6 h-6 rounded-full border flex items-center justify-center ${
+                        bedConfig === "1 x King Bed (6 foot)"
+                          ? "border-[#09432B] bg-[#09432B]"
+                          : "border-gray-300 bg-white"
+                      }`}
+                    >
+                      {bedConfig === "1 x King Bed (6 foot)" && (
+                        <Check className="w-4 h-4 text-white" />
+                      )}
+                    </div>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() =>
+                      handleSelectBedConfig("2 x Single Beds (3 foot)")
+                    }
+                    className={`w-full text-left rounded-xl border px-4 py-4 flex items-center justify-between gap-3 transition-all ${
+                      bedConfig === "2 x Single Beds (3 foot)"
+                        ? "border-[#09432B] bg-[#E6F2EE]"
+                        : "border-gray-200 bg-white hover:border-[#09432B]/60"
+                    }`}
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="w-9 h-9 rounded-full bg-[#E6F2EE] flex items-center justify-center">
+                        <LuBedSingle className="w-5 h-5 text-[#09432B]" />
                       </div>
-                    </CardContent>
-                  </Card>
-                );
-              })}
+                      <div>
+                        <p className="font-semibold text-[#09432B]">
+                          2 x Single Beds (3 foot)
+                        </p>
+                      </div>
+                    </div>
+                    <div
+                      className={`w-6 h-6 rounded-full border flex items-center justify-center ${
+                        bedConfig === "2 x Single Beds (3 foot)"
+                          ? "border-[#09432B] bg-[#09432B]"
+                          : "border-gray-300 bg-white"
+                      }`}
+                    >
+                      {bedConfig === "2 x Single Beds (3 foot)" && (
+                        <Check className="w-4 h-4 text-white" />
+                      )}
+                    </div>
+                  </button>
+                </div>
+
+                <div className="mt-5 text-sm text-[#737373]">
+                  Full Board meals (breakfast, lunch, and dinner) are
+                  automatically included with every pod booking.
+                </div>
+              </CardContent>
+            </Card>
           </div>
 
           <div className="md:col-span-4 space-y-4">
-            {/* Stay Dates Card */}
             <div className="bg-white rounded-xl border border-gray-200 p-4 shadow-sm">
               <div className="flex items-center gap-2 mb-4">
                 <div className="w-8 h-8 bg-[#E6F2EE] rounded-full flex items-center justify-center">
@@ -246,7 +212,6 @@ export default function MealPlan() {
               </p>
             </div>
 
-            {/* Price Summary Card */}
             <div className="bg-white rounded-xl border border-gray-200 px-5 py-4 shadow-sm">
               <div className="flex items-center gap-2 mb-3">
                 <div className="w-8 h-8 bg-[#E6F2EE] rounded-full flex items-center justify-center">
@@ -294,13 +259,12 @@ export default function MealPlan() {
               </div>
             </div>
 
-            {/* Continue Button */}
             <div className="w-full rounded-t-xl overflow-hidden">
               <div
                 className="px-4 py-3 text-[#0A4C30] text-sm font-medium"
                 style={{ backgroundColor: "#B7FFFF" }}
               >
-                Happy with your meal plan? let's move ahead
+                Bed configuration and meals confirmed. Let's move ahead.
               </div>
 
               <Button
