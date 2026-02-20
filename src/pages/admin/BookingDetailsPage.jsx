@@ -739,6 +739,17 @@ export default function BookingDetailsPage() {
                   ₦{formatCurrency(parseFloat(booking.totalPrice) * 0.875)}
                 </span>
               </div>
+              {booking.twelveGuestDiscountApplied &&
+                booking.twelveGuestDiscountAmount > 0 && (
+                  <div className="flex justify-between text-sm">
+                    <span className="text-gray-600">
+                      12 Guests Discount (10% of base pods cost):
+                    </span>
+                    <span className="text-green-700">
+                      -₦{formatCurrency(booking.twelveGuestDiscountAmount)}
+                    </span>
+                  </div>
+                )}
               <div className="flex justify-between text-sm">
                 <span className="text-gray-600">
                   After consumption tax and VAT(12.5%)

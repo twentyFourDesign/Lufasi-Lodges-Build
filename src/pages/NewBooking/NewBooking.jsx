@@ -472,45 +472,65 @@ export default function NewBooking() {
                 Rooms x {roomCount}
               </p>
 
-              <div className="space-y-3 text-sm font-semibold text-[#09432B]">
-                <div className="flex justify-between">
-                  <span>Sub Total:</span>
-                  <span className="text-[#09432B] font-semibold">
-                    ₦{roomCount ? bookingStore.draft.subTotal : "0"}
-                  </span>
-                </div>
+              {(() => {
+                const guestCounts = bookingStore.draft.guests || {};
+                const totalGuests =
+                  (guestCounts.adults || 0) +
+                  (guestCounts.teenagers || 0) +
+                  (guestCounts.infants || 0);
+                const basePricePerPod =
+                  pricingConfig?.basePricePerPod !== undefined
+                    ? pricingConfig.basePricePerPod
+                    : 400000;
+                const nights = bookingStore.draft.numberOfNights || 1;
+                const pods = roomCount || bookingStore.draft.podCount || 1;
+                const baseForStayPreview = pods * basePricePerPod * nights;
+                const discountPercent = totalGuests === 12 ? 10 : 0;
+                const discountAmount =
+                  discountPercent > 0
+                    ? Math.round(baseForStayPreview * 0.1)
+                    : 0;
+                const subTotal = roomCount ? bookingStore.draft.subTotal || 0 : 0;
+                const taxableBase = subTotal - discountAmount;
+                const taxAmount =
+                  taxableBase > 0 ? Math.round(taxableBase * 0.125) : 0;
+                const totalAmount =
+                  taxableBase > 0 ? Math.round(taxableBase * 1.125) : 0;
 
-                <div className="flex justify-between leading-snug">
-                  <span>
-                    After consumption tax and <br /> VAT(12.5%)
-                  </span>
-                  <span className="text-[#09432B] font-semibold">
-                    ₦
-                    {roomCount
-                      ? Math.round(
-                          (bookingStore.draft.subTotal || 0) * 0.125,
-                        ).toLocaleString()
-                      : "0"}
-                  </span>
-                </div>
+                return (
+                  <div className="space-y-3 text-sm font-semibold text-[#09432B]">
+                    <div className="flex justify-between">
+                      <span>Sub Total:</span>
+                      <span className="text-[#09432B] font-semibold">
+                        ₦{roomCount ? subTotal.toLocaleString() : "0"}
+                      </span>
+                    </div>
 
-                <div className="flex justify-between">
-                  <span>Discount</span>
-                  <span className="text-[#09432B] font-semibold">0%</span>
-                </div>
+                    <div className="flex justify-between leading-snug">
+                      <span>
+                        After consumption tax and <br /> VAT(12.5%)
+                      </span>
+                      <span className="text-[#09432B] font-semibold">
+                        ₦{roomCount ? taxAmount.toLocaleString() : "0"}
+                      </span>
+                    </div>
 
-                <div className="border-t pt-3 flex justify-between font-semibold bg-[#F2EFE7] px-3 py-2 rounded-md text-[#09432B]">
-                  <span>Total:</span>
-                  <span>
-                    ₦
-                    {roomCount
-                      ? Math.round(
-                          (bookingStore.draft.subTotal || 0) * 1.125,
-                        ).toLocaleString()
-                      : "0"}
-                  </span>
-                </div>
-              </div>
+                    <div className="flex justify-between">
+                      <span>Discount</span>
+                      <span className="text-[#09432B] font-semibold">
+                        {discountPercent > 0 ? `${discountPercent}%` : "0%"}
+                      </span>
+                    </div>
+
+                    <div className="border-t pt-3 flex justify-between font-semibold bg-[#F2EFE7] px-3 py-2 rounded-md text-[#09432B]">
+                      <span>Total:</span>
+                      <span>
+                        ₦{roomCount ? totalAmount.toLocaleString() : "0"}
+                      </span>
+                    </div>
+                  </div>
+                );
+              })()}
             </div>
             <div className="w-full rounded-t-xl overflow-hidden">
               <div

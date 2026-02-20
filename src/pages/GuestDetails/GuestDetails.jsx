@@ -321,29 +321,60 @@ export default function GuestDetails() {
                 Pod & Meals ({bookingStore.draft.numberOfNights} Nights)
               </p>
 
-              <div className="space-y-3 text-sm font-semibold text-[#09432B]">
-                <div className="flex justify-between">
-                  <span>Sub Total:</span>
-                  <span>₦{formatPrice(subTotal)}</span>
-                </div>
+              {(() => {
+                const guestCounts = bookingStore.draft.guests || {};
+                const totalGuests =
+                  (guestCounts.adults || 0) +
+                  (guestCounts.teenagers || 0) +
+                  (guestCounts.infants || 0);
+                const pricingConfig = bookingStore.draft.pricingConfig || {};
+                const basePricePerPod =
+                  pricingConfig.basePricePerPod !== undefined
+                    ? pricingConfig.basePricePerPod
+                    : 400000;
+                const nights = bookingStore.draft.numberOfNights || 1;
+                const pods = bookingStore.draft.podCount || 1;
+                const baseForStayPreview = pods * basePricePerPod * nights;
+                const discountPercent = totalGuests === 12 ? 10 : 0;
+                const discountAmount =
+                  discountPercent > 0
+                    ? Math.round(baseForStayPreview * 0.1)
+                    : 0;
+                const subTotalLocal = subTotal || 0;
+                const taxableBase = subTotalLocal - discountAmount;
+                const taxAmount =
+                  taxableBase > 0 ? Math.round(taxableBase * 0.125) : 0;
+                const totalAmount =
+                  taxableBase > 0 ? Math.round(taxableBase * 1.125) : 0;
 
-                <div className="flex justify-between leading-snug">
-                  <span>
-                    After consumption tax and <br /> VAT(12.5%)
-                  </span>
-                  <span>₦{formatPrice(Math.round(subTotal * 0.125))}</span>
-                </div>
+                return (
+                  <div className="space-y-3 text-sm font-semibold text-[#09432B]">
+                    <div className="flex justify-between">
+                      <span>Sub Total:</span>
+                      <span>₦{formatPrice(subTotalLocal)}</span>
+                    </div>
 
-                <div className="flex justify-between">
-                  <span>Discount</span>
-                  <span>0%</span>
-                </div>
+                    <div className="flex justify-between leading-snug">
+                      <span>
+                        After consumption tax and <br /> VAT(12.5%)
+                      </span>
+                      <span>₦{formatPrice(taxAmount)}</span>
+                    </div>
 
-                <div className="border-t pt-3 flex justify-between bg-[#F2EFE7] px-3 py-2 rounded-md">
-                  <span>Total:</span>
-                  <span>₦{formatPrice(Math.round(subTotal * 1.125))}</span>
-                </div>
-              </div>
+                    <div className="flex justify-between">
+                      <span>Discount</span>
+                      <span>
+                        {discountPercent > 0 ? `${discountPercent}%` : "0%"}
+                      </span>
+                    </div>
+
+                    <div className="border-t pt-3 flex justify-between bg-[#F2EFE7] px-3 py-2 rounded-md">
+                      <span>Total:</span>
+                      <span>₦{formatPrice(totalAmount)}</span>
+                    </div>
+                  </div>
+                );
+              })()}
             </div>
             <div className="w-full rounded-t-xl overflow-hidden">
               <div

@@ -227,36 +227,76 @@ export default function ReviewYourBooking() {
                 Pod & Meals ({bookingStore.draft.numberOfNights || 0} Nights)
               </p>
 
-              <div className="space-y-3 text-sm">
-                <div className="flex justify-between">
-                  <span className="text-[#6B6B6B]">Sub Total:</span>
-                  <span className="font-semibold">
-                    ₦{formatPrice(bookingStore.draft.subTotal)}
-                  </span>
-                </div>
+              {(() => {
+                const guestCounts = bookingStore.draft.guests || {};
+                const totalGuests =
+                  (guestCounts.adults || 0) +
+                  (guestCounts.teenagers || 0) +
+                  (guestCounts.infants || 0);
+                const pricingConfig = bookingStore.draft.pricingConfig || {};
+                const basePricePerPod =
+                  pricingConfig.basePricePerPod !== undefined
+                    ? pricingConfig.basePricePerPod
+                    : 400000;
+                const nights = bookingStore.draft.numberOfNights || 1;
+                const pods = bookingStore.draft.podCount || 1;
+                const baseForStayPreview = pods * basePricePerPod * nights;
+                const discountPercent = totalGuests === 12 ? 10 : 0;
+                const discountAmount =
+                  discountPercent > 0
+                    ? Math.round(baseForStayPreview * 0.1)
+                    : 0;
+                const subTotal = bookingStore.draft.subTotal || 0;
+                const taxableBase = subTotal - discountAmount;
+                const taxAmount =
+                  taxableBase > 0 ? Math.round(taxableBase * 0.125) : 0;
+                const totalAmount =
+                  taxableBase > 0 ? Math.round(taxableBase * 1.125) : 0;
 
-                <div className="flex justify-between">
-                  <span className="text-[#6B6B6B]">
-                    After consumption tax and VAT(12.5%)
-                  </span>
-                  <span className="font-semibold">
-                    ₦
-                    {formatPrice(
-                      Math.round(bookingStore.draft.subTotal * 0.125),
-                    )}
-                  </span>
-                </div>
+                return (
+                  <div className="space-y-3 text-sm">
+                    <div className="flex justify-between">
+                      <span className="text-[#6B6B6B]">Sub Total:</span>
+                      <span className="font-semibold">
+                        ₦{formatPrice(subTotal)}
+                      </span>
+                    </div>
 
-                <div className="flex justify-between">
-                  <span className="text-[#6B6B6B]">Discount</span>
-                  <span className="font-semibold">0%</span>
-                </div>
-              </div>
+                    <div className="flex justify-between">
+                      <span className="text-[#6B6B6B]">
+                        After consumption tax and VAT(12.5%)
+                      </span>
+                      <span className="font-semibold">
+                        ₦{formatPrice(taxAmount)}
+                      </span>
+                    </div>
+
+                    <div className="flex justify-between">
+                      <span className="text-[#6B6B6B]">Discount</span>
+                      <span className="font-semibold">
+                        {discountPercent > 0 ? `${discountPercent}%` : "0%"}
+                      </span>
+                    </div>
+                  </div>
+                );
+              })()}
               <div className="mt-5 rounded-xl overflow-hidden border border-[#d9d9d9]">
                 <div className="bg-[#B7FFFF] px-4 py-3 text-[#0A4C30] font-medium flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <span className="text-sm">Discount:</span>
-                    <span className="text-sm font-semibold ml-2">0%</span>
+                    <span className="text-sm font-semibold ml-2">
+                      {(() => {
+                        const guestCounts = bookingStore.draft.guests || {};
+                        const totalGuests =
+                          (guestCounts.adults || 0) +
+                          (guestCounts.teenagers || 0) +
+                          (guestCounts.infants || 0);
+                        const discountPercent = totalGuests === 12 ? 10 : 0;
+                        return discountPercent > 0
+                          ? `${discountPercent}%`
+                          : "0%";
+                      })()}
+                    </span>
                   </div>
                   <div className="text-sm text-[#4b4b4b]">
                     Apply Discount Code
@@ -328,9 +368,33 @@ export default function ReviewYourBooking() {
                     <span>Total:</span>
                     <span>
                       ₦
-                      {formatPrice(
-                        Math.round(bookingStore.draft.subTotal * 1.125),
-                      )}
+                      {(() => {
+                        const guestCounts = bookingStore.draft.guests || {};
+                        const totalGuests =
+                          (guestCounts.adults || 0) +
+                          (guestCounts.teenagers || 0) +
+                          (guestCounts.infants || 0);
+                        const pricingConfig =
+                          bookingStore.draft.pricingConfig || {};
+                        const basePricePerPod =
+                          pricingConfig.basePricePerPod !== undefined
+                            ? pricingConfig.basePricePerPod
+                            : 400000;
+                        const nights = bookingStore.draft.numberOfNights || 1;
+                        const pods = bookingStore.draft.podCount || 1;
+                        const baseForStayPreview =
+                          pods * basePricePerPod * nights;
+                        const discountPercent = totalGuests === 12 ? 10 : 0;
+                        const discountAmount =
+                          discountPercent > 0
+                            ? Math.round(baseForStayPreview * 0.1)
+                            : 0;
+                        const subTotal = bookingStore.draft.subTotal || 0;
+                        const taxableBase = subTotal - discountAmount;
+                        const totalAmount =
+                          taxableBase > 0 ? Math.round(taxableBase * 1.125) : 0;
+                        return formatPrice(totalAmount);
+                      })()}
                     </span>
                   </div>
                 </div>
