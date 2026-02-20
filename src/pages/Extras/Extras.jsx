@@ -20,7 +20,7 @@ import { Link } from "react-router-dom";
 import { BASE_URL } from "@/config";
 
 function formatPrice(n) {
-  return n.toLocaleString();
+  return Number(n || 0).toLocaleString();
 }
 function ExtrasCard({ item, selectedExtras, onToggleExtra }) {
   const [open, setOpen] = useState(item.defaultOpen || false);
@@ -88,6 +88,7 @@ export default function Extras() {
   const [selectedExtras, setSelectedExtras] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const draft = bookingStore.draft || {};
 
   useEffect(() => {
     fetchExtras();
@@ -121,15 +122,15 @@ export default function Extras() {
       let updatedExtras;
       if (isSelected) {
         updatedExtras = prev.filter((item) => item.id !== extra.id);
-        // Subtract price from bookingStore subtotal
+        const currentSubTotal = bookingStore.draft.subTotal || 0;
         bookingStore.updateDraft({
-          subTotal: bookingStore.draft.subTotal - extra.price,
+          subTotal: currentSubTotal - extra.price,
         });
       } else {
         updatedExtras = [...prev, extra];
-        // Add price to bookingStore subtotal
+        const currentSubTotal = bookingStore.draft.subTotal || 0;
         bookingStore.updateDraft({
-          subTotal: bookingStore.draft.subTotal + extra.price,
+          subTotal: currentSubTotal + extra.price,
         });
       }
       return updatedExtras;
@@ -205,19 +206,23 @@ export default function Extras() {
                 <div>
                   <p className="text-[#737373]">Check in:</p>
                   <p className="font-medium text-[#4F4F4F]">
-                    {format(bookingStore.draft.dates.checkIn, "dd/MM/yyyy")}
+                    {draft.dates?.checkIn
+                      ? format(draft.dates.checkIn, "dd/MM/yyyy")
+                      : "--"}
                   </p>
                 </div>
 
                 <div>
                   <p className="text-[#737373]">Check out:</p>
                   <p className="font-medium text-[#4F4F4F]">
-                    {format(bookingStore.draft.dates.checkOut, "dd/MM/yyyy")}
+                    {draft.dates?.checkOut
+                      ? format(draft.dates.checkOut, "dd/MM/yyyy")
+                      : "--"}
                   </p>
                 </div>
 
                 <p className="font-semibold text-[#09432B]">
-                  {bookingStore.draft.numberOfNights} Nights
+                  {draft.numberOfNights || 0} Nights
                 </p>
               </div>
             </div>
@@ -231,22 +236,24 @@ export default function Extras() {
                 <h4 className="text-[#09432B] font-bold">Rooms</h4>
               </div>
               <p className="text-sm text-[#737373]">
-                {`x${bookingStore.draft.podCount || 0} Rooms`}
+                {`x${draft.podCount || 0} Rooms`}
               </p>
             </div>
 
             {/* Meal Plan Card */}
-            <div className="bg-white rounded-xl border border-gray-200 p-4 shadow-sm">
-              <div className="flex items-center gap-2 mb-3">
-                <div className="w-8 h-8 bg-[#E6F2EE] rounded-full flex items-center justify-center">
-                  <Gift className="w-4 h-4 text-[#09432B]" />
+            {draft.mealPlan?.title && (
+              <div className="bg-white rounded-xl border border-gray-200 p-4 shadow-sm">
+                <div className="flex items-center gap-2 mb-3">
+                  <div className="w-8 h-8 bg-[#E6F2EE] rounded-full flex items-center justify-center">
+                    <Gift className="w-4 h-4 text-[#09432B]" />
+                  </div>
+                  <h4 className="text-[#09432B] font-bold">Meal Plan</h4>
                 </div>
-                <h4 className="text-[#09432B] font-bold">Meal Plan</h4>
+                <p className="text-sm text-[#737373]">
+                  {draft.mealPlan.title}
+                </p>
               </div>
-              <p className="text-sm text-[#737373]">
-                {bookingStore.draft.mealPlan.title}
-              </p>
-            </div>
+            )}
 
             {/* Guests Card */}
             <div className="bg-white rounded-xl border border-gray-200 p-4 shadow-sm">
@@ -257,7 +264,7 @@ export default function Extras() {
                 <h4 className="text-[#09432B] font-bold">Guests</h4>
               </div>
               <p className="text-sm text-[#737373]">
-                {bookingStore.draft.guests.adults} Adults (18+)
+                {(draft.guests?.adults || 0)} Adults (18+)
               </p>
             </div>
 
@@ -286,7 +293,7 @@ export default function Extras() {
               <div className="space-y-3 text-sm">
                 <div className="flex justify-between">
                   <span>Sub Total:</span>
-                  <span>₦{formatPrice(bookingStore.draft.subTotal)}</span>
+                  <span>₦{formatPrice(draft.subTotal)}</span>
                 </div>
 
                 <div className="flex justify-between leading-snug">
@@ -296,7 +303,7 @@ export default function Extras() {
                   <span>
                     ₦
                     {formatPrice(
-                      Math.round(bookingStore.draft.subTotal * 0.125),
+                      Math.round((draft.subTotal || 0) * 0.125),
                     )}
                   </span>
                 </div>
@@ -311,7 +318,7 @@ export default function Extras() {
                   <span>
                     ₦
                     {formatPrice(
-                      Math.round(bookingStore.draft.subTotal * 1.125),
+                      Math.round((draft.subTotal || 0) * 1.125),
                     )}
                   </span>
                 </div>

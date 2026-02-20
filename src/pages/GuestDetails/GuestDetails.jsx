@@ -302,11 +302,18 @@ export default function GuestDetails() {
                 <div className="w-8 h-8 bg-[#E6F2EE] rounded-full flex items-center justify-center">
                   <UtensilsCrossed className="w-4 h-4 text-[#09432B]" />
                 </div>
-                <h4 className="text-[#09432B] font-bold">Meal Plan</h4>
+                <h4 className="text-[#09432B] font-bold">Guests</h4>
               </div>
 
               <p className="text-sm text-[#737373] font-medium">
-                {bookingStore.draft.mealPlan?.title || "N/A"}
+                {(() => {
+                  const guestCounts = bookingStore.draft.guests || {};
+                  const totalGuests =
+                    (guestCounts.adults || 0) +
+                    (guestCounts.teenagers || 0) +
+                    (guestCounts.infants || 0);
+                  return `${totalGuests} Guests`;
+                })()}
               </p>
             </div>
             <div className="bg-white rounded-xl border border-gray-200 px-5 py-4 shadow-sm">

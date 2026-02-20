@@ -188,19 +188,21 @@ export default function ReviewYourBooking() {
               </CardContent>
             </Card>
 
-            <Card className="rounded-xl border border-gray-200">
-              <CardContent className="p-4 flex gap-3">
-                <div className="w-9 h-9 rounded-full bg-[#E6F2EE] flex items-center justify-center">
-                  <Utensils className="w-4 h-4 text-[#09432B]" />
-                </div>
-                <div>
-                  <h4 className="font-semibold text-[#09432B]">Meal Plan</h4>
-                  <p className="text-sm text-[#6B6B6B]">
-                    {bookingStore.draft.mealPlan?.title || "N/A"}
-                  </p>
-                </div>
-              </CardContent>
-            </Card>
+            {bookingStore.draft.mealPlan?.title && (
+              <Card className="rounded-xl border border-gray-200">
+                <CardContent className="p-4 flex gap-3">
+                  <div className="w-9 h-9 rounded-full bg-[#E6F2EE] flex items-center justify-center">
+                    <Utensils className="w-4 h-4 text-[#09432B]" />
+                  </div>
+                  <div>
+                    <h4 className="font-semibold text-[#09432B]">Meal Plan</h4>
+                    <p className="text-sm text-[#6B6B6B]">
+                      {bookingStore.draft.mealPlan.title}
+                    </p>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
 
             <Card className="rounded-xl border border-gray-200">
               <CardContent className="p-4 flex gap-3">
