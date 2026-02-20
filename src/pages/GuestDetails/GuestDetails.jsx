@@ -335,10 +335,15 @@ export default function GuestDetails() {
                 const nights = bookingStore.draft.numberOfNights || 1;
                 const pods = bookingStore.draft.podCount || 1;
                 const baseForStayPreview = pods * basePricePerPod * nights;
-                const discountPercent = totalGuests === 12 ? 10 : 0;
+                const configuredDiscountPercent =
+                  pricingConfig.twelveGuestDiscountPercent ?? 10;
+                const discountPercent =
+                  totalGuests === 12 ? configuredDiscountPercent : 0;
                 const discountAmount =
                   discountPercent > 0
-                    ? Math.round(baseForStayPreview * 0.1)
+                    ? Math.round(
+                        baseForStayPreview * (configuredDiscountPercent / 100),
+                      )
                     : 0;
                 const subTotalLocal = subTotal || 0;
                 const taxableBase = subTotalLocal - discountAmount;

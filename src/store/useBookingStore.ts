@@ -63,6 +63,7 @@ type BookingDraft = {
     maxGuestsPerPod: number;
     minGuestsPerPod: number;
     totalPodsAvailable: number;
+    twelveGuestDiscountPercent?: number;
     currency: string;
   };
   bedConfiguration?: string;

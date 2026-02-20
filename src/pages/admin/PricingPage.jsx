@@ -54,6 +54,7 @@ export default function PricingPage() {
                 max_guests_per_pod: data.max_guests_per_pod,
                 min_guests_per_pod: data.min_guests_per_pod,
                 total_pods_available: data.total_pods_available,
+                twelve_guest_discount_percent: data.twelve_guest_discount_percent ?? 10,
                 currency: data.currency,
             });
         } catch (err) {
@@ -84,6 +85,9 @@ export default function PricingPage() {
                     max_guests_per_pod: Number(pricingConfig.max_guests_per_pod),
                     min_guests_per_pod: Number(pricingConfig.min_guests_per_pod),
                     total_pods_available: Number(pricingConfig.total_pods_available),
+                    twelve_guest_discount_percent: Number(
+                        pricingConfig.twelve_guest_discount_percent ?? 10,
+                    ),
                     currency: pricingConfig.currency || "NGN",
                 }),
             });
@@ -99,6 +103,7 @@ export default function PricingPage() {
                 max_guests_per_pod: data.max_guests_per_pod,
                 min_guests_per_pod: data.min_guests_per_pod,
                 total_pods_available: data.total_pods_available,
+                twelve_guest_discount_percent: data.twelve_guest_discount_percent ?? 10,
                 currency: data.currency,
             });
             setSaveMessage({ type: "success", text: "Pricing configuration updated successfully." });
@@ -199,6 +204,22 @@ export default function PricingPage() {
                                         value={pricingConfig.total_pods_available}
                                         onChange={(e) =>
                                             handleConfigChange("total_pods_available", e.target.value)
+                                        }
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                                        12 Guests Discount (% of base pods cost)
+                                    </label>
+                                    <input
+                                        type="number"
+                                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#008080]"
+                                        value={pricingConfig.twelve_guest_discount_percent}
+                                        onChange={(e) =>
+                                            handleConfigChange(
+                                                "twelve_guest_discount_percent",
+                                                e.target.value,
+                                            )
                                         }
                                     />
                                 </div>

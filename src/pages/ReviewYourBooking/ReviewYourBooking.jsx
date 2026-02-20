@@ -241,10 +241,15 @@ export default function ReviewYourBooking() {
                 const nights = bookingStore.draft.numberOfNights || 1;
                 const pods = bookingStore.draft.podCount || 1;
                 const baseForStayPreview = pods * basePricePerPod * nights;
-                const discountPercent = totalGuests === 12 ? 10 : 0;
+                const configuredDiscountPercent =
+                  pricingConfig.twelveGuestDiscountPercent ?? 10;
+                const discountPercent =
+                  totalGuests === 12 ? configuredDiscountPercent : 0;
                 const discountAmount =
                   discountPercent > 0
-                    ? Math.round(baseForStayPreview * 0.1)
+                    ? Math.round(
+                        baseForStayPreview * (configuredDiscountPercent / 100),
+                      )
                     : 0;
                 const subTotal = bookingStore.draft.subTotal || 0;
                 const taxableBase = subTotal - discountAmount;
@@ -291,7 +296,11 @@ export default function ReviewYourBooking() {
                           (guestCounts.adults || 0) +
                           (guestCounts.teenagers || 0) +
                           (guestCounts.infants || 0);
-                        const discountPercent = totalGuests === 12 ? 10 : 0;
+                        const configuredDiscountPercent =
+                          bookingStore.draft.pricingConfig
+                            ?.twelveGuestDiscountPercent ?? 10;
+                        const discountPercent =
+                          totalGuests === 12 ? configuredDiscountPercent : 0;
                         return discountPercent > 0
                           ? `${discountPercent}%`
                           : "0%";
@@ -384,10 +393,16 @@ export default function ReviewYourBooking() {
                         const pods = bookingStore.draft.podCount || 1;
                         const baseForStayPreview =
                           pods * basePricePerPod * nights;
-                        const discountPercent = totalGuests === 12 ? 10 : 0;
+                        const configuredDiscountPercent =
+                          pricingConfig.twelveGuestDiscountPercent ?? 10;
+                        const discountPercent =
+                          totalGuests === 12 ? configuredDiscountPercent : 0;
                         const discountAmount =
                           discountPercent > 0
-                            ? Math.round(baseForStayPreview * 0.1)
+                            ? Math.round(
+                                baseForStayPreview *
+                                  (configuredDiscountPercent / 100),
+                              )
                             : 0;
                         const subTotal = bookingStore.draft.subTotal || 0;
                         const taxableBase = subTotal - discountAmount;
