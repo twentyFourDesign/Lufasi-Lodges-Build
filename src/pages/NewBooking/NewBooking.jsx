@@ -287,12 +287,12 @@ export default function NewBooking() {
                       </span>
                     </div>
                   </div>
-                  <span className="text-sm text-[#737373] font-bold whitespace-nowrap">
+                  <span className="text-sm text-[#737373] font-bold whitespace-nowrap"> From {" "}
                     {pricingConfig?.basePricePerPod != null
                       ? `₦${formatPrice(pricingConfig.basePricePerPod)}`
                       : "₦--"}{" "}
                     <span className="font-normal">
-                      From (Single Occupancy, Full Board)
+                       (Single Occupancy, Full Board)
                     </span>
                   </span>
                 </div>
@@ -551,7 +551,7 @@ export default function NewBooking() {
                   className="w-full bg-gray-400 text-white text-base font-bold py-6 rounded-none rounded-b-xl opacity-50 cursor-not-allowed"
                   disabled={true}
                 >
-                  Continue to Meal Plan →
+                  Continue to Bed Configuration →
                 </Button>
               ) : (
                 <Button
@@ -562,7 +562,7 @@ export default function NewBooking() {
                     to="/meal-plan"
                     className="flex items-center justify-center gap-2"
                   >
-                    Continue to Meal Plan →
+                    Continue to Bed Configuration →
                   </Link>
                 </Button>
               )}
