@@ -390,10 +390,11 @@ export default function EnterDetails() {
             <div className="bg-white rounded-xl border border-gray-200 p-4 shadow-sm">
               <div className="flex items-center gap-2 mb-3">
                 <Wallet className="w-5 h-5 text-[#09432B]" />
-                <h4 className="text-[#09432B] font-bold">Meal Plan</h4>
+                <h4 className="text-[#09432B] font-bold">Bed Configuration</h4>
               </div>
               <p className="text-sm text-[#737373]">
-                {bookingStore.draft.mealPlan?.title || "N/A"}
+                {bookingStore.draft.bedConfiguration ||
+                  "1 x King Bed (6 foot)"}
               </p>
             </div>
             <div className="bg-white rounded-xl border border-gray-200 p-4 shadow-sm">
