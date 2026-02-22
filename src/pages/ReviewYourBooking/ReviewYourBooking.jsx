@@ -32,7 +32,6 @@ export default function ReviewYourBooking() {
   const bookingStore = useBookingStore();
   const [voucherCode, setVoucherCode] = useState("");
   const [discountCode, setDiscountCode] = useState("");
-  const [clubId, setClubId] = useState("");
   const [creating, setCreating] = useState(false);
   const [errorDialogOpen, setErrorDialogOpen] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
@@ -40,7 +39,6 @@ export default function ReviewYourBooking() {
 
   const applyVoucher = () => {};
   const applyDiscount = () => {};
-  const applyClub = () => {};
 
   // API: Create booking
   const handleConfirmBooking = async () => {
@@ -352,23 +350,6 @@ export default function ReviewYourBooking() {
                           onClick={applyDiscount}
                           className="w-full h-10 mt-5"
                         >
-                          Apply
-                        </Button>
-                      </div>
-                    </div>
-                    <div className="flex gap-3 items-center">
-                      <div className="flex-1">
-                        <Label className="text-sm">100Club ID</Label>
-                        <Input
-                          placeholder="Enter 100Club ID"
-                          value={clubId}
-                          onChange={(e) => setClubId(e.target.value)}
-                          className="mt-1"
-                        />
-                      </div>
-                      <div className="w-28 flex-shrink-0 mt-5">
-                        {" "}
-                        <Button onClick={applyClub} className="w-full h-10">
                           Apply
                         </Button>
                       </div>
