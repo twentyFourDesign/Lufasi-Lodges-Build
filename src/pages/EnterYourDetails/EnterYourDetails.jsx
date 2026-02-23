@@ -295,6 +295,16 @@ export default function EnterDetails() {
                         className="hidden"
                         onChange={(e) => {
                           const file = e.target.files?.[0];
+                          console.log(
+                            "[EnterYourDetails] Identification file selected",
+                            file
+                              ? {
+                                  name: file.name,
+                                  size: file.size,
+                                  type: file.type,
+                                }
+                              : null,
+                          );
                           onChange(file);
                         }}
                       />

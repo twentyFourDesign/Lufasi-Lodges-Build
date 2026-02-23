@@ -40,29 +40,96 @@ export default function ReviewYourBooking() {
   const applyVoucher = () => {};
   const applyDiscount = () => {};
 
+  const validateBooking = () => {
+    const { draft } = bookingStore;
+    if (!draft.dates || !draft.dates.checkIn || !draft.dates.checkOut) {
+      return "Please select your check-in and check-out dates before continuing.";
+    }
+    if (!draft.podCount || draft.podCount < 1) {
+      return "Please select at least one room before continuing.";
+    }
+    const contact = draft.contact || {};
+    if (!contact.firstName || !contact.lastName) {
+      return "Please enter your first and last name on the details page.";
+    }
+    if (!contact.email) {
+      return "Please enter your email address on the details page.";
+    }
+    if (!contact.phone) {
+      return "Please enter your phone number on the details page.";
+    }
+    if (!contact.gender) {
+      return "Please select your gender on the details page.";
+    }
+    if (!contact.dob) {
+      return "Please enter your date of birth on the details page.";
+    }
+    const guests = draft.guests || {};
+    if (!guests.adults || guests.adults < 1) {
+      return "At least one adult guest is required for a booking.";
+    }
+    return null;
+  };
+
   // API: Create booking
   const handleConfirmBooking = async () => {
+    const validationError = validateBooking();
+    if (validationError) {
+      setErrorMessage(validationError);
+      setErrorDialogOpen(true);
+      return;
+    }
+    const contact = bookingStore.draft.contact || {};
+    const { identification, ...contactWithoutId } = contact;
+    const payload = {
+      dates: bookingStore.draft.dates,
+      contact: contactWithoutId,
+      podId: bookingStore.draft.availablePods[0]?.id,
+      podCount: bookingStore.draft.podCount,
+      boardType: bookingStore.draft.mealPlan?.boardType || "fullBoard",
+      guests: bookingStore.draft.guests,
+      popUpBeds: bookingStore.draft.popUpBeds || 0,
+      extras: bookingStore.draft.extras || [],
+      discountCode,
+      voucherCode,
+      bedConfiguration: bookingStore.draft.bedConfiguration,
+    };
+
     try {
       setCreating(true);
+      console.log("[ReviewYourBooking] Preparing booking payload", {
+        hasIdentification: !!identification,
+        contactEmail: contactWithoutId.email,
+        podId: payload.podId,
+        dates: payload.dates,
+      });
+      const formData = new FormData();
+      formData.append("payload", JSON.stringify(payload));
+      if (identification) {
+        console.log(
+          "[ReviewYourBooking] Appending identification file to FormData",
+          {
+            name: identification.name,
+            size: identification.size,
+            type: identification.type,
+          },
+        );
+        formData.append("identification", identification);
+      }
+
       const response = await fetch(`${BASE_URL}/bookings`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          dates: bookingStore.draft.dates,
-          contact: bookingStore.draft.contact,
-          podId: bookingStore.draft.availablePods[0]?.id, // Pods will be assigned manually later
-          podCount: bookingStore.draft.podCount,
-          boardType: bookingStore.draft.mealPlan?.boardType || "fullBoard",
-          guests: bookingStore.draft.guests,
-          popUpBeds: bookingStore.draft.popUpBeds || 0,
-          extras: bookingStore.draft.extras || [],
-          discountCode,
-          voucherCode,
-          bedConfiguration: bookingStore.draft.bedConfiguration,
-        }),
+        body: formData,
       });
 
       const result = await response.json();
+      console.log("[ReviewYourBooking] Booking API response", {
+        status: response.status,
+        ok: response.ok,
+        error: result.error,
+        bookingId: result.bookingId,
+        bookingReference: result.bookingReference,
+      });
       if (response.ok) {
         // Navigate to payment page with payment details
         navigate("/payment", {

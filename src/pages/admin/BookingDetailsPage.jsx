@@ -453,6 +453,42 @@ export default function BookingDetailsPage() {
             {guest.phone && (
               <p className="text-sm text-gray-600">Phone: {guest.phone}</p>
             )}
+            <div className="mt-3">
+              <p className="text-sm font-semibold text-[#333333]">
+                Identification Document
+              </p>
+              {booking.identificationImageUrl ? (
+                booking.identificationImageUrl
+                  .toLowerCase()
+                  .includes(".pdf") ? (
+                  <a
+                    href={booking.identificationImageUrl}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="inline-flex items-center gap-2 text-sm text-[#008080] hover:underline mt-2"
+                  >
+                    <span>Open PDF</span>
+                  </a>
+                ) : (
+                  <a
+                    href={booking.identificationImageUrl}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="inline-block mt-2"
+                  >
+                    <img
+                      src={booking.identificationImageUrl}
+                      alt="Identification document"
+                      className="w-40 h-40 object-cover rounded border border-gray-200"
+                    />
+                  </a>
+                )
+              ) : (
+                <p className="text-sm text-gray-500">
+                  No identification document uploaded
+                </p>
+              )}
+            </div>
           </div>
 
           {/* Stay Dates */}
