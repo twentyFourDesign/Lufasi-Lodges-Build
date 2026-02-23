@@ -81,20 +81,7 @@ export default function BookingForm() {
   };
 
   return (
-    <div
-      className="
-        w-full max-w-6xl mx-auto
-        bg-white
-        rounded-xl shadow-xl
-
-        px-5 py-6
-        md:px-8 md:py-8
-
-        flex flex-col md:flex-row
-        gap-5 md:gap-6
-        items-start md:items-center
-      "
-    >
+    <div className="w-full max-w-6xl mx-auto bg-white rounded-xl shadow-xl px-5 py-6 md:px-8 md:py-8 flex flex-col md:flex-row gap-5 md:gap-6 items-start md:items-center">
       {/* CHECK-IN */}
       <div className="w-full md:w-1/4">
         <label className="text-gray-700 font-semibold text-sm">Check-in</label>
@@ -168,6 +155,21 @@ export default function BookingForm() {
             />
           </PopoverContent>
         </Popover>
+      </div>
+
+      {/* STAY NIGHTS */}
+      <div className="w-full md:w-1/4">
+        <label className="text-gray-700 font-semibold text-sm">
+          You are staying for
+        </label>
+        <div className="w-full mt-1 border border-gray-300 rounded-md px-3 py-3 flex items-center text-gray-700 bg-gray-50">
+          {checkIn && checkOut
+            ? `${differenceInCalendarDays(
+                checkOut,
+                checkIn,
+              )} night${differenceInCalendarDays(checkOut, checkIn) === 1 ? "" : "s"}`
+            : "Select dates"}
+        </div>
       </div>
 
       {/* GUESTS */}
