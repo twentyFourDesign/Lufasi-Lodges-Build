@@ -5,8 +5,14 @@ import { ArrowRight } from "lucide-react";
 import BookingForm from "@/components/Home/BookingForm/BookingForm";
 import Footer from "@/components/shared/Footer/Footer";
 import { Link } from "react-router-dom";
+import ComingSoonPage from "@/components/shared/ComingSoonPage";
+import { isComingSoonEnabled } from "@/config";
 
 export default function Home() {
+  if (isComingSoonEnabled()) {
+    return <ComingSoonPage />;
+  }
+
   return (
     <div
       style={{

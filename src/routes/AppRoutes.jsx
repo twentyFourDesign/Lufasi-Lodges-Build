@@ -1,4 +1,4 @@
-import { Routes, Route, Navigate } from "react-router-dom";
+import { Routes, Route, Navigate, useLocation } from "react-router-dom";
 import Home from "../pages/Home/Home";
 import BookYourStay from "@/pages/BookYourStay/BookYourStay";
 import NewBooking from "@/pages/NewBooking/NewBooking";
@@ -31,6 +31,7 @@ import BookingLogsList from "@/pages/admin/BookingLogsList";
 import GuestDetailsPage from "@/pages/admin/GuestDetailsPage";
 import { isAdminSubdomain, isBookingSubdomain } from "@/utils/subdomain";
 import useAuthStore from "@/store/useAuthStore";
+import { isComingSoonEnabled } from "@/config";
 
 // Component to block admin access on booking subdomain
 function AdminRoute({ children }) {
@@ -80,41 +81,70 @@ function HomeRoute() {
   return <Home />;
 }
 
+function isAdminAccessiblePath(pathname) {
+  const adminExactPaths = ["/login", "/admin-login", "/dashboard"];
+  const adminPathPrefixes = ["/admin", "/bookings/admin"];
+
+  if (adminExactPaths.includes(pathname)) {
+    return true;
+  }
+
+  return adminPathPrefixes.some(
+    (prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`)
+  );
+}
+
+// Route middleware for live/coming-soon mode
+function RouteModeMiddleware({ children }) {
+  const location = useLocation();
+
+  if (!isComingSoonEnabled()) {
+    return children;
+  }
+
+  if (location.pathname === "/" || isAdminAccessiblePath(location.pathname)) {
+    return children;
+  }
+
+  return <Navigate to="/" replace />;
+}
+
 export default function AppRoutes() {
   return (
-    <Routes>
-      {/* Root Route - handles subdomain-specific behavior */}
-      <Route path="/" element={<HomeRoute />} />
-      <Route path="/manage-your-booking" element={<ManageBooking />} />
-      <Route path="/book-your-stay" element={<BookYourStay />} />
-      <Route path="/new-booking" element={<NewBooking />} />
-      <Route path="/meal-plan" element={<MealPlan />} />
-      <Route path="/guest-details" element={<GuestDetails />} />
-      <Route path="/extras" element={<ExtrasPage />} />
-      <Route path="/enter-your-details" element={<EnterYourDetails />} />
-      <Route path="/review-your-booking" element={<ReviewYourBooking />} />
-      <Route path="/payment" element={<PaymentPage />} />
-      <Route path="/payment/result" element={<PaymentResult />} />
-      <Route path="/booking-confirmation" element={<BookingConfirmation />} />
-      <Route path="/edit-your-booking" element={<EditBookingPage />} />
+    <RouteModeMiddleware>
+      <Routes>
+        {/* Root Route - handles subdomain-specific behavior */}
+        <Route path="/" element={<HomeRoute />} />
+        <Route path="/manage-your-booking" element={<ManageBooking />} />
+        <Route path="/book-your-stay" element={<BookYourStay />} />
+        <Route path="/new-booking" element={<NewBooking />} />
+        <Route path="/meal-plan" element={<MealPlan />} />
+        <Route path="/guest-details" element={<GuestDetails />} />
+        <Route path="/extras" element={<ExtrasPage />} />
+        <Route path="/enter-your-details" element={<EnterYourDetails />} />
+        <Route path="/review-your-booking" element={<ReviewYourBooking />} />
+        <Route path="/payment" element={<PaymentPage />} />
+        <Route path="/payment/result" element={<PaymentResult />} />
+        <Route path="/booking-confirmation" element={<BookingConfirmation />} />
+        <Route path="/edit-your-booking" element={<EditBookingPage />} />
 
-      {/* Admin Login Routes - blocked on booking subdomain */}
-      <Route path="/admin-login" element={<AdminLoginRoute />} />
-      <Route path="/admin/login" element={<AdminLoginRoute />} />
-      <Route path="/login" element={<AdminLoginRoute />} />
+        {/* Admin Login Routes - blocked on booking subdomain */}
+        <Route path="/admin-login" element={<AdminLoginRoute />} />
+        <Route path="/admin/login" element={<AdminLoginRoute />} />
+        <Route path="/login" element={<AdminLoginRoute />} />
 
-      {/* Admin Dashboard Route - for admin subdomain clean URL */}
-      <Route
-        path="/dashboard"
-        element={
-          <ProtectedRoute>
-            <AdminDashboard />
-          </ProtectedRoute>
-        }
-      />
+        {/* Admin Dashboard Route - for admin subdomain clean URL */}
+        <Route
+          path="/dashboard"
+          element={
+            <ProtectedRoute>
+              <AdminDashboard />
+            </ProtectedRoute>
+          }
+        />
 
-      {/* Protected Admin Routes */}
-      <Route
+        {/* Protected Admin Routes */}
+        <Route
         path="/admin/dashboard"
         element={
           <ProtectedRoute>
@@ -122,7 +152,7 @@ export default function AppRoutes() {
           </ProtectedRoute>
         }
       />
-      <Route
+        <Route
         path="/admin/bookings"
         element={
           <ProtectedRoute>
@@ -130,7 +160,7 @@ export default function AppRoutes() {
           </ProtectedRoute>
         }
       />
-      <Route
+        <Route
         path="/admin/bookings/:id"
         element={
           <ProtectedRoute>
@@ -138,8 +168,8 @@ export default function AppRoutes() {
           </ProtectedRoute>
         }
       />
-      {/* Alternate route for bookings */}
-      <Route
+        {/* Alternate route for bookings */}
+        <Route
         path="/bookings/admin/:id"
         element={
           <ProtectedRoute>
@@ -147,7 +177,7 @@ export default function AppRoutes() {
           </ProtectedRoute>
         }
       />
-      <Route
+        <Route
         path="/admin/settings"
         element={
           <ProtectedRoute allowedRoles={["admin"]}>
@@ -155,7 +185,7 @@ export default function AppRoutes() {
           </ProtectedRoute>
         }
       />
-      <Route
+        <Route
         path="/admin/booking-page"
         element={
           <ProtectedRoute>
@@ -163,7 +193,7 @@ export default function AppRoutes() {
           </ProtectedRoute>
         }
       />
-      <Route
+        <Route
         path="/admin/pricing"
         element={
           <ProtectedRoute>
@@ -171,7 +201,7 @@ export default function AppRoutes() {
           </ProtectedRoute>
         }
       />
-      <Route
+        <Route
         path="/admin/guest-payments"
         element={
           <ProtectedRoute>
@@ -179,7 +209,7 @@ export default function AppRoutes() {
           </ProtectedRoute>
         }
       />
-      <Route
+        <Route
         path="/admin/page-settings"
         element={
           <ProtectedRoute allowedRoles={["admin"]}>
@@ -187,7 +217,7 @@ export default function AppRoutes() {
           </ProtectedRoute>
         }
       />
-      <Route
+        <Route
         path="/admin/pods"
         element={
           <ProtectedRoute>
@@ -195,7 +225,7 @@ export default function AppRoutes() {
           </ProtectedRoute>
         }
       />
-      <Route
+        <Route
         path="/admin/vouchers"
         element={
           <ProtectedRoute>
@@ -203,7 +233,7 @@ export default function AppRoutes() {
           </ProtectedRoute>
         }
       />
-      <Route
+        <Route
         path="/admin/extras"
         element={
           <ProtectedRoute>
@@ -211,7 +241,7 @@ export default function AppRoutes() {
           </ProtectedRoute>
         }
       />
-      <Route
+        <Route
         path="/admin/meals"
         element={
           <ProtectedRoute>
@@ -219,7 +249,7 @@ export default function AppRoutes() {
           </ProtectedRoute>
         }
       />
-      <Route
+        <Route
         path="/admin/reports"
         element={
           <ProtectedRoute>
@@ -227,7 +257,7 @@ export default function AppRoutes() {
           </ProtectedRoute>
         }
       />
-      <Route
+        <Route
         path="/admin/logs"
         element={
           <ProtectedRoute>
@@ -235,14 +265,15 @@ export default function AppRoutes() {
           </ProtectedRoute>
         }
       />
-      <Route
+        <Route
         path="/admin/guests"
         element={
           <ProtectedRoute>
             <GuestDetailsPage />
           </ProtectedRoute>
         }
-      />
-    </Routes>
+        />
+      </Routes>
+    </RouteModeMiddleware>
   );
 }
