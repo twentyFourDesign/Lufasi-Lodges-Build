@@ -17,9 +17,6 @@ export default defineConfig({
   },
   build: {
     minify: false,
-    rollupOptions: {
-      external: ["lucide-react"],
-    },
   },
   esbuild: {
     legalComments: "none",
