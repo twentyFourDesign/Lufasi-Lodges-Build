@@ -171,7 +171,7 @@ export default function PaymentPage() {
                             </p>
 
                             {/* Paystack Button */}
-                            <Button
+                            {/* <Button
                                 className="w-full h-14 bg-[#0A4C30] hover:bg-[#083d26] text-white rounded-xl text-base font-semibold flex items-center justify-center gap-3"
                                 onClick={() => handlePayment("paystack")}
                                 disabled={isProcessing}
@@ -187,7 +187,7 @@ export default function PaymentPage() {
                                         Pay with Paystack
                                     </>
                                 )}
-                            </Button>
+                            </Button> */}
 
                             {/* Squadco Button */}
                             <Button
