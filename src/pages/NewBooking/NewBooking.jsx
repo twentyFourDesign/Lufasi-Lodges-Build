@@ -2,14 +2,18 @@ import React, { useState, useCallback, useEffect } from "react";
 import CommonNavbar from "@/components/shared/common/CommonNavbar/CommonNavbar";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Calendar, Home, Info, Star, Wallet } from "lucide-react";
+import { ArrowLeft, Calendar, Home, Info, Star, Wallet, ChevronLeft, ChevronRight } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useBookingStore } from "@/store/useBookingStore";
 import { format, differenceInCalendarDays } from "date-fns";
 import { BASE_URL } from "@/config";
 import EditStayDatesModal from "@/components/edit-booking/EditStayDatesModal";
-import gardenHaven from "@/assets/garden-retreat.svg";
-import forestRetreat from "@/assets/forest-haven.svg";
+import image1 from "@/assets/lodges/image.png";
+import image2 from "@/assets/lodges/image copy.png";
+import image3 from "@/assets/lodges/image copy 2.png";
+import image4 from "@/assets/lodges/image copy 3.png";
+import image5 from "@/assets/lodges/image copy 4.png";
+import image6 from "@/assets/lodges/image copy 5.png";
 
 function formatPrice(n) {
   return n.toLocaleString();
@@ -19,6 +23,17 @@ export default function NewBooking() {
   const bookingStore = useBookingStore();
   const [stayOpen, setStayOpen] = useState(false);
   const pricingConfig = bookingStore.draft.pricingConfig;
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
+
+  const images = [image1, image2, image3, image4, image5, image6];
+
+  const nextImage = () => {
+    setCurrentImageIndex((prev) => (prev + 1) % images.length);
+  };
+
+  const prevImage = () => {
+    setCurrentImageIndex((prev) => (prev - 1 + images.length) % images.length);
+  };
 
   // Count available pods
   const availablePodsCount = bookingStore.draft.availablePods
@@ -268,7 +283,7 @@ export default function NewBooking() {
                   <div>
                     <div className="flex items-center gap-2">
                       <h3 className="text-lg font-semibold text-[#09432B]">
-                        Nature Pod - Standard
+                        Nature Dome
                       </h3>
                       {availablePodsCount < 1 && (
                         <span className="text-xs px-3 py-1 rounded-full bg-red-500 text-white font-semibold">
@@ -287,22 +302,62 @@ export default function NewBooking() {
                       </span>
                     </div>
                   </div>
-                  <span className="text-sm text-[#737373] font-bold whitespace-nowrap"> From {" "}
-                    {pricingConfig?.basePricePerPod != null
-                      ? `₦${formatPrice(pricingConfig.basePricePerPod)}`
-                      : "₦--"}{" "}
-                    <span className="font-normal">
-                       (Single Occupancy, Full Board)
+                  <div className="flex flex-col md:items-end items-start mt-[-4px]">
+                     <span className="text-sm text-[#737373] font-bold whitespace-nowrap"> From {" "}
+                      {/* {pricingConfig?.basePricePerPod != null
+                        ? `₦${formatPrice(pricingConfig.basePricePerPod)}`
+                        : "₦--"}{" "} */}
+                        250,000
+                      <span className="font-normal">
+                        (Single Occupancy, Full Board)
+                      </span>
                     </span>
-                  </span>
+                    <span className="text-[11px] text-red-600 font-semibold">
+                      Full camp takeover, all 6 domes, 12 people
+                    </span>
+                  </div>
                 </div>
-                <div className="flex items-center gap-2 mb-3">
-                  <img src={gardenHaven} alt="Garden Retreat" />
-                  <img
-                    src={forestRetreat}
-                    alt="Forest Retreat"
-                    className="sm:block hidden"
-                  />
+                <div className="relative group mb-3 w-full">
+                  <div className="flex gap-2 overflow-hidden">
+                    <div className="w-full sm:w-1/2 aspect-[4/3] overflow-hidden rounded-lg bg-gray-50">
+                      <img
+                        src={images[currentImageIndex]}
+                        alt={`Lodge image ${currentImageIndex + 1}`}
+                        className="w-full h-full object-cover transition-all duration-500 ease-in-out hover:scale-105"
+                      />
+                    </div>
+                    <div className="hidden sm:block sm:w-1/2 aspect-[4/3] overflow-hidden rounded-lg bg-gray-50">
+                      <img
+                        src={images[(currentImageIndex + 1) % images.length]}
+                        alt={`Lodge image ${((currentImageIndex + 1) % images.length) + 1}`}
+                        className="w-full h-full object-cover transition-all duration-500 ease-in-out hover:scale-105"
+                      />
+                    </div>
+                  </div>
+                  
+                  <button
+                    onClick={prevImage}
+                    className="absolute -left-3 top-1/2 -translate-y-1/2 bg-white shadow-md border border-gray-200 text-[#09432B] p-2 rounded-full hover:bg-gray-50 transition-all z-10"
+                  >
+                    <ChevronLeft size={20} />
+                  </button>
+                  <button
+                    onClick={nextImage}
+                    className="absolute -right-3 top-1/2 -translate-y-1/2 bg-white shadow-md border border-gray-200 text-[#09432B] p-2 rounded-full hover:bg-gray-50 transition-all z-10"
+                  >
+                    <ChevronRight size={20} />
+                  </button>
+                  
+                  <div className="mt-2 flex justify-center gap-1.5">
+                    {images.map((_, idx) => (
+                      <div
+                        key={idx}
+                        className={`w-1.5 h-1.5 rounded-full transition-all ${
+                          idx === currentImageIndex ? "bg-[#09432B] scale-125" : "bg-gray-300"
+                        }`}
+                      />
+                    ))}
+                  </div>
                 </div>
 
                 <p className="text-sm text-[#737373] mt-1">
@@ -543,7 +598,7 @@ export default function NewBooking() {
                 className="px-4 py-3 text-[#0A4C30] text-sm font-medium"
                 style={{ backgroundColor: "#B7FFFF" }}
               >
-                Happy with your room let's move ahead
+                Happy with your Dome let's move ahead
               </div>
 
               {roomCount < 1 ? (
