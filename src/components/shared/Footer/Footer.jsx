@@ -14,7 +14,7 @@ export default function Footer() {
         <div>
           <h2 className="text-lg font-bold mb-2">Lufasi Lodges</h2>
           <p className="text-sm leading-relaxed opacity-80">
-            Unwind in the heart of nature with eco-pods that blend sustainable design with luxurious comfort.
+            Lufasi Lodges has six geo-domes, provided on a Full-Board basis. Welcome lunch, dinner and breakfast provided, along with​ drinks, including alcohol for a truly curated experience.
           </p>
         </div>
 
@@ -47,7 +47,7 @@ export default function Footer() {
               <Instagram size={16} />
             </a>
             <a
-              href="https://wa.me/2348060554342"
+              href="http://wa.link/zrgp1y"
               target="_blank"
               rel="noopener noreferrer"
               className="w-8 h-8 flex items-center justify-center bg-white/10 rounded-full hover:bg-white/20 transition"
@@ -60,9 +60,9 @@ export default function Footer() {
 
       {/* Bottom Bar */}
       <div className="max-w-7xl mx-auto mt-6 pt-4 border-t border-white/20 flex flex-col md:flex-row items-center justify-between text-xs opacity-80 gap-2">
-        <p>© 2024 Lufasi Lodges. All rights reserved.</p>
+        <p>© 2026 Lufasi Lodges. All rights reserved.</p>
         <div className="flex items-center gap-4">
-          <a href="#" className="hover:opacity-100">Terms</a>
+          <a href="https://www.lufasilodges.com/terms" className="hover:opacity-100">Terms</a>
           <a href="#" className="hover:opacity-100">Privacy</a>
         </div>
       </div>
