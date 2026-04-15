@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import CommonNavbar from "@/components/shared/common/CommonNavbar/CommonNavbar";
 import { Button } from "@/components/ui/button";
 import {
@@ -15,7 +15,7 @@ import {
 import { Link } from "react-router-dom";
 import { useBookingStore } from "@/store/useBookingStore";
 import { format } from "date-fns";
-
+import { BASE_URL } from "@/config";
 function formatPrice(n) {
   return n.toLocaleString();
 }
@@ -24,9 +24,40 @@ export default function GuestDetails() {
   const bookingStore = useBookingStore();
   const pricingConfig = bookingStore.draft.pricingConfig;
   const [adults, setAdults] = useState(bookingStore.draft.guests?.adults || 2);
-  const [teens, setTeens] = useState(0);
-  const [infants, setInfants] = useState(0);
+  const [teens, setTeens] = useState(bookingStore.draft.guests?.teenagers || 0);
+  const [children, setChildren] = useState(bookingStore.draft.guests?.children || 0);
   const [subTotal, setSubTotal] = useState(bookingStore.draft?.subTotal || 0);
+  const [schoolHolidays, setSchoolHolidays] = useState([]);
+
+  useEffect(() => {
+    async function fetchHolidays() {
+      try {
+        const response = await fetch(`${BASE_URL}/config/holidays`);
+        if (response.ok) {
+          const data = await response.json();
+          setSchoolHolidays(data);
+        }
+      } catch (error) {
+        console.error("Error fetching school holidays", error);
+      }
+    }
+    fetchHolidays();
+  }, []);
+
+  const isChildrenPermitted = () => {
+    // Permitted if full camp takeover (6 pods)
+    if (bookingStore.draft.podCount === 6) return true;
+
+    // Check if check-in or check-out falls within any designated school holiday
+    const checkIn = new Date(bookingStore.draft.dates?.checkIn);
+    const checkOut = new Date(bookingStore.draft.dates?.checkOut);
+
+    return schoolHolidays.some(holiday => {
+      const start = new Date(holiday.startDate);
+      const end = new Date(holiday.endDate);
+      return (checkIn >= start && checkIn <= end) || (checkOut >= start && checkOut <= end) || (checkIn <= start && checkOut >= end);
+    });
+  };
 
   const computeSubTotal = (guestCount, podCount, nights) => {
     const basePricePerPod =
@@ -113,11 +144,18 @@ export default function GuestDetails() {
     }
   };
 
-  const onChangeInfants = (type) => {
-    if (type === "dec" && infants > 0) {
-      setInfants(infants - 1);
+  const onChangeChildren = (type) => {
+    if (type === "dec" && children > 0) {
+      setChildren(children - 1);
+      bookingStore.updateDraft({
+        guests: { ...bookingStore.draft.guests, children: children - 1 }
+      });
     } else if (type === "inc") {
-      setInfants(infants + 1);
+      if (!isChildrenPermitted()) return;
+      setChildren(children + 1);
+      bookingStore.updateDraft({
+        guests: { ...bookingStore.draft.guests, children: children + 1 }
+      });
     }
   };
 
@@ -181,7 +219,7 @@ export default function GuestDetails() {
   "
               >
                 <span className="text-lg font-semibold text-[#09432B]">
-                  Teenagers (11–17 years)
+                  Teens (13–17 years)
                 </span>
 
                 <div className="flex items-center gap-6 mt-4 sm:mt-0">
@@ -211,43 +249,49 @@ export default function GuestDetails() {
   "
               >
                 <span className="text-lg font-semibold text-[#09432B]">
-                  Infants (0–1 years)
+                  Children & Infants (0–12 years)
                 </span>
 
                 <div className="flex items-center gap-6 mt-4 sm:mt-0">
                   <button
-                    onClick={() => onChangeInfants("dec")}
+                    onClick={() => onChangeChildren("dec")}
                     className="w-12 h-12 rounded-full border-2 border-[#0F5B45] flex items-center justify-center text-[#0F5B45] text-xl"
                   >
                     –
                   </button>
 
                   <span className="text-2xl font-bold text-[#09432B] w-8 text-center">
-                    {infants}
+                    {children}
                   </span>
 
                   <button
-                    onClick={() => onChangeInfants("inc")}
-                    className="w-12 h-12 rounded-full border-2 border-[#0F5B45] flex items-center justify-center text-[#0F5B45] text-xl"
+                    onClick={() => onChangeChildren("inc")}
+                    className={`w-12 h-12 rounded-full border-2 border-[#0F5B45] flex items-center justify-center text-xl ${!isChildrenPermitted() ? 'text-gray-300 border-gray-300 cursor-not-allowed' : 'text-[#0F5B45]'}`}
+                    disabled={!isChildrenPermitted()}
                   >
                     +
                   </button>
                 </div>
               </div>
-            </div>
-            <div className="bg-[#C5F8FF] rounded-xl px-6 py-6 border border-[#8FE8FF] shadow-sm">
-              <div className="flex items-start gap-3">
-                <Info className="w-5 h-5 text-[#0A4C30]" />
-
-                <div>
-                  <h4 className="text-[#0A4C30] font-semibold">Age Policy</h4>
-                  <p className="text-sm text-[#0A4C30] mt-1 leading-snug">
-                    Children aged 2–10 years are not permitted unless you book
-                    the entire camp for exclusive use. Please contact us if
-                    you'd like to arrange a full camp takeover.
+              
+              {!isChildrenPermitted() && (
+                <div className="flex items-center gap-2 mt-4 text-amber-700 bg-amber-50 p-3 rounded-lg border border-amber-200">
+                  <Info className="w-4 h-4 flex-shrink-0" />
+                  <p className="text-xs font-semibold">
+                    Children aged 0-12 are only permitted when booking a full camp takeover (all 6 domes) or during designated school holidays.
                   </p>
-
-                  <button className="mt-3 text-sm font-semibold text-[#09432B] underline">
+                </div>
+              )}
+            </div>
+            <div className="bg-[#C5F8FF] rounded-xl px-5 py-5 border border-[#8FE8FF] shadow-sm">
+              <div className="flex items-start gap-3">
+                <Info className="w-5 h-5 text-[#0A4C30] flex-shrink-0 mt-0.5" />
+                <div className="min-w-0">
+                  <h4 className="text-[#0A4C30] font-semibold text-sm">Age Policy</h4>
+                  <p className="text-sm text-[#0A4C30] mt-1 leading-relaxed">
+                    Children aged 0–12 years are not permitted unless you book the entire camp for exclusive use (6 Domes) or it is a designated school holiday. Please contact us if you'd like to arrange a full camp takeover.
+                  </p>
+                  <button className="mt-2 text-sm font-semibold text-[#09432B] underline hover:text-[#083f28]">
                     Learn more
                   </button>
                 </div>
@@ -326,7 +370,7 @@ export default function GuestDetails() {
                 const totalGuests =
                   (guestCounts.adults || 0) +
                   (guestCounts.teenagers || 0) +
-                  (guestCounts.infants || 0);
+                  (guestCounts.children || 0);
                 const pricingConfig = bookingStore.draft.pricingConfig || {};
                 const basePricePerPod =
                   pricingConfig.basePricePerPod !== undefined

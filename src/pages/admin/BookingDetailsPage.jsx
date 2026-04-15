@@ -41,14 +41,12 @@ export default function BookingDetailsPage() {
       const guests = booking.BookingGuests?.[0] || {};
       const adults = guests.adults || 1;
       const children = guests.children || 0;
-      const infants = guests.infants || 0;
 
       console.log("Fetching availability with:", {
         startDate: booking.checkIn.split("T")[0],
         endDate: booking.checkOut.split("T")[0],
         adults,
         children,
-        infants,
       });
 
       const response = await fetch(`${BASE_URL}/availability/check`, {
@@ -61,7 +59,6 @@ export default function BookingDetailsPage() {
           endDate: booking.checkOut.split("T")[0],
           adults,
           children,
-          infants,
           excludeBookingId: id,
         }),
       });
@@ -444,8 +441,8 @@ export default function BookingDetailsPage() {
                 `, ${bookingGuests.children} Children`}
               {bookingGuests.toddlers > 0 &&
                 `, ${bookingGuests.toddlers} Toddlers`}
-              {bookingGuests.infants > 0 &&
-                `, ${bookingGuests.infants} Infants`}
+              {bookingGuests.children > 0 &&
+                `, ${bookingGuests.children} Children`}
             </p>
             <p className="text-sm text-gray-600">
               1- {guest.fullName || "Guest"} - {guest.email || ""}

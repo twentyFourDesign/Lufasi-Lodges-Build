@@ -512,7 +512,7 @@ export default function NewBooking() {
                 {`Guests: ${
                   (bookingStore.draft.guests?.adults || 0) +
                   (bookingStore.draft.guests?.teenagers || 0) +
-                  (bookingStore.draft.guests?.infants || 0)
+                  (bookingStore.draft.guests?.children || 0)
                 }`}
               </p>
             </div>
@@ -533,7 +533,7 @@ export default function NewBooking() {
                 const totalGuests =
                   (guestCounts.adults || 0) +
                   (guestCounts.teenagers || 0) +
-                  (guestCounts.infants || 0);
+                  (guestCounts.children || 0);
                 const basePricePerPod =
                   pricingConfig?.basePricePerPod !== undefined
                     ? pricingConfig.basePricePerPod
@@ -598,7 +598,7 @@ export default function NewBooking() {
                 className="px-4 py-3 text-[#0A4C30] text-sm font-medium"
                 style={{ backgroundColor: "#B7FFFF" }}
               >
-                Happy with your Dome let's move ahead
+                Happy with your Dome? let's move ahead
               </div>
 
               {roomCount < 1 ? (

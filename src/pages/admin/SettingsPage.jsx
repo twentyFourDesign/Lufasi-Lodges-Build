@@ -20,6 +20,17 @@ export default function SettingsPage() {
         role: "staff",
     });
 
+    // School Holiday state
+    const [holidays, setHolidays] = useState([]);
+    const [showAddHolidayModal, setShowAddHolidayModal] = useState(false);
+    const [showEditHolidayModal, setShowEditHolidayModal] = useState(false);
+    const [editingHoliday, setEditingHoliday] = useState(null);
+    const [newHoliday, setNewHoliday] = useState({
+        name: "",
+        startDate: "",
+        endDate: "",
+    });
+
     // Default pod image upload state
     const [defaultPodImage, setDefaultPodImage] = useState(null);
     const [uploadingImage, setUploadingImage] = useState(false);
@@ -27,6 +38,7 @@ export default function SettingsPage() {
 
     useEffect(() => {
         fetchUsers();
+        fetchHolidays();
     }, []);
 
     const fetchUsers = async () => {
@@ -111,6 +123,86 @@ export default function SettingsPage() {
     const openEditModal = (user) => {
         setEditingUser({ ...user, password: "" });
         setShowEditModal(true);
+    };
+
+    // School Holiday Methods
+    const fetchHolidays = async () => {
+        try {
+            const response = await fetch(`${BASE_URL}/config/holidays`);
+            const data = await response.json();
+            setHolidays(data || []);
+        } catch (err) {
+            console.error("Error fetching holidays:", err);
+        }
+    };
+
+    const handleAddHoliday = async () => {
+        setSaving(true);
+        try {
+            const response = await fetch(`${BASE_URL}/config/holidays`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    Authorization: `Bearer ${token}`,
+                },
+                body: JSON.stringify(newHoliday),
+            });
+            if (!response.ok) {
+                const data = await response.json();
+                throw new Error(data.error || "Failed to create holiday");
+            }
+            await fetchHolidays();
+            setShowAddHolidayModal(false);
+            setNewHoliday({ name: "", startDate: "", endDate: "" });
+        } catch (err) {
+            alert(err.message);
+        } finally {
+            setSaving(false);
+        }
+    };
+
+    const handleEditHoliday = async () => {
+        setSaving(true);
+        try {
+            const response = await fetch(`${BASE_URL}/config/holidays/${editingHoliday.id}`, {
+                method: "PUT",
+                headers: {
+                    "Content-Type": "application/json",
+                    Authorization: `Bearer ${token}`,
+                },
+                body: JSON.stringify(editingHoliday),
+            });
+            if (!response.ok) {
+                const data = await response.json();
+                throw new Error(data.error || "Failed to update holiday");
+            }
+            await fetchHolidays();
+            setShowEditHolidayModal(false);
+            setEditingHoliday(null);
+        } catch (err) {
+            alert(err.message);
+        } finally {
+            setSaving(false);
+        }
+    };
+
+    const handleDeleteHoliday = async (holidayId) => {
+        if (!confirm("Are you sure you want to delete this holiday?")) return;
+        try {
+            const response = await fetch(`${BASE_URL}/config/holidays/${holidayId}`, {
+                method: "DELETE",
+                headers: { Authorization: `Bearer ${token}` },
+            });
+            if (!response.ok) throw new Error("Failed to delete holiday");
+            await fetchHolidays();
+        } catch (err) {
+            alert(err.message);
+        }
+    };
+
+    const openEditHolidayModal = (holiday) => {
+        setEditingHoliday(holiday);
+        setShowEditHolidayModal(true);
     };
 
     // Handle default pod image upload
@@ -331,7 +423,70 @@ export default function SettingsPage() {
                         </table>
                     </div>
                 </div>
+
+                {/* School Holiday Management Section */}
+                <div className="bg-white rounded-lg border border-gray-100 shadow-sm overflow-hidden">
+                    <div className="p-6 border-b border-gray-100 flex justify-between items-center">
+                        <h2 className="text-lg font-semibold text-[#333333]">School Holiday Management</h2>
+                        <button
+                            onClick={() => setShowAddHolidayModal(true)}
+                            className="px-4 py-2 bg-[#008080] text-white rounded-lg flex items-center gap-2 hover:bg-[#006666]"
+                        >
+                            Add Holiday +
+                        </button>
+                    </div>
+
+                    <div className="overflow-x-auto">
+                        <table className="w-full">
+                            <thead>
+                                <tr className="bg-[#333333] text-white">
+                                    <th className="text-left px-6 py-3 font-medium">Holiday Name</th>
+                                    <th className="text-left px-6 py-3 font-medium">Start Date</th>
+                                    <th className="text-left px-6 py-3 font-medium">End Date</th>
+                                    <th className="text-left px-6 py-3 font-medium">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {holidays.map((h, index) => (
+                                    <tr
+                                        key={h.id}
+                                        className={index % 2 === 0 ? "bg-white" : "bg-[#00FFFF]/20"}
+                                    >
+                                        <td className="px-6 py-4">{h.name}</td>
+                                        <td className="px-6 py-4">{h.startDate}</td>
+                                        <td className="px-6 py-4">{h.endDate}</td>
+                                        <td className="px-6 py-4">
+                                            <div className="flex items-center gap-3">
+                                                <button
+                                                    onClick={() => openEditHolidayModal(h)}
+                                                    className="text-[#008080] hover:underline"
+                                                >
+                                                    Edit
+                                                </button>
+                                                <button
+                                                    onClick={() => handleDeleteHoliday(h.id)}
+                                                    className="text-red-500 hover:underline"
+                                                >
+                                                    Remove
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                ))}
+                                {holidays.length === 0 && (
+                                    <tr>
+                                        <td colSpan={4} className="px-6 py-8 text-center text-gray-500">
+                                            No school holidays configured
+                                        </td>
+                                    </tr>
+                                )}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
             </div>
+
+            {/* Modals */}
 
             {/* Add User Modal */}
             {showAddModal && (
@@ -486,6 +641,127 @@ export default function SettingsPage() {
                             <button
                                 onClick={handleEditUser}
                                 disabled={saving || !editingUser.fullName || !editingUser.email}
+                                className="px-6 py-2 bg-[#008080] text-white rounded-lg hover:bg-[#006666] disabled:opacity-50"
+                            >
+                                {saving ? "Saving..." : "Save Changes"}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Add Holiday Modal */}
+            {showAddHolidayModal && (
+                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+                    <div className="bg-white rounded-lg w-full max-w-md">
+                        <div className="p-6 border-b border-gray-100 flex justify-between items-center">
+                            <h2 className="text-xl font-semibold text-[#333333]">Add School Holiday</h2>
+                            <button onClick={() => setShowAddHolidayModal(false)} className="text-gray-400 hover:text-gray-600">
+                                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                </svg>
+                            </button>
+                        </div>
+                        <div className="p-6 space-y-4">
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">Holiday Name *</label>
+                                <input
+                                    type="text"
+                                    placeholder="e.g., Summer Holiday"
+                                    value={newHoliday.name}
+                                    onChange={(e) => setNewHoliday({ ...newHoliday, name: e.target.value })}
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#008080]"
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">Start Date *</label>
+                                <input
+                                    type="date"
+                                    value={newHoliday.startDate}
+                                    onChange={(e) => setNewHoliday({ ...newHoliday, startDate: e.target.value })}
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#008080]"
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">End Date *</label>
+                                <input
+                                    type="date"
+                                    value={newHoliday.endDate}
+                                    onChange={(e) => setNewHoliday({ ...newHoliday, endDate: e.target.value })}
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#008080]"
+                                />
+                            </div>
+                        </div>
+                        <div className="p-6 border-t border-gray-100 flex justify-end gap-3">
+                            <button
+                                onClick={() => setShowAddHolidayModal(false)}
+                                className="px-6 py-2 border border-gray-300 rounded-lg text-gray-600 hover:bg-gray-50"
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                onClick={handleAddHoliday}
+                                disabled={saving || !newHoliday.name || !newHoliday.startDate || !newHoliday.endDate}
+                                className="px-6 py-2 bg-[#008080] text-white rounded-lg hover:bg-[#006666] disabled:opacity-50"
+                            >
+                                {saving ? "Saving..." : "Add Holiday"}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Edit Holiday Modal */}
+            {showEditHolidayModal && editingHoliday && (
+                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+                    <div className="bg-white rounded-lg w-full max-w-md">
+                        <div className="p-6 border-b border-gray-100 flex justify-between items-center">
+                            <h2 className="text-xl font-semibold text-[#333333]">Edit School Holiday</h2>
+                            <button onClick={() => setShowEditHolidayModal(false)} className="text-gray-400 hover:text-gray-600">
+                                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                </svg>
+                            </button>
+                        </div>
+                        <div className="p-6 space-y-4">
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">Holiday Name *</label>
+                                <input
+                                    type="text"
+                                    value={editingHoliday.name}
+                                    onChange={(e) => setEditingHoliday({ ...editingHoliday, name: e.target.value })}
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#008080]"
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">Start Date *</label>
+                                <input
+                                    type="date"
+                                    value={editingHoliday.startDate}
+                                    onChange={(e) => setEditingHoliday({ ...editingHoliday, startDate: e.target.value })}
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#008080]"
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">End Date *</label>
+                                <input
+                                    type="date"
+                                    value={editingHoliday.endDate}
+                                    onChange={(e) => setEditingHoliday({ ...editingHoliday, endDate: e.target.value })}
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#008080]"
+                                />
+                            </div>
+                        </div>
+                        <div className="p-6 border-t border-gray-100 flex justify-end gap-3">
+                            <button
+                                onClick={() => setShowEditHolidayModal(false)}
+                                className="px-6 py-2 border border-gray-300 rounded-lg text-gray-600 hover:bg-gray-50"
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                onClick={handleEditHoliday}
+                                disabled={saving || !editingHoliday.name || !editingHoliday.startDate || !editingHoliday.endDate}
                                 className="px-6 py-2 bg-[#008080] text-white rounded-lg hover:bg-[#006666] disabled:opacity-50"
                             >
                                 {saving ? "Saving..." : "Save Changes"}

@@ -53,7 +53,7 @@ type BookingDraft = {
   guests?: {
     adults: number;
     teenagers: number;
-    infants: number;
+    children: number;
   };
   numberOfNights?: number;
   basePrice?: number;

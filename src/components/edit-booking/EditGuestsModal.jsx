@@ -10,7 +10,7 @@ import { Button } from "@/components/ui/button";
 
 export default function EditGuestsModal({ open, onOpenChange, value, onSave }) {
   const [local, setLocal] = useState(
-    value || { adults: 2, teenagers: 0, infants: 0 }
+    value || { adults: 2, teenagers: 0, children: 0 }
   );
 
   const change = (key, delta) => {
@@ -45,7 +45,7 @@ export default function EditGuestsModal({ open, onOpenChange, value, onSave }) {
             </div>
 
             <div className="w-full flex items-center justify-between">
-              <div className="text-sm">Teenagers (11-17 years)</div>
+              <div className="text-sm">Teens (13-17 years)</div>
               <div className="flex items-center gap-3">
                 <Button
                   variant="outline"
@@ -66,13 +66,13 @@ export default function EditGuestsModal({ open, onOpenChange, value, onSave }) {
             </div>
 
             <div className="w-full flex items-center justify-between">
-              <div className="text-sm">Infants (0-1 years)</div>
+              <div className="text-sm">Children (0-12 years)</div>
               <div className="flex items-center gap-3">
-                <Button variant="outline" onClick={() => change("infants", -1)}>
+                <Button variant="outline" onClick={() => change("children", -1)}>
                   -
                 </Button>
-                <div className="min-w-[32px] text-center">{local.infants}</div>
-                <Button variant="outline" onClick={() => change("infants", 1)}>
+                <div className="min-w-[32px] text-center">{local.children}</div>
+                <Button variant="outline" onClick={() => change("children", 1)}>
                   +
                 </Button>
               </div>
@@ -87,9 +87,8 @@ export default function EditGuestsModal({ open, onOpenChange, value, onSave }) {
               Age Policy
             </div>
             <div className="text-xs text-[#444] mt-1">
-              Children aged 2-10 years are not permitted unless you book the
-              entire camp for exclusive use. Please contact us if you'd like to
-              arrange a full camp takeover.
+              Children aged 0-12 years are not permitted standard unless full 
+              camp takeover or school holidays.
             </div>
           </div>
         </div>
