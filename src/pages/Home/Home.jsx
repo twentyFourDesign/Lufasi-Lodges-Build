@@ -40,7 +40,7 @@ export default function Home() {
         "
       >
         <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold mb-4 drop-shadow-md">
-          Escape into Nature
+          Wake Up Wild
         </h1>
 
         <p className="max-w-xl text-base md:text-lg font-semibold mb-6 drop-shadow-md">
