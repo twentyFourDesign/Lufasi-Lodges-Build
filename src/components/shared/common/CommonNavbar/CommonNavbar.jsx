@@ -28,7 +28,9 @@ export default function CommonNavbar() {
             rounded-md
           "
         >
-          Contact us
+          <a href="https://www.lufasilodges.com/" target="_blank" rel="noopener noreferrer">
+            Contact us
+          </a>
         </Button>
       </div>
     </div>

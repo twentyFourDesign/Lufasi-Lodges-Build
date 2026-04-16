@@ -63,7 +63,9 @@ export default function Navbar() {
               text-sm md:text-base
             "
           >
-            Contact us
+            <a href="https://www.lufasilodges.com/" target="_blank" rel="noopener noreferrer">
+              Contact us
+            </a>
           </Button>
         </div>
       </nav>
