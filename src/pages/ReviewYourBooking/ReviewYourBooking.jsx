@@ -473,17 +473,21 @@ export default function ReviewYourBooking() {
                   {creating ? "Creating Booking..." : "Proceed to Payment"}
                 </Button>
 
-                <div className="md:flex  gap-3">
-                  <Button
-                    variant="outline"
-                    className="w-full md:flex-1 border border-[#09432B]"
-                  >
-                    Restart Booking
-                  </Button>
-                  <Button className="md:flex-1 w-full md:mt-0 mt-2 text-white font-semibold bg-gradient-to-r from-[#B5AB84] to-[#A19257]">
+                <div className="w-full mt-2">
+                  <Button className="w-full text-white font-semibold bg-gradient-to-r from-[#B5AB84] to-[#A19257] py-3">
                     Download a Performa Invoice
                   </Button>
                 </div>
+                <Button
+                  variant="outline"
+                  className="w-full border border-[#09432B] text-[#09432B] font-semibold py-3 mt-2 cursor-pointer"
+                  onClick={() => {
+                    bookingStore.resetBooking();
+                    navigate("/");
+                  }}
+                >
+                  Restart Booking
+                </Button>
               </div>
             </CardContent>
           </Card>

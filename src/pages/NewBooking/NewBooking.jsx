@@ -3,7 +3,7 @@ import CommonNavbar from "@/components/shared/common/CommonNavbar/CommonNavbar";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, Calendar, Home, Info, Star, Wallet, ChevronLeft, ChevronRight } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useBookingStore } from "@/store/useBookingStore";
 import { format, differenceInCalendarDays } from "date-fns";
 import { BASE_URL } from "@/config";
@@ -20,6 +20,7 @@ function formatPrice(n) {
 }
 
 export default function NewBooking() {
+  const navigate = useNavigate();
   const bookingStore = useBookingStore();
   const [stayOpen, setStayOpen] = useState(false);
   const pricingConfig = bookingStore.draft.pricingConfig;
@@ -361,8 +362,7 @@ export default function NewBooking() {
                 </div>
 
                 <p className="text-sm text-[#737373] mt-1">
-                  The perfect escape into the nature. Timber construction with
-                  modern amenities sleeps 2 people.
+                  Each private dome features a large en-suite bathroom, with double sinks and shower skylight, and its own plunge pool.
                 </p>
 
                 <div className="flex flex-wrap gap-2 mt-3">
@@ -627,6 +627,16 @@ export default function NewBooking() {
               className="w-full py-6 rounded-md border border-[#A19257] hover:text-white bg-gradient-to-r from-[#B5AB84] to-[#A19257] font-bold text-white"
             >
               Quick Book
+            </Button>
+            <Button
+              variant="outline"
+              className="w-full py-6 mt-4 rounded-md border border-[#09432B] text-[#09432B] font-bold cursor-pointer"
+              onClick={() => {
+                bookingStore.resetBooking();
+                navigate("/");
+              }}
+            >
+              Restart Booking
             </Button>
           </div>
         </div>

@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button";
-import heroImage from "../../assets/image.png";
+import heroImage from "../../assets/image copy.png";
 import Navbar from "../../components/shared/Navbar/Navbar";
 import { ArrowRight } from "lucide-react";
 import BookingForm from "@/components/Home/BookingForm/BookingForm";

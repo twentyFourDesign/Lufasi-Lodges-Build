@@ -12,7 +12,7 @@ import {
   Minus,
   UtensilsCrossed,
 } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useBookingStore } from "@/store/useBookingStore";
 import { format } from "date-fns";
 import { BASE_URL } from "@/config";
@@ -21,6 +21,7 @@ function formatPrice(n) {
 }
 
 export default function GuestDetails() {
+  const navigate = useNavigate();
   const bookingStore = useBookingStore();
   const pricingConfig = bookingStore.draft.pricingConfig;
   const [adults, setAdults] = useState(bookingStore.draft.guests?.adults || 2);
@@ -450,6 +451,16 @@ export default function GuestDetails() {
               className="w-full py-6 rounded-md border border-[#A19257] hover:text-white bg-gradient-to-r from-[#B5AB84] to-[#A19257] font-bold text-white"
             >
               Quick Book
+            </Button>
+            <Button
+              variant="outline"
+              className="w-full py-6 mt-4 rounded-md border border-[#09432B] text-[#09432B] font-bold cursor-pointer"
+              onClick={() => {
+                bookingStore.resetBooking();
+                navigate("/");
+              }}
+            >
+              Restart Booking
             </Button>
           </div>
         </div>

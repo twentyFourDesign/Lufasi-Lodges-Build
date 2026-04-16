@@ -16,7 +16,7 @@ import {
   Gift,
   Loader2,
 } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { BASE_URL } from "@/config";
 
 function formatPrice(n) {
@@ -83,6 +83,7 @@ function ExtrasCard({ item, selectedExtras, onToggleExtra }) {
 }
 
 export default function Extras() {
+  const navigate = useNavigate();
   const bookingStore = useBookingStore();
   const [extras, setExtras] = useState([]);
   const [selectedExtras, setSelectedExtras] = useState([]);
@@ -360,6 +361,16 @@ export default function Extras() {
             {/* Quick Book Button */}
             <Button className="w-full py-6 rounded-md hover:text-white hover:bg-[#A19257] bg-[#A19257] text-white font-bold">
               Quick Book
+            </Button>
+            <Button
+              variant="outline"
+              className="w-full py-6 mt-4 rounded-md border border-[#09432B] text-[#09432B] font-bold cursor-pointer"
+              onClick={() => {
+                bookingStore.resetBooking();
+                navigate("/");
+              }}
+            >
+              Restart Booking
             </Button>
           </div>
         </div>

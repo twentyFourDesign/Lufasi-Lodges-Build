@@ -320,6 +320,16 @@ export default function MealPlan() {
             >
               Quick Book
             </Button>
+            <Button
+              variant="outline"
+              className="w-full py-6 mt-4 rounded-md border border-[#09432B] text-[#09432B] font-bold cursor-pointer"
+              onClick={() => {
+                bookingStore.resetBooking();
+                navigate("/");
+              }}
+            >
+              Restart Booking
+            </Button>
           </div>
         </div>
       </div>
