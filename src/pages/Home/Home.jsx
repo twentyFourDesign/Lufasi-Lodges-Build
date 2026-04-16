@@ -1,5 +1,7 @@
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import heroImage from "../../assets/image copy.png";
+import heroImageMobile from "../../assets/image-mobile.png";
 import Navbar from "../../components/shared/Navbar/Navbar";
 import { ArrowRight } from "lucide-react";
 import BookingForm from "@/components/Home/BookingForm/BookingForm";
@@ -9,6 +11,15 @@ import ComingSoonPage from "@/components/shared/ComingSoonPage";
 import { isComingSoonEnabled } from "@/config";
 
 export default function Home() {
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const checkMobile = () => setIsMobile(window.innerWidth < 768);
+    checkMobile();
+    window.addEventListener("resize", checkMobile);
+    return () => window.removeEventListener("resize", checkMobile);
+  }, []);
+
   if (isComingSoonEnabled()) {
     return <ComingSoonPage />;
   }
@@ -16,14 +27,13 @@ export default function Home() {
   return (
     <div
       style={{
-        width: "100vw",
-        minHeight: "100vh",
-        backgroundImage: `url(${heroImage})`,
-        backgroundSize: "cover",
-        backgroundPosition: "center",
-        backgroundRepeat: "no-repeat",
+        backgroundImage: `url(${isMobile ? heroImageMobile : heroImage})`,
       }}
-      className="-mt-6 p-0 overflow-auto overflow-x-hidden max-w-full opacity-98"
+      className="
+        w-full min-h-[85vh] md:min-h-screen
+        bg-cover bg-[center_right_15%] md:bg-center bg-no-repeat
+        -mt-6 p-0 overflow-auto overflow-x-hidden opacity-98
+      "
     >
       {/* NAVBAR */}
       <Navbar />

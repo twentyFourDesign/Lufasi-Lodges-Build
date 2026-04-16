@@ -151,6 +151,26 @@ export default function EditStayDatesModal({
           <div className="flex gap-2">
             <Button
               onClick={() => {
+                const launchDate = new Date(2026, 4, 1); // May 1, 2026
+                const parseDate = (str) => {
+                  const [d, m, y] = str.split("/");
+                  return new Date(`${y}-${m}-${d}`);
+                };
+
+                const ci = parseDate(local.checkIn);
+                const co = parseDate(local.checkOut);
+
+                if (ci < launchDate) {
+                  alert(
+                    "Check-in date cannot be before our launch date (May 1, 2026).",
+                  );
+                  return;
+                }
+                if (co <= ci) {
+                  alert("Check-out date must be after check-in date.");
+                  return;
+                }
+
                 onSave(local);
                 onOpenChange(false);
               }}

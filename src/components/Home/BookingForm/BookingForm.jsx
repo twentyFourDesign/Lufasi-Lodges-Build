@@ -30,6 +30,8 @@ export default function BookingForm() {
   const bookingStore = useBookingStore();
   const navigate = useNavigate();
 
+  const launchDate = new Date(2026, 4, 1); // May 1, 2026
+
   const handleCheckAvailability = async () => {
     if (!checkIn || !checkOut) {
       return;
@@ -115,7 +117,7 @@ export default function BookingForm() {
                   setCheckOut(nextCheckout);
                 }
               }}
-              disabled={(date) => date < new Date()} // Disable past dates
+              disabled={(date) => date < launchDate || date < new Date()} // Disable dates before May 1, 2026 or past dates
               className="rounded-md"
             />
           </PopoverContent>
@@ -150,7 +152,7 @@ export default function BookingForm() {
                 setCheckOut(date);
                 setCheckOutOpen(false);
               }}
-              disabled={(date) => date <= (checkIn || new Date())} // Disable dates before check-in
+              disabled={(date) => date <= (checkIn || launchDate.getTime() > Date.now() ? launchDate : new Date())} // Disable dates before check-in or launch date
               className="rounded-md"
             />
           </PopoverContent>

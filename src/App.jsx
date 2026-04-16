@@ -1,6 +1,6 @@
-
 import { useLocation } from "react-router-dom";
 import AppRoutes from "./routes/AppRoutes";
+import ScrollToTop from "./components/shared/ScrollToTop";
 
 export default function App() {
   const location = useLocation();
@@ -12,6 +12,7 @@ export default function App() {
 
   return (
     <>
+      <ScrollToTop />
       <div className={isFullScreen ? "" : "p-6"}>
         <AppRoutes />
       </div>
