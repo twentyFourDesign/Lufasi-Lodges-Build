@@ -122,9 +122,10 @@ export default function EnterDetails() {
                   <FormField
                     control={form.control}
                     name="firstName"
+                    rules={{ required: "First name is required" }}
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>First Name</FormLabel>
+                        <FormLabel>First Name <span className="text-red-500">*</span></FormLabel>
                         <FormControl>
                           <Input
                             className="border-[#29A3A3] border"
@@ -132,15 +133,17 @@ export default function EnterDetails() {
                             {...field}
                           />
                         </FormControl>
+                        <FormMessage />
                       </FormItem>
                     )}
                   />
                   <FormField
                     control={form.control}
                     name="lastName"
+                    rules={{ required: "Last name is required" }}
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Last Name</FormLabel>
+                        <FormLabel>Last Name <span className="text-red-500">*</span></FormLabel>
                         <FormControl>
                           <Input
                             className="border-[#29A3A3] border"
@@ -148,6 +151,7 @@ export default function EnterDetails() {
                             {...field}
                           />
                         </FormControl>
+                        <FormMessage />
                       </FormItem>
                     )}
                   />
@@ -156,9 +160,10 @@ export default function EnterDetails() {
                   <FormField
                     control={form.control}
                     name="email"
+                    rules={{ required: "Email is required" }}
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Email</FormLabel>
+                        <FormLabel>Email <span className="text-red-500">*</span></FormLabel>
                         <FormControl>
                           <Input
                             type="email"
@@ -167,6 +172,7 @@ export default function EnterDetails() {
                             {...field}
                           />
                         </FormControl>
+                        <FormMessage />
                       </FormItem>
                     )}
                   />
@@ -174,9 +180,10 @@ export default function EnterDetails() {
                   <FormField
                     control={form.control}
                     name="phone"
+                    rules={{ required: "Phone number is required" }}
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Phone Number</FormLabel>
+                        <FormLabel>Phone Number <span className="text-red-500">*</span></FormLabel>
                         <FormControl>
                           <Input
                             type="tel"
@@ -185,6 +192,7 @@ export default function EnterDetails() {
                             {...field}
                           />
                         </FormControl>
+                        <FormMessage />
                       </FormItem>
                     )}
                   />
@@ -193,9 +201,10 @@ export default function EnterDetails() {
                   <FormField
                     control={form.control}
                     name="gender"
+                    rules={{ required: "Gender is required" }}
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Gender</FormLabel>
+                        <FormLabel>Gender <span className="text-red-500">*</span></FormLabel>
                         <Select
                           onValueChange={field.onChange}
                           value={field.value}
@@ -210,15 +219,17 @@ export default function EnterDetails() {
                             <SelectItem value="female">Female</SelectItem>
                           </SelectContent>
                         </Select>
+                        <FormMessage />
                       </FormItem>
                     )}
                   />
                   <FormField
                     control={form.control}
                     name="dob"
+                    rules={{ required: "Date of birth is required" }}
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Date of Birth</FormLabel>
+                        <FormLabel>Date of Birth <span className="text-red-500">*</span></FormLabel>
                         <Popover>
                           <PopoverTrigger asChild>
                             <FormControl className="border-[#29A3A3] border">
@@ -249,6 +260,7 @@ export default function EnterDetails() {
                             />
                           </PopoverContent>
                         </Popover>
+                        <FormMessage />
                       </FormItem>
                     )}
                   />
@@ -256,9 +268,10 @@ export default function EnterDetails() {
                 <FormField
                   control={form.control}
                   name="instruction"
+                  rules={{ required: "Special instruction is required" }}
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Special Instruction</FormLabel>
+                      <FormLabel>Special Instruction <span className="text-red-500">*</span></FormLabel>
                       <FormControl>
                         <Input
                           className="border-[#29A3A3] border"
@@ -266,17 +279,19 @@ export default function EnterDetails() {
                           {...field}
                         />
                       </FormControl>
+                      <FormMessage />
                     </FormItem>
                   )}
                 />
                 <FormField
                   control={form.control}
                   name="identification"
+                  rules={{ required: "Identification is required" }}
                   render={({ field: { onChange, value, ...field } }) => (
                     <FormItem>
                       <FormLabel>
                         Upload Identification (Passport, National ID, Drivers
-                        License)
+                        License) <span className="text-red-500">*</span>
                       </FormLabel>
                       <FormControl>
                         <label
@@ -308,6 +323,7 @@ export default function EnterDetails() {
                           onChange(file);
                         }}
                       />
+                      <FormMessage />
                     </FormItem>
                   )}
                 />
@@ -323,9 +339,10 @@ export default function EnterDetails() {
                       <FormField
                         control={form.control}
                         name="guestNames.0"
+                        rules={{ required: "Guest name is required" }}
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Guest 1</FormLabel>
+                            <FormLabel>Guest 1 <span className="text-red-500">*</span></FormLabel>
                             <FormControl>
                               <Input
                                 placeholder="Enter Guest Name"
@@ -339,15 +356,17 @@ export default function EnterDetails() {
                       <FormField
                         control={form.control}
                         name="guestNames.1"
+                        rules={{ required: "Guest name is required" }}
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Guest 2</FormLabel>
+                            <FormLabel>Guest 2 <span className="text-red-500">*</span></FormLabel>
                             <FormControl>
                               <Input
                                 placeholder="Enter Guest Name"
                                 {...field}
                               />
                             </FormControl>
+                            <FormMessage />
                           </FormItem>
                         )}
                       />
