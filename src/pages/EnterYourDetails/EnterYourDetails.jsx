@@ -268,10 +268,9 @@ export default function EnterDetails() {
                 <FormField
                   control={form.control}
                   name="instruction"
-                  rules={{ required: "Special instruction is required" }}
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Special Instruction <span className="text-red-500">*</span></FormLabel>
+                      <FormLabel>Special Instruction</FormLabel>
                       <FormControl>
                         <Input
                           className="border-[#29A3A3] border"
