@@ -32,13 +32,118 @@ export default function ReviewYourBooking() {
   const bookingStore = useBookingStore();
   const [voucherCode, setVoucherCode] = useState("");
   const [discountCode, setDiscountCode] = useState("");
+  const [appliedDiscount, setAppliedDiscount] = useState(null);
+  const [appliedVoucher, setAppliedVoucher] = useState(null);
   const [creating, setCreating] = useState(false);
   const [errorDialogOpen, setErrorDialogOpen] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
+  const [successMessage, setSuccessMessage] = useState("");
+  const [successDialogOpen, setSuccessDialogOpen] = useState(false);
   const navigate = useNavigate();
 
-  const applyVoucher = () => {};
-  const applyDiscount = () => {};
+  const applyVoucher = async () => {
+    if (!voucherCode) return;
+    try {
+      const response = await fetch(`${BASE_URL}/vouchers/validate`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ code: voucherCode }),
+      });
+      const data = await response.json();
+      if (data.valid) {
+        setAppliedVoucher(data.voucher);
+        setSuccessMessage(`Voucher applied: ₦${data.voucher.value.toLocaleString()}`);
+        setSuccessDialogOpen(true);
+      } else {
+        setErrorMessage(data.reason || "Invalid voucher code");
+        setErrorDialogOpen(true);
+      }
+    } catch (error) {
+      console.error("Error applying voucher:", error);
+      setErrorMessage("Failed to validate voucher");
+      setErrorDialogOpen(true);
+    }
+  };
+
+  const applyDiscount = async () => {
+    if (!discountCode) return;
+    try {
+      const response = await fetch(`${BASE_URL}/discounts/validate`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ code: discountCode }),
+      });
+      const data = await response.json();
+      if (data.valid) {
+        setAppliedDiscount(data.discount);
+        setSuccessMessage(`Discount applied: ${data.discount.type === 'percentage' ? data.discount.value + '%' : '₦' + Number(data.discount.value).toLocaleString()}`);
+        setSuccessDialogOpen(true);
+      } else {
+        setErrorMessage(data.reason || "Invalid discount code");
+        setErrorDialogOpen(true);
+      }
+    } catch (error) {
+      console.error("Error applying discount:", error);
+      setErrorMessage("Failed to validate discount");
+      setErrorDialogOpen(true);
+    }
+  };
+
+  const calculatePricing = () => {
+    const guestCounts = bookingStore.draft.guests || {};
+    const totalGuests = (guestCounts.adults || 0) + (guestCounts.teenagers || 0) + (guestCounts.children || 0);
+    const pricingConfig = bookingStore.draft.pricingConfig || {};
+    const basePricePerPod = pricingConfig.basePricePerPod ?? 400000;
+    const nights = bookingStore.draft.numberOfNights || 1;
+    const pods = bookingStore.draft.podCount || 1;
+    const baseForStayPreview = pods * basePricePerPod * nights;
+    
+    // 1. Twelve Guest Discount
+    const configuredDiscountPercent = pricingConfig.twelveGuestDiscountPercent ?? 10;
+    const twelveGuestDiscountPercent = totalGuests === 12 ? configuredDiscountPercent : 0;
+    const twelveGuestDiscountAmount = twelveGuestDiscountPercent > 0
+        ? Math.round(baseForStayPreview * (twelveGuestDiscountPercent / 100))
+        : 0;
+    
+    const subTotal = bookingStore.draft.subTotal || 0;
+    let runningTotal = subTotal - twelveGuestDiscountAmount;
+    
+    // 2. Applied Discount Code
+    let promoDiscountAmount = 0;
+    if (appliedDiscount) {
+      if (appliedDiscount.type === 'percentage') {
+        promoDiscountAmount = Math.round(runningTotal * (Number(appliedDiscount.value) / 100));
+      } else {
+        promoDiscountAmount = Number(appliedDiscount.value);
+      }
+      runningTotal -= promoDiscountAmount;
+    }
+    
+    // 3. Applied Voucher
+    let voucherDiscountAmount = 0;
+    if (appliedVoucher) {
+      voucherDiscountAmount = Number(appliedVoucher.value);
+      runningTotal -= voucherDiscountAmount;
+    }
+
+    const taxableBase = Math.max(0, runningTotal);
+    const taxAmount = Math.round(taxableBase * 0.125);
+    const finalTotal = Math.round(taxableBase * 1.125);
+
+    return {
+      subTotal,
+      twelveGuestDiscountAmount,
+      twelveGuestDiscountPercent,
+      promoDiscountAmount,
+      voucherDiscountAmount,
+      taxableBase,
+      taxAmount,
+      finalTotal,
+      totalSavings: twelveGuestDiscountAmount + promoDiscountAmount + voucherDiscountAmount
+    };
+  };
+
+  const pricing = calculatePricing();
 
   const validateBooking = () => {
     const { draft } = bookingStore;
@@ -131,6 +236,9 @@ export default function ReviewYourBooking() {
         bookingReference: result.bookingReference,
       });
       if (response.ok) {
+        // Clear applied codes on success
+        setAppliedDiscount(null);
+        setAppliedVoucher(null);
         // Navigate to payment page with payment details
         navigate("/payment", {
           state: {
@@ -164,6 +272,18 @@ export default function ReviewYourBooking() {
           </DialogHeader>
           <DialogFooter>
             <Button onClick={() => setErrorDialogOpen(false)}>Close</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={successDialogOpen} onOpenChange={setSuccessDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Success</DialogTitle>
+            <DialogDescription>{successMessage}</DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button onClick={() => setSuccessDialogOpen(false)}>Great!</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -294,84 +414,57 @@ export default function ReviewYourBooking() {
                 Pod & Meals ({bookingStore.draft.numberOfNights || 0} Nights)
               </p>
 
-              {(() => {
-                const guestCounts = bookingStore.draft.guests || {};
-                const totalGuests =
-                  (guestCounts.adults || 0) +
-                  (guestCounts.teenagers || 0) +
-                  (guestCounts.children || 0);
-                const pricingConfig = bookingStore.draft.pricingConfig || {};
-                const basePricePerPod =
-                  pricingConfig.basePricePerPod !== undefined
-                    ? pricingConfig.basePricePerPod
-                    : 400000;
-                const nights = bookingStore.draft.numberOfNights || 1;
-                const pods = bookingStore.draft.podCount || 1;
-                const baseForStayPreview = pods * basePricePerPod * nights;
-                const configuredDiscountPercent =
-                  pricingConfig.twelveGuestDiscountPercent ?? 10;
-                const discountPercent =
-                  totalGuests === 12 ? configuredDiscountPercent : 0;
-                const discountAmount =
-                  discountPercent > 0
-                    ? Math.round(
-                        baseForStayPreview * (configuredDiscountPercent / 100),
-                      )
-                    : 0;
-                const subTotal = bookingStore.draft.subTotal || 0;
-                const taxableBase = subTotal - discountAmount;
-                const taxAmount =
-                  taxableBase > 0 ? Math.round(taxableBase * 0.125) : 0;
-                const totalAmount =
-                  taxableBase > 0 ? Math.round(taxableBase * 1.125) : 0;
+              <div className="space-y-3 text-sm">
+                <div className="flex justify-between">
+                  <span className="text-[#6B6B6B]">Sub Total:</span>
+                  <span className="font-semibold text-[#09432B]">
+                    ₦{formatPrice(pricing.subTotal)}
+                  </span>
+                </div>
 
-                return (
-                  <div className="space-y-3 text-sm">
-                    <div className="flex justify-between">
-                      <span className="text-[#6B6B6B]">Sub Total:</span>
-                      <span className="font-semibold">
-                        ₦{formatPrice(subTotal)}
-                      </span>
-                    </div>
-
-                    <div className="flex justify-between">
-                      <span className="text-[#6B6B6B]">
-                        After consumption tax and VAT(12.5%)
-                      </span>
-                      <span className="font-semibold">
-                        ₦{formatPrice(taxAmount)}
-                      </span>
-                    </div>
-
-                    <div className="flex justify-between">
-                      <span className="text-[#6B6B6B]">Discount</span>
-                      <span className="font-semibold">
-                        {discountPercent > 0 ? `${discountPercent}%` : "0%"}
-                      </span>
-                    </div>
+                {pricing.twelveGuestDiscountAmount > 0 && (
+                  <div className="flex justify-between text-[#008080]">
+                    <span className="">12 Guest Discount ({pricing.twelveGuestDiscountPercent}%):</span>
+                    <span className="font-semibold">
+                      - ₦{formatPrice(pricing.twelveGuestDiscountAmount)}
+                    </span>
                   </div>
-                );
-              })()}
+                )}
+
+                {pricing.promoDiscountAmount > 0 && (
+                  <div className="flex justify-between text-[#008080]">
+                    <span className="">Promo Discount ({appliedDiscount.code}):</span>
+                    <span className="font-semibold">
+                      - ₦{formatPrice(pricing.promoDiscountAmount)}
+                    </span>
+                  </div>
+                )}
+
+                {pricing.voucherDiscountAmount > 0 && (
+                  <div className="flex justify-between text-[#008080]">
+                    <span className="">Voucher ({appliedVoucher.code}):</span>
+                    <span className="font-semibold">
+                      - ₦{formatPrice(pricing.voucherDiscountAmount)}
+                    </span>
+                  </div>
+                )}
+
+                <div className="flex justify-between">
+                  <span className="text-[#6B6B6B]">
+                    Consumption tax & VAT (12.5%):
+                  </span>
+                  <span className="font-semibold text-[#09432B]">
+                    ₦{formatPrice(pricing.taxAmount)}
+                  </span>
+                </div>
+              </div>
               <div className="mt-5 rounded-xl overflow-hidden border border-[#d9d9d9]">
                 <div className="bg-[#B7FFFF] px-4 py-3 text-[#0A4C30] font-medium flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <span className="text-sm">Discount:</span>
+                    <span className="text-sm">Savings:</span>
                     <span className="text-sm font-semibold ml-2">
-                      {(() => {
-                        const guestCounts = bookingStore.draft.guests || {};
-                        const totalGuests =
-                          (guestCounts.adults || 0) +
-                          (guestCounts.teenagers || 0) +
-                          (guestCounts.children || 0);
-                        const configuredDiscountPercent =
-                          bookingStore.draft.pricingConfig
-                            ?.twelveGuestDiscountPercent ?? 10;
-                        const discountPercent =
-                          totalGuests === 12 ? configuredDiscountPercent : 0;
-                        return discountPercent > 0
-                          ? `${discountPercent}%`
-                          : "0%";
-                      })()}
+                      ₦{formatPrice(pricing.totalSavings)}
                     </span>
                   </div>
                   <div className="text-sm text-[#4b4b4b]">
@@ -425,42 +518,7 @@ export default function ReviewYourBooking() {
 
                   <div className="border-t mt-4 pt-3 bg-[#F2EFE7] px-3 py-2 rounded-md flex justify-between font-semibold">
                     <span>Total:</span>
-                    <span>
-                      ₦
-                      {(() => {
-                        const guestCounts = bookingStore.draft.guests || {};
-                        const totalGuests =
-                          (guestCounts.adults || 0) +
-                          (guestCounts.teenagers || 0) +
-                          (guestCounts.children || 0);
-                        const pricingConfig =
-                          bookingStore.draft.pricingConfig || {};
-                        const basePricePerPod =
-                          pricingConfig.basePricePerPod !== undefined
-                            ? pricingConfig.basePricePerPod
-                            : 400000;
-                        const nights = bookingStore.draft.numberOfNights || 1;
-                        const pods = bookingStore.draft.podCount || 1;
-                        const baseForStayPreview =
-                          pods * basePricePerPod * nights;
-                        const configuredDiscountPercent =
-                          pricingConfig.twelveGuestDiscountPercent ?? 10;
-                        const discountPercent =
-                          totalGuests === 12 ? configuredDiscountPercent : 0;
-                        const discountAmount =
-                          discountPercent > 0
-                            ? Math.round(
-                                baseForStayPreview *
-                                  (configuredDiscountPercent / 100),
-                              )
-                            : 0;
-                        const subTotal = bookingStore.draft.subTotal || 0;
-                        const taxableBase = subTotal - discountAmount;
-                        const totalAmount =
-                          taxableBase > 0 ? Math.round(taxableBase * 1.125) : 0;
-                        return formatPrice(totalAmount);
-                      })()}
-                    </span>
+                    <span>₦{formatPrice(pricing.finalTotal)}</span>
                   </div>
                 </div>
               </div>

@@ -39,10 +39,10 @@ export default function VouchersPage() {
         setLoading(true);
         try {
             const [discountsRes, vouchersRes] = await Promise.all([
-                fetch(`${BASE_URL}/discounts/discounts`, {
+                fetch(`${BASE_URL}/discounts`, {
                     headers: { Authorization: `Bearer ${token}` },
                 }),
-                fetch(`${BASE_URL}/discounts/vouchers`, {
+                fetch(`${BASE_URL}/vouchers`, {
                     headers: { Authorization: `Bearer ${token}` },
                 }),
             ]);
@@ -134,8 +134,8 @@ export default function VouchersPage() {
         setSaving(true);
         try {
             const url = editingItem
-                ? `${BASE_URL}/discounts/discounts/${editingItem.id}`
-                : `${BASE_URL}/discounts/discounts`;
+                ? `${BASE_URL}/discounts/${editingItem.id}`
+                : `${BASE_URL}/discounts`;
             const method = editingItem ? "PUT" : "POST";
 
             const response = await fetch(url, {
@@ -162,8 +162,8 @@ export default function VouchersPage() {
         setSaving(true);
         try {
             const url = editingItem
-                ? `${BASE_URL}/discounts/vouchers/${editingItem.id}`
-                : `${BASE_URL}/discounts/vouchers`;
+                ? `${BASE_URL}/vouchers/${editingItem.id}`
+                : `${BASE_URL}/vouchers`;
             const method = editingItem ? "PUT" : "POST";
 
             const response = await fetch(url, {
@@ -189,7 +189,7 @@ export default function VouchersPage() {
     const handleDeleteDiscount = async (id) => {
         if (!confirm("Are you sure you want to delete this discount?")) return;
         try {
-            await fetch(`${BASE_URL}/discounts/discounts/${id}`, {
+            await fetch(`${BASE_URL}/discounts/${id}`, {
                 method: "DELETE",
                 headers: { Authorization: `Bearer ${token}` },
             });
@@ -202,7 +202,7 @@ export default function VouchersPage() {
     const handleDeleteVoucher = async (id) => {
         if (!confirm("Are you sure you want to delete this voucher?")) return;
         try {
-            await fetch(`${BASE_URL}/discounts/vouchers/${id}`, {
+            await fetch(`${BASE_URL}/vouchers/${id}`, {
                 method: "DELETE",
                 headers: { Authorization: `Bearer ${token}` },
             });
