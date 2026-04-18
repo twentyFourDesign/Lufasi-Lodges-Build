@@ -502,13 +502,6 @@ export default function EnterDetails() {
               </Button>
             </div>
 
-            {/* Skip Button */}
-            <Button
-              variant="outline"
-              className="w-full py-6 rounded-md border border-[#A19257] bg-white text-[#09432B] font-medium"
-            >
-              Skip Extras
-            </Button>
 
             {/* Quick Book */}
             <Button className="w-full py-6 rounded-md hover:bg-[#A19257] bg-[#A19257] text-white font-semibold">
