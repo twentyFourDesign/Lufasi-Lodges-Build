@@ -486,6 +486,42 @@ export default function BookingDetailsPage() {
                 </p>
               )}
             </div>
+
+            {/* Per-Dome Details */}
+            {booking.domeDetails && booking.domeDetails.length > 0 && (
+              <div className="mt-6 border-t pt-4">
+                <h4 className="text-sm font-bold text-[#333333] mb-3 uppercase tracking-wider">
+                  Dome Assignments & Bedding
+                </h4>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  {booking.domeDetails.map((dome, idx) => (
+                    <div
+                      key={idx}
+                      className="p-3 bg-white border border-gray-200 rounded-lg shadow-sm"
+                    >
+                      <div className="flex justify-between items-center mb-2">
+                        <span className="text-xs font-bold text-[#008080]">
+                          Dome {idx + 1}
+                        </span>
+                        <span className="text-[10px] bg-gray-100 px-2 py-0.5 rounded text-gray-500 font-medium">
+                          {dome.bedConfig}
+                        </span>
+                      </div>
+                      <div className="space-y-1">
+                        {dome.guests?.map((guestName, gIdx) => 
+                          guestName && (
+                            <div key={gIdx} className="text-sm text-gray-600 flex items-center gap-2">
+                              <div className="w-1 h-1 bg-gray-300 rounded-full"></div>
+                              {guestName}
+                            </div>
+                          )
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Stay Dates */}

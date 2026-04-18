@@ -66,7 +66,10 @@ export default function EnterDetails() {
       dob: undefined,
       identification: undefined,
       instruction: "",
-      guestNames: [],
+      domeDetails: bookingStore.draft.domeDetails || Array.from({ length: bookingStore.draft.podCount || 1 }, () => ({
+        bedConfig: "1 x King Bed (6 foot)",
+        guests: ["", ""],
+      })),
     },
   });
 
@@ -75,13 +78,15 @@ export default function EnterDetails() {
       // Transform form data to match booking hook structure
       const contactInfo = {
         ...data,
-        guestNames:
-          data.guestNames?.filter((name) => name && name.trim() !== "") || [],
+        guestNames: undefined // we use domeDetails now
       };
 
-      // Update booking store with contact information
+      // Update booking store with contact information and dome details
       bookingStore.updateDraft({
-        contact: contactInfo,
+        contact: {
+          ...contactInfo,
+        },
+        domeDetails: data.domeDetails,
       });
 
       // Navigate to next step
@@ -90,6 +95,11 @@ export default function EnterDetails() {
       console.error("Error submitting form:", error);
     }
   };
+
+  // Guard: Don't render if crucial booking data is missing
+  if (!bookingStore.draft.dates || !bookingStore.draft.podCount) {
+    return null;
+  }
 
   return (
     <div className="overflow-x-hidden min-h-screen w-full bg-[#F7F5F0]">
@@ -326,51 +336,83 @@ export default function EnterDetails() {
                     </FormItem>
                   )}
                 />
-                <Accordion type="single" collapsible defaultValue="guests">
-                  <AccordionItem
-                    value="guests"
-                    className="border-none rounded-lg overflow-hidden mt-6"
-                  >
-                    <AccordionTrigger className="bg-[#C8FBFF] px-4 py-3 text-[#09432B] text-base md:text-2xl font-bold">
-                      Enter Guests Information
-                    </AccordionTrigger>
-                    <AccordionContent className="bg-[#C8FBFF] px-4 py-4 space-y-4">
-                      <FormField
-                        control={form.control}
-                        name="guestNames.0"
-                        rules={{ required: "Guest name is required" }}
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Guest 1 <span className="text-red-500">*</span></FormLabel>
-                            <FormControl>
-                              <Input
-                                placeholder="Enter Guest Name"
-                                {...field}
-                              />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                      <FormField
-                        control={form.control}
-                        name="guestNames.1"
-                        rules={{ required: "Guest name is required" }}
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Guest 2 <span className="text-red-500">*</span></FormLabel>
-                            <FormControl>
-                              <Input
-                                placeholder="Enter Guest Name"
-                                {...field}
-                              />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                    </AccordionContent>
-                  </AccordionItem>
+                <Accordion type="multiple" defaultValue={["dome-0"]} className="mt-6 space-y-4">
+                  {Array.from({ length: bookingStore.draft.podCount || 1 }).map((_, domeIdx) => (
+                    <AccordionItem
+                      key={domeIdx}
+                      value={`dome-${domeIdx}`}
+                      className="border rounded-lg overflow-hidden bg-white shadow-sm"
+                    >
+                      <AccordionTrigger className="bg-[#C8FBFF] px-4 py-3 text-[#09432B] text-base md:text-xl font-bold hover:no-underline">
+                        Dome {domeIdx + 1} - Accommodation Details
+                      </AccordionTrigger>
+                      <AccordionContent className="bg-[#C8FBFF]/30 px-6 py-6 space-y-6">
+                        <FormField
+                          control={form.control}
+                          name={`domeDetails.${domeIdx}.bedConfig`}
+                          rules={{ required: "Bed configuration is required" }}
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel className="text-[#09432B] font-semibold">Bed Configuration <span className="text-red-500">*</span></FormLabel>
+                              <Select onValueChange={field.onChange} value={field.value}>
+                                <FormControl>
+                                  <SelectTrigger className="border-[#29A3A3] border bg-white">
+                                    <SelectValue placeholder="Select Bed Configuration" />
+                                  </SelectTrigger>
+                                </FormControl>
+                                <SelectContent>
+                                  <SelectItem value="1 x King Bed (6 foot)">1 x King Bed (6 foot)</SelectItem>
+                                  <SelectItem value="2 x Twin Beds">2 x Twin Beds</SelectItem>
+                                </SelectContent>
+                              </Select>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+
+                        <div className="space-y-4">
+                          <p className="text-[#09432B] font-semibold text-sm">Guest Names</p>
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <FormField
+                              control={form.control}
+                              name={`domeDetails.${domeIdx}.guests.0`}
+                              rules={{ required: "Guest 1 name is required" }}
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel className="text-xs">Guest 1 <span className="text-red-500">*</span></FormLabel>
+                                  <FormControl>
+                                    <Input 
+                                      className="border-[#29A3A3] border bg-white" 
+                                      placeholder="Full Name" 
+                                      {...field} 
+                                    />
+                                  </FormControl>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+                            <FormField
+                              control={form.control}
+                              name={`domeDetails.${domeIdx}.guests.1`}
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel className="text-xs">Guest 2 (Optional)</FormLabel>
+                                  <FormControl>
+                                    <Input 
+                                      className="border-[#29A3A3] border bg-white" 
+                                      placeholder="Full Name" 
+                                      {...field} 
+                                    />
+                                  </FormControl>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+                          </div>
+                        </div>
+                      </AccordionContent>
+                    </AccordionItem>
+                  ))}
                 </Accordion>
               </form>
             </Form>
@@ -393,14 +435,14 @@ export default function EnterDetails() {
                 <div>
                   <p className="text-[#737373]">Check in:</p>
                   <p className="text-[#4F4F4F] font-medium mt-1">
-                    {format(bookingStore.draft.dates.checkIn, "dd/MM/yyyy")}
+                    {bookingStore.draft.dates?.checkIn ? format(bookingStore.draft.dates.checkIn, "dd/MM/yyyy") : "--"}
                   </p>
                 </div>
 
                 <div>
                   <p className="text-[#737373]">Check out:</p>
                   <p className="text-[#4F4F4F] font-medium mt-1">
-                    {format(bookingStore.draft.dates.checkOut, "dd/MM/yyyy")}
+                    {bookingStore.draft.dates?.checkOut ? format(bookingStore.draft.dates.checkOut, "dd/MM/yyyy") : "--"}
                   </p>
                 </div>
               </div>
@@ -439,7 +481,7 @@ export default function EnterDetails() {
                 <Wallet className="w-5 h-5 text-[#09432B]" />
                 <h4 className="text-[#09432B] font-bold">Extras</h4>
               </div>
-              {bookingStore.draft.extras.length === 0 ? (
+              {!bookingStore.draft.extras || bookingStore.draft.extras.length === 0 ? (
                 <p className="text-sm text-[#737373]">None selected</p>
               ) : (
                 <p className="text-sm text-[#737373]">
@@ -463,7 +505,7 @@ export default function EnterDetails() {
                   <span>
                     ₦
                     {formatPrice(
-                      Math.round(bookingStore.draft.subTotal * 0.125),
+                      Math.round((bookingStore.draft.subTotal || 0) * 0.125),
                     )}
                   </span>
                 </div>

@@ -28,9 +28,14 @@ export default function MealPlan() {
   const [error, setError] = useState(null);
   const bookingStore = useBookingStore();
   const navigate = useNavigate();
+  const podCount = bookingStore.draft.podCount || 1;
   const pricingConfig = bookingStore.draft.pricingConfig;
-  const bedConfig =
-    bookingStore.draft.bedConfiguration || "1 x King Bed (6 foot)";
+  const domeDetails = bookingStore.draft.domeDetails || 
+    Array.from({ length: podCount }, () => ({
+      bedConfig: "1 x King Bed (6 foot)",
+      guests: ["", ""]
+    }));
+  const bedConfig = domeDetails[0]?.bedConfig || "1 x King Bed (6 foot)";
 
   useEffect(() => {
     if (!bookingStore.draft.dates || !bookingStore.draft.podCount) {
@@ -48,9 +53,15 @@ export default function MealPlan() {
     setLoading(false);
   }, [bookingStore.draft.dates, bookingStore.draft.podCount, navigate]);
 
-  const handleSelectBedConfig = (value) => {
+  const handleSelectDomeBedConfig = (domeIdx, value) => {
+    const updatedDetails = [...domeDetails];
+    updatedDetails[domeIdx] = {
+      ...updatedDetails[domeIdx],
+      bedConfig: value,
+    };
     bookingStore.updateDraft({
-      bedConfiguration: value,
+      domeDetails: updatedDetails,
+      bedConfiguration: updatedDetails[0].bedConfig, // Maintain legacy field for compatibility with parts of UI
     });
   };
 
@@ -95,75 +106,84 @@ export default function MealPlan() {
                   Choose your preferred bed setup.
                 </p>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
-                  <button
-                    type="button"
-                    onClick={() =>
-                      handleSelectBedConfig("1 x King Bed (6 foot)")
-                    }
-                    className={`w-full text-left rounded-xl border px-4 py-4 flex items-center justify-between gap-3 transition-all ${
-                      bedConfig === "1 x King Bed (6 foot)"
-                        ? "border-[#09432B] bg-[#E6F2EE]"
-                        : "border-gray-200 bg-white hover:border-[#09432B]/60"
-                    }`}
-                  >
-                    <div className="flex items-center gap-3">
-                      <div className="w-9 h-9 rounded-full bg-[#E6F2EE] flex items-center justify-center">
-                        <IoBedOutline className="w-5 h-5 text-[#09432B]" />
-                      </div>
-                      <div>
-                        <p className="font-semibold text-[#09432B]">
-                          1 x King Bed (6 foot)
-                        </p>
-                      </div>
-                    </div>
-                    <div
-                      className={`w-6 h-6 rounded-full border flex items-center justify-center ${
-                        bedConfig === "1 x King Bed (6 foot)"
-                          ? "border-[#09432B] bg-[#09432B]"
-                          : "border-gray-300 bg-white"
-                      }`}
-                    >
-                      {bedConfig === "1 x King Bed (6 foot)" && (
-                        <Check className="w-4 h-4 text-white" />
-                      )}
-                    </div>
-                  </button>
+                <div className="space-y-8">
+                  {Array.from({ length: podCount }).map((_, domeIdx) => (
+                    <div key={domeIdx} className={domeIdx > 0 ? "pt-6 border-t border-gray-100" : ""}>
+                      <h4 className="text-lg font-bold text-[#09432B] mb-4">
+                        Dome {domeIdx + 1}
+                      </h4>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <button
+                          type="button"
+                          onClick={() =>
+                            handleSelectDomeBedConfig(domeIdx, "1 x King Bed (6 foot)")
+                          }
+                          className={`w-full text-left rounded-xl border px-4 py-4 flex items-center justify-between gap-3 transition-all ${
+                            domeDetails[domeIdx]?.bedConfig === "1 x King Bed (6 foot)"
+                              ? "border-[#09432B] bg-[#E6F2EE]"
+                              : "border-gray-200 bg-white hover:border-[#09432B]/60"
+                          }`}
+                        >
+                          <div className="flex items-center gap-3">
+                            <div className="w-9 h-9 rounded-full bg-[#E6F2EE] flex items-center justify-center">
+                              <IoBedOutline className="w-5 h-5 text-[#09432B]" />
+                            </div>
+                            <div>
+                              <p className="font-semibold text-[#09432B]">
+                                1 x King Bed (6 foot)
+                              </p>
+                            </div>
+                          </div>
+                          <div
+                            className={`w-6 h-6 rounded-full border flex items-center justify-center ${
+                              domeDetails[domeIdx]?.bedConfig === "1 x King Bed (6 foot)"
+                                ? "border-[#09432B] bg-[#09432B]"
+                                : "border-gray-300 bg-white"
+                            }`}
+                          >
+                            {domeDetails[domeIdx]?.bedConfig === "1 x King Bed (6 foot)" && (
+                              <Check className="w-4 h-4 text-white" />
+                            )}
+                          </div>
+                        </button>
 
-                  <button
-                    type="button"
-                    onClick={() =>
-                      handleSelectBedConfig("2 x Single Beds (3 foot)")
-                    }
-                    className={`w-full text-left rounded-xl border px-4 py-4 flex items-center justify-between gap-3 transition-all ${
-                      bedConfig === "2 x Single Beds (3 foot)"
-                        ? "border-[#09432B] bg-[#E6F2EE]"
-                        : "border-gray-200 bg-white hover:border-[#09432B]/60"
-                    }`}
-                  >
-                    <div className="flex items-center gap-3">
-                      <div className="w-9 h-9 rounded-full bg-[#E6F2EE] flex items-center justify-center">
-                        <LuBedSingle className="w-5 h-5 text-[#09432B]" />
-                        <LuBedSingle className="w-5 h-5 text-[#09432B]" />
-                      </div>
-                      <div>
-                        <p className="font-semibold text-[#09432B]">
-                          2 x Single Beds (3 foot)
-                        </p>
+                        <button
+                          type="button"
+                          onClick={() =>
+                            handleSelectDomeBedConfig(domeIdx, "2 x Single Beds (3 foot)")
+                          }
+                          className={`w-full text-left rounded-xl border px-4 py-4 flex items-center justify-between gap-3 transition-all ${
+                            domeDetails[domeIdx]?.bedConfig === "2 x Single Beds (3 foot)"
+                              ? "border-[#09432B] bg-[#E6F2EE]"
+                              : "border-gray-200 bg-white hover:border-[#09432B]/60"
+                          }`}
+                        >
+                          <div className="flex items-center gap-3">
+                            <div className="w-9 h-9 rounded-full bg-[#E6F2EE] flex items-center justify-center">
+                              <LuBedSingle className="w-5 h-5 text-[#09432B]" />
+                              <LuBedSingle className="w-5 h-5 text-[#09432B]" />
+                            </div>
+                            <div>
+                              <p className="font-semibold text-[#09432B]">
+                                2 x Single Beds (3 foot)
+                              </p>
+                            </div>
+                          </div>
+                          <div
+                            className={`w-6 h-6 rounded-full border flex items-center justify-center ${
+                              domeDetails[domeIdx]?.bedConfig === "2 x Single Beds (3 foot)"
+                                ? "border-[#09432B] bg-[#09432B]"
+                                : "border-gray-300 bg-white"
+                            }`}
+                          >
+                            {domeDetails[domeIdx]?.bedConfig === "2 x Single Beds (3 foot)" && (
+                              <Check className="w-4 h-4 text-white" />
+                            )}
+                          </div>
+                        </button>
                       </div>
                     </div>
-                    <div
-                      className={`w-6 h-6 rounded-full border flex items-center justify-center ${
-                        bedConfig === "2 x Single Beds (3 foot)"
-                          ? "border-[#09432B] bg-[#09432B]"
-                          : "border-gray-300 bg-white"
-                      }`}
-                    >
-                      {bedConfig === "2 x Single Beds (3 foot)" && (
-                        <Check className="w-4 h-4 text-white" />
-                      )}
-                    </div>
-                  </button>
+                  ))}
                 </div>
 
                 <div className="mt-5 text-sm text-[#737373]">

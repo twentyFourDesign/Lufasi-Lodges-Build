@@ -198,6 +198,7 @@ export default function ReviewYourBooking() {
       discountCode,
       voucherCode,
       bedConfiguration: bookingStore.draft.bedConfiguration,
+      domeDetails: bookingStore.draft.domeDetails,
     };
 
     try {
@@ -350,10 +351,21 @@ export default function ReviewYourBooking() {
                   <p className="text-sm text-[#6B6B6B]">
                     {`x${bookingStore.draft.podCount || 0} Rooms`}
                   </p>
-                  {bookingStore.draft.bedConfiguration && (
-                    <p className="text-sm text-[#6B6B6B] mt-1">
-                      {bookingStore.draft.bedConfiguration}
-                    </p>
+                  {bookingStore.draft.domeDetails && bookingStore.draft.domeDetails.length > 0 ? (
+                    <div className="mt-2 space-y-2">
+                       {bookingStore.draft.domeDetails.map((dome, idx) => (
+                         <div key={idx} className="text-xs text-[#6B6B6B] border-l-2 border-[#E6F2EE] pl-2">
+                           <span className="font-semibold">Dome {idx + 1}:</span> {dome.bedConfig}
+                           {dome.guests?.[0] && <div className="italic text-gray-500">- {dome.guests.join(', ').replace(/, $/, '')}</div>}
+                         </div>
+                       ))}
+                    </div>
+                  ) : (
+                    bookingStore.draft.bedConfiguration && (
+                      <p className="text-sm text-[#6B6B6B] mt-1">
+                        {bookingStore.draft.bedConfiguration}
+                      </p>
+                    )
                   )}
                 </div>
               </CardContent>

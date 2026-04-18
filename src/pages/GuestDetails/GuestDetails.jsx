@@ -400,7 +400,9 @@ export default function GuestDetails() {
               </div>
 
               <p className="text-sm text-[#737373] font-medium">
-                {bookingStore.draft.bedConfiguration || "1 x King Bed (6 foot)"}
+                {bookingStore.draft.domeDetails && bookingStore.draft.domeDetails.length > 1 
+                  ? "Multiple Configurations" 
+                  : (bookingStore.draft.bedConfiguration || "1 x King Bed (6 foot)")}
               </p>
             </div>
             <div className="bg-white rounded-xl border border-gray-200 px-5 py-4 shadow-sm">
