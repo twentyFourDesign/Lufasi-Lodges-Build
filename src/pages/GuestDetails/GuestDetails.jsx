@@ -60,6 +60,34 @@ export default function GuestDetails() {
     });
   };
 
+  const isValidGuestCount = (newTotalGuests) => {
+    const podCount = bookingStore.draft.podCount || 1;
+    
+    // Total guests must be at least 1 per pod (unless 1 pod, then 1 guest)
+    // And at most 2 per pod.
+    // However, if we follow the NewBooking logic strictly:
+    if (newTotalGuests < 1) return false;
+    
+    let minPods = 0;
+    let maxPods = 0;
+
+    if (newTotalGuests === 1) { minPods = 1; maxPods = 1; }
+    else if (newTotalGuests === 2) { minPods = 1; maxPods = 2; }
+    else if (newTotalGuests === 3) { minPods = 2; maxPods = 3; }
+    else if (newTotalGuests === 4) { minPods = 2; maxPods = 4; }
+    else if (newTotalGuests === 5) { minPods = 3; maxPods = 5; }
+    else if (newTotalGuests === 6) { minPods = 3; maxPods = 6; }
+    else if (newTotalGuests === 7) { minPods = 4; maxPods = 6; }
+    else if (newTotalGuests === 8) { minPods = 4; maxPods = 6; }
+    else if (newTotalGuests === 9) { minPods = 5; maxPods = 6; }
+    else if (newTotalGuests === 10) { minPods = 5; maxPods = 6; }
+    else if (newTotalGuests === 11) { minPods = 6; maxPods = 6; }
+    else if (newTotalGuests === 12) { minPods = 6; maxPods = 6; }
+    else { return false; } // Max 12 guests total
+
+    return podCount >= minPods && podCount <= maxPods;
+  };
+
   const computeSubTotal = (guestCount, podCount, nights) => {
     const basePricePerPod =
       pricingConfig?.basePricePerPod !== undefined
@@ -80,7 +108,9 @@ export default function GuestDetails() {
   const onChangeAdults = (type) => {
     if (type === "dec" && adults > 1) {
       const nextAdults = adults - 1;
-      const guestCount = nextAdults + teens;
+      const guestCount = nextAdults + teens + children;
+      if (!isValidGuestCount(guestCount)) return;
+
       const nights = bookingStore.draft.numberOfNights || 1;
       const pods = bookingStore.draft.podCount || 1;
       const nextSubTotal = computeSubTotal(guestCount, pods, nights);
@@ -95,7 +125,9 @@ export default function GuestDetails() {
       });
     } else if (type === "inc") {
       const nextAdults = adults + 1;
-      const guestCount = nextAdults + teens;
+      const guestCount = nextAdults + teens + children;
+      if (!isValidGuestCount(guestCount)) return;
+
       const nights = bookingStore.draft.numberOfNights || 1;
       const pods = bookingStore.draft.podCount || 1;
       const nextSubTotal = computeSubTotal(guestCount, pods, nights);
@@ -114,7 +146,9 @@ export default function GuestDetails() {
   const onChangeTeens = (type) => {
     if (type === "dec" && teens > 0) {
       const nextTeens = teens - 1;
-      const guestCount = adults + nextTeens;
+      const guestCount = adults + nextTeens + children;
+      if (!isValidGuestCount(guestCount)) return;
+
       const nights = bookingStore.draft.numberOfNights || 1;
       const pods = bookingStore.draft.podCount || 1;
       const nextSubTotal = computeSubTotal(guestCount, pods, nights);
@@ -129,7 +163,9 @@ export default function GuestDetails() {
       });
     } else if (type === "inc") {
       const nextTeens = teens + 1;
-      const guestCount = adults + nextTeens;
+      const guestCount = adults + nextTeens + children;
+      if (!isValidGuestCount(guestCount)) return;
+
       const nights = bookingStore.draft.numberOfNights || 1;
       const pods = bookingStore.draft.podCount || 1;
       const nextSubTotal = computeSubTotal(guestCount, pods, nights);
@@ -147,15 +183,23 @@ export default function GuestDetails() {
 
   const onChangeChildren = (type) => {
     if (type === "dec" && children > 0) {
-      setChildren(children - 1);
+      const nextChildren = children - 1;
+      const guestCount = adults + teens + nextChildren;
+      if (!isValidGuestCount(guestCount)) return;
+
+      setChildren(nextChildren);
       bookingStore.updateDraft({
-        guests: { ...bookingStore.draft.guests, children: children - 1 }
+        guests: { ...bookingStore.draft.guests, children: nextChildren }
       });
     } else if (type === "inc") {
       if (!isChildrenPermitted()) return;
-      setChildren(children + 1);
+      const nextChildren = children + 1;
+      const guestCount = adults + teens + nextChildren;
+      if (!isValidGuestCount(guestCount)) return;
+
+      setChildren(nextChildren);
       bookingStore.updateDraft({
-        guests: { ...bookingStore.draft.guests, children: children + 1 }
+        guests: { ...bookingStore.draft.guests, children: nextChildren }
       });
     }
   };
@@ -196,7 +240,8 @@ export default function GuestDetails() {
                 <div className="flex items-center gap-6 mt-4 sm:mt-0">
                   <button
                     onClick={() => onChangeAdults("dec")}
-                    className="w-12 h-12 rounded-full border-2 border-[#0F5B45] flex items-center justify-center text-[#0F5B45] text-xl"
+                    className={`w-12 h-12 rounded-full border-2 border-[#0F5B45] flex items-center justify-center text-[#0F5B45] text-xl ${adults <= 1 || !isValidGuestCount(adults + teens + children - 1) ? 'opacity-30 cursor-not-allowed' : ''}`}
+                    disabled={adults <= 1 || !isValidGuestCount(adults + teens + children - 1)}
                   >
                     –
                   </button>
@@ -207,7 +252,8 @@ export default function GuestDetails() {
 
                   <button
                     onClick={() => onChangeAdults("inc")}
-                    className="w-12 h-12 rounded-full border-2 border-[#0F5B45] flex items-center justify-center text-[#0F5B45] text-xl"
+                    className={`w-12 h-12 rounded-full border-2 border-[#0F5B45] flex items-center justify-center text-[#0F5B45] text-xl ${!isValidGuestCount(adults + teens + children + 1) ? 'opacity-30 cursor-not-allowed' : ''}`}
+                    disabled={!isValidGuestCount(adults + teens + children + 1)}
                   >
                     +
                   </button>
@@ -226,7 +272,8 @@ export default function GuestDetails() {
                 <div className="flex items-center gap-6 mt-4 sm:mt-0">
                   <button
                     onClick={() => onChangeTeens("dec")}
-                    className="w-12 h-12 rounded-full border-2 border-[#0F5B45] flex items-center justify-center text-[#0F5B45] text-xl"
+                    className={`w-12 h-12 rounded-full border-2 border-[#0F5B45] flex items-center justify-center text-[#0F5B45] text-xl ${teens <= 0 || !isValidGuestCount(adults + teens + children - 1) ? 'opacity-30 cursor-not-allowed' : ''}`}
+                    disabled={teens <= 0 || !isValidGuestCount(adults + teens + children - 1)}
                   >
                     –
                   </button>
@@ -237,7 +284,8 @@ export default function GuestDetails() {
 
                   <button
                     onClick={() => onChangeTeens("inc")}
-                    className="w-12 h-12 rounded-full border-2 border-[#0F5B45] flex items-center justify-center text-[#0F5B45] text-xl"
+                    className={`w-12 h-12 rounded-full border-2 border-[#0F5B45] flex items-center justify-center text-[#0F5B45] text-xl ${!isValidGuestCount(adults + teens + children + 1) ? 'opacity-30 cursor-not-allowed' : ''}`}
+                    disabled={!isValidGuestCount(adults + teens + children + 1)}
                   >
                     +
                   </button>
@@ -256,7 +304,8 @@ export default function GuestDetails() {
                 <div className="flex items-center gap-6 mt-4 sm:mt-0">
                   <button
                     onClick={() => onChangeChildren("dec")}
-                    className="w-12 h-12 rounded-full border-2 border-[#0F5B45] flex items-center justify-center text-[#0F5B45] text-xl"
+                    className={`w-12 h-12 rounded-full border-2 border-[#0F5B45] flex items-center justify-center text-[#0F5B45] text-xl ${children <= 0 || !isValidGuestCount(adults + teens + children - 1) ? 'opacity-30 cursor-not-allowed' : ''}`}
+                    disabled={children <= 0 || !isValidGuestCount(adults + teens + children - 1)}
                   >
                     –
                   </button>
@@ -267,8 +316,8 @@ export default function GuestDetails() {
 
                   <button
                     onClick={() => onChangeChildren("inc")}
-                    className={`w-12 h-12 rounded-full border-2 border-[#0F5B45] flex items-center justify-center text-xl ${!isChildrenPermitted() ? 'text-gray-300 border-gray-300 cursor-not-allowed' : 'text-[#0F5B45]'}`}
-                    disabled={!isChildrenPermitted()}
+                    className={`w-12 h-12 rounded-full border-2 border-[#0F5B45] flex items-center justify-center text-xl ${!isChildrenPermitted() || !isValidGuestCount(adults + teens + children + 1) ? 'text-gray-300 border-gray-300 cursor-not-allowed opacity-30' : 'text-[#0F5B45]'}`}
+                    disabled={!isChildrenPermitted() || !isValidGuestCount(adults + teens + children + 1)}
                   >
                     +
                   </button>
