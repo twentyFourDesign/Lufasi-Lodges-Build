@@ -19,9 +19,9 @@ export default function Navbar() {
           text-white
         "
       >
-        <div className="flex items-center gap-3">
+        <a href="https://www.lufasilodges.com/" className="flex items-center gap-3">
           <img src={logo} alt="Lufasi Lodges" className="h-10 md:h-18" />
-        </div>
+        </a>
 
         <div className="flex items-center gap-2 md:gap-4">
           <Button

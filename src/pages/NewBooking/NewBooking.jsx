@@ -284,7 +284,7 @@ export default function NewBooking() {
                   <div>
                     <div className="flex items-center gap-2">
                       <h3 className="text-lg font-semibold text-[#09432B]">
-                        Nature Dome
+                        Geodesic Dome
                       </h3>
                       {availablePodsCount < 1 && (
                         <span className="text-xs px-3 py-1 rounded-full bg-red-500 text-white font-semibold">

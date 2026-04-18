@@ -17,9 +17,9 @@ export default function CommonNavbar() {
           flex items-center justify-between
         "
       >
-        <Link to="/">
+        <a href="https://www.lufasilodges.com/">
           <img src={logo} alt="Lufasi Lodges" className="h-12 md:h-14" />
-        </Link>
+        </a>
 
         <Button
           className="
