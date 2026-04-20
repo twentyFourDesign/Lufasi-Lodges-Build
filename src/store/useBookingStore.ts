@@ -123,3 +123,38 @@ export const useBookingStore = create<BookingStore>()(
     },
   ),
 );
+
+export const calculateDynamicSubTotal = (draft: BookingDraft): number => {
+  const guestCounts = draft.guests || { adults: 0, teenagers: 0, children: 0 };
+  const totalGuests =
+    (guestCounts.adults || 0) +
+    (guestCounts.teenagers || 0) +
+    (guestCounts.children || 0);
+  const pricingConfig = draft.pricingConfig || {
+    basePricePerPod: 400000,
+    extraGuestFee: 100000,
+    maxGuestsPerPod: 2,
+    minGuestsPerPod: 1,
+    totalPodsAvailable: 6,
+    currency: "NGN",
+  };
+  const basePricePerPod = pricingConfig.basePricePerPod ?? 400000;
+  const extraGuestFee = pricingConfig.extraGuestFee ?? 100000;
+
+  const nights = draft.numberOfNights || 1;
+  const pods = draft.podCount || 1;
+
+  const baseForStayPreview = pods * basePricePerPod * nights;
+
+  const effectiveGuests = totalGuests < 1 ? 1 : totalGuests;
+  const extraGuests = effectiveGuests > pods ? effectiveGuests - pods : 0;
+  const extraForStay = extraGuests * extraGuestFee * nights;
+
+  const extrasTotal =
+    draft.extras?.reduce(
+      (sum, e: any) => sum + (Number(e.price) * (e.quantity || 1)) || 0,
+      0,
+    ) || 0;
+
+  return baseForStayPreview + extraForStay + extrasTotal;
+};

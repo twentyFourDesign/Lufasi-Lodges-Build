@@ -94,9 +94,23 @@ export default function ReviewYourBooking() {
     const totalGuests = (guestCounts.adults || 0) + (guestCounts.teenagers || 0) + (guestCounts.children || 0);
     const pricingConfig = bookingStore.draft.pricingConfig || {};
     const basePricePerPod = pricingConfig.basePricePerPod ?? 400000;
+    const extraGuestFee = pricingConfig.extraGuestFee ?? 100000;
     const nights = bookingStore.draft.numberOfNights || 1;
     const pods = bookingStore.draft.podCount || 1;
+    
+    // Base amount
     const baseForStayPreview = pods * basePricePerPod * nights;
+    
+    // Extra guests
+    const effectiveGuests = totalGuests < 1 ? 1 : totalGuests;
+    const extraGuests = effectiveGuests > pods ? effectiveGuests - pods : 0;
+    const extraForStay = extraGuests * extraGuestFee * nights;
+    
+    // Extras
+    const extrasTotal = bookingStore.draft.extras?.reduce((sum, e) => sum + (Number(e.price) * (e.quantity || 1)), 0) || 0;
+    
+    // Re-calculate subTotal dynamically to avoid stale fallbacks
+    const subTotal = baseForStayPreview + extraForStay + extrasTotal;
     
     // 1. Twelve Guest Discount
     const configuredDiscountPercent = pricingConfig.twelveGuestDiscountPercent ?? 10;
@@ -105,7 +119,6 @@ export default function ReviewYourBooking() {
         ? Math.round(baseForStayPreview * (twelveGuestDiscountPercent / 100))
         : 0;
     
-    const subTotal = bookingStore.draft.subTotal || 0;
     let runningTotal = subTotal - twelveGuestDiscountAmount;
     
     // 2. Applied Discount Code

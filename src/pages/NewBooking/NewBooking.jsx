@@ -4,7 +4,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, Calendar, Home, Info, Star, Wallet, ChevronLeft, ChevronRight } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
-import { useBookingStore } from "@/store/useBookingStore";
+import { useBookingStore, calculateDynamicSubTotal } from "@/store/useBookingStore";
 import { format, differenceInCalendarDays } from "date-fns";
 import { BASE_URL } from "@/config";
 import EditStayDatesModal from "@/components/edit-booking/EditStayDatesModal";
@@ -551,8 +551,8 @@ export default function NewBooking() {
                         baseForStayPreview * (configuredDiscountPercent / 100),
                       )
                     : 0;
-                const subTotal = roomCount ? bookingStore.draft.subTotal || 0 : 0;
-                const taxableBase = subTotal - discountAmount;
+                const dynamicSubTotal = roomCount ? calculateDynamicSubTotal(bookingStore.draft) : 0;
+                const taxableBase = dynamicSubTotal - discountAmount;
                 const taxAmount =
                   taxableBase > 0 ? Math.round(taxableBase * 0.125) : 0;
                 const totalAmount =
@@ -563,7 +563,7 @@ export default function NewBooking() {
                     <div className="flex justify-between">
                       <span>Sub Total:</span>
                       <span className="text-[#09432B] font-semibold">
-                        ₦{roomCount ? subTotal.toLocaleString() : "0"}
+                        ₦{roomCount ? dynamicSubTotal.toLocaleString() : "0"}
                       </span>
                     </div>
 

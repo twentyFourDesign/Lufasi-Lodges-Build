@@ -13,7 +13,7 @@ import {
   UtensilsCrossed,
 } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
-import { useBookingStore } from "@/store/useBookingStore";
+import { useBookingStore, calculateDynamicSubTotal } from "@/store/useBookingStore";
 import { format } from "date-fns";
 import { BASE_URL } from "@/config";
 function formatPrice(n) {
@@ -441,7 +441,7 @@ export default function GuestDetails() {
                         baseForStayPreview * (configuredDiscountPercent / 100),
                       )
                     : 0;
-                const subTotalLocal = subTotal || 0;
+                const subTotalLocal = calculateDynamicSubTotal(bookingStore.draft);
                 const taxableBase = subTotalLocal - discountAmount;
                 const taxAmount =
                   taxableBase > 0 ? Math.round(taxableBase * 0.125) : 0;

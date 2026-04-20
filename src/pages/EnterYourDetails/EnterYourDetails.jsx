@@ -10,7 +10,7 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 
-import { useBookingStore } from "@/store/useBookingStore";
+import { useBookingStore, calculateDynamicSubTotal } from "@/store/useBookingStore";
 import { Input } from "@/components/ui/input";
 
 import {
@@ -495,7 +495,7 @@ export default function EnterDetails() {
               <div className="space-y-3 text-sm text-[#09432B]">
                 <div className="flex justify-between">
                   <span>Sub Total:</span>
-                  <span>₦{formatPrice(bookingStore.draft.subTotal)}</span>
+                  <span>₦{formatPrice(calculateDynamicSubTotal(bookingStore.draft))}</span>
                 </div>
 
                 <div className="flex justify-between leading-snug">
@@ -505,7 +505,7 @@ export default function EnterDetails() {
                   <span>
                     ₦
                     {formatPrice(
-                      Math.round((bookingStore.draft.subTotal || 0) * 0.125),
+                      Math.round(calculateDynamicSubTotal(bookingStore.draft) * 0.125),
                     )}
                   </span>
                 </div>
@@ -520,7 +520,7 @@ export default function EnterDetails() {
                   <span>
                     ₦
                     {formatPrice(
-                      Math.round(bookingStore.draft.subTotal * 1.125),
+                      Math.round(calculateDynamicSubTotal(bookingStore.draft) * 1.125),
                     )}
                   </span>
                 </div>

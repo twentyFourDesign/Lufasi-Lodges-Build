@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import CommonNavbar from "@/components/shared/common/CommonNavbar/CommonNavbar";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
-import { useBookingStore } from "@/store/useBookingStore";
+import { useBookingStore, calculateDynamicSubTotal } from "@/store/useBookingStore";
 import { format } from "date-fns";
 
 import image1 from "../../assets/Frame 19 (1).png";
@@ -322,7 +322,7 @@ export default function Extras() {
               <div className="space-y-3 text-sm">
                 <div className="flex justify-between">
                   <span>Sub Total:</span>
-                  <span>₦{formatPrice(draft.subTotal)}</span>
+                  <span>₦{formatPrice(calculateDynamicSubTotal(draft))}</span>
                 </div>
 
                 <div className="flex justify-between leading-snug">
@@ -332,7 +332,7 @@ export default function Extras() {
                   <span>
                     ₦
                     {formatPrice(
-                      Math.round((draft.subTotal || 0) * 0.125),
+                      Math.round(calculateDynamicSubTotal(draft) * 0.125),
                     )}
                   </span>
                 </div>
@@ -347,7 +347,7 @@ export default function Extras() {
                   <span>
                     ₦
                     {formatPrice(
-                      Math.round((draft.subTotal || 0) * 1.125),
+                      Math.round(calculateDynamicSubTotal(draft) * 1.125),
                     )}
                   </span>
                 </div>

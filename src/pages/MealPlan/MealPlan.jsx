@@ -15,7 +15,7 @@ import { LuBedSingle } from "react-icons/lu";
 import { IoBedOutline } from "react-icons/io5";
 import { Link, useNavigate } from "react-router-dom";
 import { BASE_URL } from "@/config";
-import { useBookingStore } from "@/store/useBookingStore";
+import { useBookingStore, calculateDynamicSubTotal } from "@/store/useBookingStore";
 import { format } from "date-fns";
 
 function formatPrice(n) {
@@ -276,8 +276,8 @@ export default function MealPlan() {
                         baseForStayPreview * (configuredDiscountPercent / 100),
                       )
                     : 0;
-                const subTotal = bookingStore.draft.subTotal || 0;
-                const taxableBase = subTotal - discountAmount;
+                const dynamicSubTotal = calculateDynamicSubTotal(bookingStore.draft);
+                const taxableBase = dynamicSubTotal - discountAmount;
                 const taxAmount =
                   taxableBase > 0 ? Math.round(taxableBase * 0.125) : 0;
                 const totalAmount =
@@ -287,7 +287,7 @@ export default function MealPlan() {
                   <div className="space-y-3 text-sm font-semibold text-[#09432B]">
                     <div className="flex justify-between">
                       <span>Sub Total:</span>
-                      <span>₦{formatPrice(subTotal)}</span>
+                      <span>₦{formatPrice(dynamicSubTotal)}</span>
                     </div>
 
                     <div className="flex justify-between leading-snug">
