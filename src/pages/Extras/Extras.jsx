@@ -22,6 +22,45 @@ import { BASE_URL } from "@/config";
 function formatPrice(n) {
   return Number(n || 0).toLocaleString();
 }
+function ExtraRow({ opt, selectedExtras, onToggleExtra }) {
+  const [expanded, setExpanded] = useState(false);
+
+  return (
+    <div className="border-b last:border-b-0">
+      <div className="flex items-center justify-between py-3">
+        <div className="flex items-center gap-3">
+          <Checkbox
+            checked={selectedExtras.some((extra) => extra.id === opt.id)}
+            onCheckedChange={() => onToggleExtra(opt)}
+          />
+          <button
+            onClick={() => setExpanded(!expanded)}
+            className="text-sm text-[#4F4F4F] font-medium hover:text-[#09432B] transition-colors text-left flex items-center gap-1.5"
+          >
+            {opt.name}
+            <ChevronDown
+              className={`w-3.5 h-3.5 transition-transform duration-200 ${expanded ? "rotate-180" : ""
+                }`}
+            />
+          </button>
+        </div>
+
+        <span className="text-[#09432B] font-semibold text-sm">
+          ₦{opt.price.toLocaleString()}
+        </span>
+      </div>
+
+      {expanded && (
+        <div className="pb-3 pl-8 pr-4 animate-in fade-in slide-in-from-top-1 duration-200">
+          <p className="text-xs text-[#737373] leading-relaxed">
+            {opt.description || "No description available for this extra."}
+          </p>
+        </div>
+      )}
+    </div>
+  );
+}
+
 function ExtrasCard({ item, selectedExtras, onToggleExtra }) {
   const [open, setOpen] = useState(item.defaultOpen || false);
 
@@ -37,7 +76,7 @@ function ExtrasCard({ item, selectedExtras, onToggleExtra }) {
             <img src={image1} alt="" className="w-full h-full object-cover" />
           </div>
 
-          <div>
+          <div className="text-left">
             <h3 className="text-[#09432B] font-semibold text-base sm:text-lg">
               {item.title}
             </h3>
@@ -46,9 +85,8 @@ function ExtrasCard({ item, selectedExtras, onToggleExtra }) {
         </div>
 
         <ChevronDown
-          className={`w-5 h-5 text-[#09432B] transition-transform duration-300 ${
-            open ? "rotate-180" : ""
-          }`}
+          className={`w-5 h-5 text-[#09432B] transition-transform duration-300 ${open ? "rotate-180" : ""
+            }`}
         />
       </button>
 
@@ -59,22 +97,12 @@ function ExtrasCard({ item, selectedExtras, onToggleExtra }) {
           )}
 
           {item.options.map((opt) => (
-            <div
+            <ExtraRow
               key={opt.id}
-              className="flex items-center justify-between py-3 border-b last:border-b-0"
-            >
-              <div className="flex items-center gap-3">
-                <Checkbox
-                  checked={selectedExtras.some((extra) => extra.id === opt.id)}
-                  onCheckedChange={() => onToggleExtra(opt)}
-                />
-                <span className="text-sm text-[#4F4F4F]">{opt.label}</span>
-              </div>
-
-              <span className="text-[#09432B] font-semibold text-sm">
-                ₦{opt.price.toLocaleString()}
-              </span>
-            </div>
+              opt={opt}
+              selectedExtras={selectedExtras}
+              onToggleExtra={onToggleExtra}
+            />
           ))}
         </div>
       )}
