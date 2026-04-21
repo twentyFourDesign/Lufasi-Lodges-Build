@@ -779,18 +779,33 @@ export default function BookingDetailsPage() {
               <h3 className="font-semibold text-[#333333]">Extras</h3>
             </div>
             {booking.BookingExtras && booking.BookingExtras.length > 0 ? (
-              <ul className="text-sm text-gray-600">
+              <ul className="text-sm text-gray-600 mb-2">
                 {booking.BookingExtras.map((extra, i) => (
                   <li key={i}>- {extra.Extra?.name || "Extra"}</li>
                 ))}
               </ul>
             ) : (
-              <p className="text-sm text-gray-600">N/A</p>
+              <p className="text-sm text-gray-600 mb-2">N/A</p>
             )}
+            
+            {booking.welcomeNote && (
+              <div className="mt-4 border-t border-gray-200 pt-3">
+                <p className="text-sm font-semibold text-[#333333] mb-1">Welcome Note:</p>
+                <p className="text-sm text-gray-600 italic">"{booking.welcomeNote.text}"</p>
+                {booking.welcomeNote.dates && booking.welcomeNote.dates.length > 0 && (
+                  <p className="text-xs text-gray-500 mt-1">
+                    Dates: {booking.welcomeNote.dates.join(", ")}
+                  </p>
+                )}
+              </div>
+            )}
+
             {booking.popUpBeds > 0 && (
-              <p className="text-sm text-gray-600 mt-1">
-                Pop-up Beds: {booking.popUpBeds}
-              </p>
+              <div className="mt-3 border-t border-gray-200 pt-3">
+                <p className="text-sm text-gray-600">
+                  Pop-up Beds: {booking.popUpBeds}
+                </p>
+              </div>
             )}
           </div>
 

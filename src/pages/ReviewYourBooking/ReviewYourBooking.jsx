@@ -212,6 +212,7 @@ export default function ReviewYourBooking() {
       voucherCode,
       bedConfiguration: bookingStore.draft.bedConfiguration,
       domeDetails: bookingStore.draft.domeDetails,
+      welcomeNote: bookingStore.draft.welcomeNote,
     };
 
     try {

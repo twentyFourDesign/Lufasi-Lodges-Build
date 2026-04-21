@@ -3,7 +3,7 @@ import CommonNavbar from "@/components/shared/common/CommonNavbar/CommonNavbar";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useBookingStore, calculateDynamicSubTotal } from "@/store/useBookingStore";
-import { format } from "date-fns";
+import { format, addDays, differenceInDays } from "date-fns";
 
 import image1 from "../../assets/Frame 19 (1).png";
 
@@ -118,6 +118,19 @@ export default function Extras() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const draft = bookingStore.draft || {};
+  const [welcomeNote, setWelcomeNote] = useState({
+    enabled: false,
+    text: "",
+    dates: [],
+  });
+
+  const nights = draft.numberOfNights || 1;
+  const stayDates = [];
+  if (draft.dates?.checkIn && nights > 1) {
+    for (let i = 0; i < nights; i++) {
+      stayDates.push(addDays(new Date(draft.dates.checkIn), i));
+    }
+  }
 
   useEffect(() => {
     fetchExtras();
@@ -167,9 +180,10 @@ export default function Extras() {
   };
 
   const handleContinue = () => {
-    // Store selected extras in booking store
+    // Store selected extras and welcome note in booking store
     bookingStore.updateDraft({
       extras: selectedExtras,
+      welcomeNote: welcomeNote.enabled ? welcomeNote : null,
     });
   };
 
@@ -219,6 +233,88 @@ export default function Extras() {
                   onToggleExtra={handleToggleExtra}
                 />
               ))}
+
+            {/* Welcome Note Card */}
+            {!loading && (
+              <div className="bg-white rounded-xl border border-gray-200 overflow-hidden shadow-sm">
+                <div className="bg-gradient-to-r from-[#09432B] to-[#0A4C30] px-4 py-3 flex items-center justify-between">
+                  <h3 className="text-white font-semibold flex items-center gap-2">
+                    <Gift className="w-5 h-5 text-[#B5AB84]" />
+                    Personalised Welcome Note
+                  </h3>
+                  <span className="text-xs bg-[#B5AB84] text-[#09432B] px-2 py-0.5 rounded font-bold">
+                    Free
+                  </span>
+                </div>
+                <div className="p-4 bg-white/50 space-y-4">
+                  <div className="border-b last:border-b-0 pb-3">
+                    <div className="flex items-center justify-between py-3">
+                      <div className="flex items-center gap-3">
+                        <Checkbox
+                          checked={welcomeNote.enabled}
+                          onCheckedChange={(checked) =>
+                            setWelcomeNote({ ...welcomeNote, enabled: checked })
+                          }
+                        />
+                        <span className="text-sm text-[#4F4F4F] font-medium">
+                          Add a welcome note
+                        </span>
+                      </div>
+                      <span className="text-[#09432B] font-semibold text-sm">₦0</span>
+                    </div>
+
+                    {welcomeNote.enabled && (
+                      <div className="ml-8 mt-2 space-y-4 animate-in fade-in slide-in-from-top-1 duration-200">
+                        <p className="text-xs text-[#737373]">
+                          Want to surprise your partner or share a special message? Enter your personalized welcome note below.
+                        </p>
+                        <textarea
+                          placeholder="Type your welcome note here..."
+                          className="w-full text-sm p-3 border border-gray-200 rounded-md focus:outline-none focus:ring-1 focus:ring-[#09432B] resize-none"
+                          rows="3"
+                          value={welcomeNote.text}
+                          onChange={(e) =>
+                            setWelcomeNote({ ...welcomeNote, text: e.target.value })
+                          }
+                        />
+                        
+                        {stayDates.length > 0 && (
+                          <div className="space-y-2 mt-4">
+                            <p className="text-xs font-semibold text-[#09432B]">
+                              Select date(s) for the note during your {nights}-night stay:
+                            </p>
+                            <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+                              {stayDates.map((date, idx) => {
+                                const dateStr = format(date, "yyyy-MM-dd");
+                                const isChecked = welcomeNote.dates.includes(dateStr);
+                                return (
+                                  <div key={idx} className="flex items-center gap-2">
+                                    <Checkbox
+                                      checked={isChecked}
+                                      onCheckedChange={(checked) => {
+                                        setWelcomeNote((prev) => ({
+                                          ...prev,
+                                          dates: checked
+                                            ? [...prev.dates, dateStr]
+                                            : prev.dates.filter((d) => d !== dateStr),
+                                        }));
+                                      }}
+                                    />
+                                    <span className="text-xs text-[#4F4F4F]">
+                                      {format(date, "MMM do")}
+                                    </span>
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
 
           <div className="md:col-span-4 space-y-4">
