@@ -17,6 +17,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { BASE_URL } from "@/config";
 import { useBookingStore, calculateDynamicSubTotal } from "@/store/useBookingStore";
 import { format } from "date-fns";
+import { formatDateSafe } from "@/lib/utils";
 
 function formatPrice(n) {
   return n?.toLocaleString() || "0";
@@ -209,14 +210,14 @@ export default function MealPlan() {
                 <div>
                   <p className="text-sm text-[#737373]">Check in:</p>
                   <p className="text-sm font-medium text-[#4F4F4F] mt-1">
-                    {format(bookingStore.draft.dates.checkIn, "dd/MM/yyyy")}
+                    {formatDateSafe(bookingStore.draft.dates.checkIn, "dd/MM/yyyy")}
                   </p>
                 </div>
 
                 <div>
                   <p className="text-sm text-[#737373]">Check out:</p>
                   <p className="text-sm font-medium text-[#4F4F4F] mt-1">
-                    {format(bookingStore.draft.dates.checkOut, "dd/MM/yyyy")}
+                    {formatDateSafe(bookingStore.draft.dates.checkOut, "dd/MM/yyyy")}
                   </p>
                 </div>
 

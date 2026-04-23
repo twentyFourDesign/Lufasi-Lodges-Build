@@ -93,10 +93,20 @@ export default function BookingLogPage() {
     // Find booking for a specific pod and date
     const getBookingForCell = (podId, date) => {
         const dateStr = date.toISOString().split("T")[0];
+        const toISODateLocal = (str) => {
+            if (!str) return "";
+            if (typeof str === "string" && str.includes("-") && !str.includes("T")) return str.split("T")[0];
+            const d = new Date(str);
+            const year = d.getFullYear();
+            const month = String(d.getMonth() + 1).padStart(2, "0");
+            const day = String(d.getDate()).padStart(2, "0");
+            return `${year}-${month}-${day}`;
+        };
+
         return bookings.find((b) => {
             if (b.podId !== podId) return false;
-            const checkIn = new Date(b.checkIn).toISOString().split("T")[0];
-            const checkOut = new Date(b.checkOut).toISOString().split("T")[0];
+            const checkIn = toISODateLocal(b.checkIn);
+            const checkOut = toISODateLocal(b.checkOut);
             return dateStr >= checkIn && dateStr < checkOut;
         });
     };

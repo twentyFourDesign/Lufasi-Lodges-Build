@@ -186,6 +186,15 @@ export default function BookingDetailsPage() {
 
   const formatDate = (dateStr) => {
     if (!dateStr) return "-";
+    // Check if it's a YYYY-MM-DD string
+    if (typeof dateStr === "string" && dateStr.includes("-") && !dateStr.includes("T")) {
+      const [y, m, d] = dateStr.split("-").map(Number);
+      return new Date(y, m - 1, d).toLocaleDateString("en-GB", {
+        day: "2-digit",
+        month: "2-digit",
+        year: "numeric",
+      });
+    }
     const date = new Date(dateStr);
     return date.toLocaleDateString("en-GB", {
       day: "2-digit",
@@ -203,7 +212,14 @@ export default function BookingDetailsPage() {
 
   const calculateNights = (checkIn, checkOut) => {
     if (!checkIn || !checkOut) return 0;
-    const diff = new Date(checkOut) - new Date(checkIn);
+    const parseDate = (str) => {
+      if (typeof str === "string" && str.includes("-") && !str.includes("T")) {
+        const [y, m, d] = str.split("-").map(Number);
+        return new Date(y, m - 1, d);
+      }
+      return new Date(str);
+    };
+    const diff = parseDate(checkOut) - parseDate(checkIn);
     return Math.ceil(diff / (1000 * 60 * 60 * 24));
   };
 
@@ -633,6 +649,7 @@ export default function BookingDetailsPage() {
                       </svg>
                       No pods found matching guest capacity.
                     </div>
+
                     <p className="text-xs text-gray-400">
                       Dates: {booking.checkIn.split("T")[0]} to{" "}
                       {booking.checkOut.split("T")[0]}

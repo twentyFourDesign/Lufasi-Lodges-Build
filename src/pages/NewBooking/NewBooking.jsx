@@ -8,6 +8,7 @@ import { useBookingStore, calculateDynamicSubTotal } from "@/store/useBookingSto
 import { format, differenceInCalendarDays } from "date-fns";
 import { BASE_URL } from "@/config";
 import EditStayDatesModal from "@/components/edit-booking/EditStayDatesModal";
+import { toISODate, formatDateSafe } from "@/lib/utils";
 import image1 from "@/assets/lodges/image.png";
 import image2 from "@/assets/lodges/image copy.png";
 import image3 from "@/assets/lodges/image copy 2.png";
@@ -205,9 +206,9 @@ export default function NewBooking() {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          startDate: format(bookingStore.draft.dates.checkIn, "yyyy-MM-dd"), // "2025-12-20"
-          endDate: format(bookingStore.draft.dates.checkOut, "yyyy-MM-dd"), // "2025-12-20"
-          adults: parseInt(bookingStore.draft.guests.adults) || 1, // Extract number from "2 Guests"
+          startDate: bookingStore.draft.dates.checkIn, // Now always YYYY-MM-DD string
+          endDate: bookingStore.draft.dates.checkOut, // Now always YYYY-MM-DD string
+          adults: parseInt(bookingStore.draft.guests.adults) || 1,
         }),
       });
       const data = await response.json();
@@ -222,18 +223,19 @@ export default function NewBooking() {
 
   const setStayDates = (dates) => {
     function parseDate(ddmmyyyy) {
+      if (!ddmmyyyy) return null;
       const [day, month, year] = ddmmyyyy.split("/");
-      return new Date(`${year}-${month}-${day}`);
+      return new Date(year, month - 1, day);
     }
+    const checkIn = parseDate(dates.checkIn);
+    const checkOut = parseDate(dates.checkOut);
+
     bookingStore.updateDraft({
       dates: {
-        checkIn: parseDate(dates.checkIn),
-        checkOut: parseDate(dates.checkOut),
+        checkIn: toISODate(checkIn),
+        checkOut: toISODate(checkOut),
       },
-      numberOfNights: differenceInCalendarDays(
-        parseDate(dates.checkOut),
-        parseDate(dates.checkIn),
-      ),
+      numberOfNights: differenceInCalendarDays(checkOut, checkIn),
       guests: {
         ...bookingStore.draft.guests,
         adults: parseInt(dates.guests.match(/(\d+)/)[1]) || 1,
@@ -444,11 +446,11 @@ export default function NewBooking() {
                       open={stayOpen}
                       onOpenChange={setStayOpen}
                       value={{
-                        checkIn: format(
+                        checkIn: formatDateSafe(
                           bookingStore.draft.dates.checkIn,
                           "dd/MM/yyyy",
                         ),
-                        checkOut: format(
+                        checkOut: formatDateSafe(
                           bookingStore.draft.dates.checkOut,
                           "dd/MM/yyyy",
                         ),
@@ -479,7 +481,7 @@ export default function NewBooking() {
                     Check in:
                   </p>
                   <p className="text-sm font-medium text-[#4F4F4F] leading-tight mt-1">
-                    {format(bookingStore.draft.dates.checkIn, "dd/MM/yyyy")}
+                    {formatDateSafe(bookingStore.draft.dates.checkIn, "dd/MM/yyyy")}
                   </p>
                 </div>
                 <div>
@@ -487,7 +489,7 @@ export default function NewBooking() {
                     Check out:
                   </p>
                   <p className="text-sm font-medium text-[#4F4F4F] leading-tight mt-1">
-                    {format(bookingStore.draft.dates.checkOut, "dd/MM/yyyy")}
+                    {formatDateSafe(bookingStore.draft.dates.checkOut, "dd/MM/yyyy")}
                   </p>
                 </div>
                 <div className="flex items-center justify-end">

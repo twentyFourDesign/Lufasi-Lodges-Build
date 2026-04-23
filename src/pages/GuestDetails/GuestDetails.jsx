@@ -16,6 +16,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { useBookingStore, calculateDynamicSubTotal } from "@/store/useBookingStore";
 import { format } from "date-fns";
 import { BASE_URL } from "@/config";
+import { formatDateSafe } from "@/lib/utils";
 function formatPrice(n) {
   return n.toLocaleString();
 }
@@ -50,12 +51,17 @@ export default function GuestDetails() {
     if (bookingStore.draft.podCount === 6) return true;
 
     // Check if check-in or check-out falls within any designated school holiday
-    const checkIn = new Date(bookingStore.draft.dates?.checkIn);
-    const checkOut = new Date(bookingStore.draft.dates?.checkOut);
+    const parseLocalDate = (str) => {
+      const [y, m, d] = str.split("-").map(Number);
+      return new Date(y, m - 1, d);
+    };
+
+    const checkIn = parseLocalDate(bookingStore.draft.dates?.checkIn);
+    const checkOut = parseLocalDate(bookingStore.draft.dates?.checkOut);
 
     return schoolHolidays.some(holiday => {
-      const start = new Date(holiday.startDate);
-      const end = new Date(holiday.endDate);
+      const start = parseLocalDate(holiday.startDate);
+      const end = parseLocalDate(holiday.endDate);
       return (checkIn >= start && checkIn <= end) || (checkOut >= start && checkOut <= end) || (checkIn <= start && checkOut >= end);
     });
   };
@@ -363,14 +369,14 @@ export default function GuestDetails() {
                 <div>
                   <p className="text-sm text-[#737373]">Check in:</p>
                   <p className="text-sm font-medium text-[#4F4F4F] mt-1">
-                    {format(bookingStore.draft.dates.checkIn, "dd/MM/yyyy")}
+                    {formatDateSafe(bookingStore.draft.dates.checkIn, "dd/MM/yyyy")}
                   </p>
                 </div>
 
                 <div>
                   <p className="text-sm text-[#737373]">Check out:</p>
                   <p className="text-sm font-medium text-[#4F4F4F] mt-1">
-                    {format(bookingStore.draft.dates.checkOut, "dd/MM/yyyy")}
+                    {formatDateSafe(bookingStore.draft.dates.checkOut, "dd/MM/yyyy")}
                   </p>
                 </div>
 

@@ -18,6 +18,7 @@ import {
 } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { BASE_URL } from "@/config";
+import { formatDateSafe } from "@/lib/utils";
 
 function formatPrice(n) {
   return Number(n || 0).toLocaleString();
@@ -331,18 +332,14 @@ export default function Extras() {
                 <div>
                   <p className="text-[#737373]">Check in:</p>
                   <p className="font-medium text-[#4F4F4F]">
-                    {draft.dates?.checkIn
-                      ? format(draft.dates.checkIn, "dd/MM/yyyy")
-                      : "--"}
+                    {formatDateSafe(draft.dates.checkIn, "dd/MM/yyyy")}
                   </p>
                 </div>
 
                 <div>
                   <p className="text-[#737373]">Check out:</p>
                   <p className="font-medium text-[#4F4F4F]">
-                    {draft.dates?.checkOut
-                      ? format(draft.dates.checkOut, "dd/MM/yyyy")
-                      : "--"}
+                    {formatDateSafe(draft.dates.checkOut, "dd/MM/yyyy")}
                   </p>
                 </div>
 

@@ -29,7 +29,7 @@ import {
 
 import { Calendar } from "@/components/ui/calendar";
 import { Button } from "@/components/ui/button";
-import { cn } from "@/lib/utils";
+import { cn, formatDateSafe } from "@/lib/utils";
 import { format } from "date-fns";
 
 import {
@@ -435,14 +435,14 @@ export default function EnterDetails() {
                 <div>
                   <p className="text-[#737373]">Check in:</p>
                   <p className="text-[#4F4F4F] font-medium mt-1">
-                    {bookingStore.draft.dates?.checkIn ? format(bookingStore.draft.dates.checkIn, "dd/MM/yyyy") : "--"}
+                    {formatDateSafe(bookingStore.draft.dates.checkIn, "dd/MM/yyyy")}
                   </p>
                 </div>
 
                 <div>
                   <p className="text-[#737373]">Check out:</p>
                   <p className="text-[#4F4F4F] font-medium mt-1">
-                    {bookingStore.draft.dates?.checkOut ? format(bookingStore.draft.dates.checkOut, "dd/MM/yyyy") : "--"}
+                    {formatDateSafe(bookingStore.draft.dates.checkOut, "dd/MM/yyyy")}
                   </p>
                 </div>
               </div>

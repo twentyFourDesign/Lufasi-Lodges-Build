@@ -154,7 +154,7 @@ export default function EditStayDatesModal({
                 const launchDate = new Date(2026, 4, 1); // May 1, 2026
                 const parseDate = (str) => {
                   const [d, m, y] = str.split("/");
-                  return new Date(`${y}-${m}-${d}`);
+                  return new Date(y, m - 1, d);
                 };
 
                 const ci = parseDate(local.checkIn);

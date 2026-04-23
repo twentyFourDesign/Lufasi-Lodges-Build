@@ -16,6 +16,7 @@ import CommonNavbar from "@/components/shared/common/CommonNavbar/CommonNavbar";
 import { useBookingStore } from "@/store/useBookingStore";
 import { format } from "date-fns/format";
 import { BASE_URL } from "@/config";
+import { formatDateSafe } from "@/lib/utils";
 import {
   Dialog,
   DialogContent,
@@ -338,13 +339,13 @@ export default function ReviewYourBooking() {
                     <div>
                       <div className="text-xs text-[#6B6B6B]">Check in</div>
                       <div className="font-medium mt-1">
-                        {format(bookingStore.draft.dates.checkIn, "dd/MM/yyyy")}
+                        {formatDateSafe(bookingStore.draft.dates.checkIn, "dd/MM/yyyy")}
                       </div>
                     </div>
                     <div>
                       <div className="text-xs text-[#6B6B6B]">Check out</div>
                       <div className="font-medium mt-1">
-                        {format(
+                        {formatDateSafe(
                           bookingStore.draft.dates.checkOut,
                           "dd/MM/yyyy",
                         )}

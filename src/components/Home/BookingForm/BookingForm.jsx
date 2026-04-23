@@ -19,6 +19,7 @@ import { addDays, differenceInCalendarDays } from "date-fns";
 import { BASE_URL } from "@/config";
 import { useBookingStore } from "@/store/useBookingStore";
 import { useNavigate } from "react-router-dom";
+import { toISODate } from "@/lib/utils";
 
 export default function BookingForm() {
   const [checkIn, setCheckIn] = useState();
@@ -50,8 +51,8 @@ export default function BookingForm() {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          startDate: checkIn.toISOString().split("T")[0], // "2025-12-20"
-          endDate: checkOut.toISOString().split("T")[0], // "2025-12-22"
+          startDate: toISODate(checkIn), // "2025-12-20"
+          endDate: toISODate(checkOut), // "2025-12-22"
           adults: parseInt(guests.match(/(\d+)/)[1]) || 1, // Extract number from "2 Guests"
         }),
       });
@@ -59,18 +60,15 @@ export default function BookingForm() {
 
       bookingStore.updateDraft({
         dates: {
-          checkIn: checkIn.toISOString().split("T")[0],
-          checkOut: checkOut.toISOString().split("T")[0],
+          checkIn: toISODate(checkIn),
+          checkOut: toISODate(checkOut),
         },
         guests: {
           adults: parseInt(guests.match(/(\d+)/)[1]) || 1,
           teenagers: 0,
           children: 0,
         },
-        numberOfNights: differenceInCalendarDays(
-          checkOut.toISOString().split("T")[0],
-          checkIn.toISOString().split("T")[0],
-        ),
+        numberOfNights: differenceInCalendarDays(checkOut, checkIn),
         availablePods: data,
       });
 
