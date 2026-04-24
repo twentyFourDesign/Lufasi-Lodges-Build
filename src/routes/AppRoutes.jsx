@@ -16,6 +16,7 @@ import AdminLogin from "@/pages/AdminLogin/AdminLogin";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import AdminDashboard from "@/pages/admin/AdminDashboard";
 import BookingsPage from "@/pages/admin/BookingsPage";
+import PendingBookingsPage from "@/pages/admin/PendingBookingsPage";
 import BookingDetailsPage from "@/pages/admin/BookingDetailsPage";
 import SettingsPage from "@/pages/admin/SettingsPage";
 import PricingPage from "@/pages/admin/PricingPage";
@@ -157,6 +158,14 @@ export default function AppRoutes() {
         element={
           <ProtectedRoute>
             <BookingsPage />
+          </ProtectedRoute>
+        }
+      />
+        <Route
+        path="/admin/pending-bookings"
+        element={
+          <ProtectedRoute>
+            <PendingBookingsPage />
           </ProtectedRoute>
         }
       />

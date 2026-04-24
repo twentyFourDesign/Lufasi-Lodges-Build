@@ -4,7 +4,7 @@ import { BASE_URL } from "@/config";
 import useAuthStore from "@/store/useAuthStore";
 import AdminLayout from "@/components/admin/AdminLayout";
 
-export default function BookingsPage() {
+export default function PendingBookingsPage() {
   const { token } = useAuthStore();
   const [loading, setLoading] = useState(true);
   const [bookings, setBookings] = useState([]);
@@ -12,7 +12,7 @@ export default function BookingsPage() {
   const [error, setError] = useState(null);
 
   // Email/Action states
-  const [sendingAction, setSendingAction] = useState(null); // id of booking being processed
+  const [sendingAction, setSendingAction] = useState(null);
   const [actionMessage, setActionMessage] = useState(null);
 
   // Pagination
@@ -32,17 +32,17 @@ export default function BookingsPage() {
   const [cancelling, setCancelling] = useState(false);
   const [cancelError, setCancelError] = useState(null);
 
+  const confirmedStatuses = ["confirmed", "ready_for_checkin", "confirmed_unassigned", "paid"];
+
   useEffect(() => {
     fetchBookings();
   }, []);
 
-  const confirmedStatuses = ["confirmed", "ready_for_checkin", "confirmed_unassigned", "paid"];
-
   // Apply filters when bookings or filters change
   useEffect(() => {
-    // Filter for confirmed bookings first
+    // Filter out confirmed bookings first
     let result = bookings.filter(
-      (b) => confirmedStatuses.includes(b.bookingStatus || b.status)
+      (b) => !confirmedStatuses.includes(b.bookingStatus || b.status)
     );
 
     if (filters.status) {
@@ -64,7 +64,7 @@ export default function BookingsPage() {
     }
 
     setFilteredBookings(result);
-    setCurrentPage(1); // Reset to first page on filter change
+    setCurrentPage(1);
   }, [bookings, filters]);
 
   const fetchBookings = async () => {
@@ -110,27 +110,6 @@ export default function BookingsPage() {
       failed: "text-red-600",
     };
     return styles[status] || "text-gray-600";
-  };
-
-  const handleDelete = async (bookingId) => {
-    if (!confirm("Are you sure you want to delete this booking?")) return;
-
-    try {
-      const response = await fetch(`${BASE_URL}/bookings/admin/${bookingId}`, {
-        method: "DELETE",
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-
-      if (!response.ok) {
-        throw new Error("Failed to delete booking");
-      }
-
-      fetchBookings();
-    } catch (err) {
-      alert(err.message);
-    }
   };
 
   const handleResendInvoice = async (bookingId) => {
@@ -213,7 +192,7 @@ export default function BookingsPage() {
 
       setShowCancelModal(false);
       setSelectedBooking(null);
-      fetchBookings(); // Refresh list
+      fetchBookings();
     } catch (err) {
       setCancelError(err.message);
     } finally {
@@ -221,7 +200,6 @@ export default function BookingsPage() {
     }
   };
 
-  // Pagination calculations
   const totalPages = Math.ceil(filteredBookings.length / itemsPerPage);
   const startIndex = (currentPage - 1) * itemsPerPage;
   const paginatedBookings = filteredBookings.slice(
@@ -238,10 +216,9 @@ export default function BookingsPage() {
   return (
     <AdminLayout>
       <div className="space-y-6">
-        {/* Header */}
         <div className="flex items-center justify-between">
           <h1 className="text-2xl font-bold text-[#333333]">
-            Confirmed Bookings Management
+            Pending/Cancelled Bookings
           </h1>
           <button
             onClick={() => setShowFilter(!showFilter)}
@@ -268,7 +245,6 @@ export default function BookingsPage() {
           </button>
         </div>
 
-        {/* Action Message Toast */}
         {actionMessage && (
           <div
             className={`fixed top-5 right-5 z-[100] p-4 rounded-lg shadow-lg animate-in slide-in-from-right duration-300 ${
@@ -278,37 +254,11 @@ export default function BookingsPage() {
             }`}
           >
             <div className="flex items-center gap-2">
-              {actionMessage.type === "success" ? (
-                <svg
-                  className="w-5 h-5"
-                  fill="currentColor"
-                  viewBox="0 0 20 20"
-                >
-                  <path
-                    fillRule="evenodd"
-                    d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
-                    clipRule="evenodd"
-                  />
-                </svg>
-              ) : (
-                <svg
-                  className="w-5 h-5"
-                  fill="currentColor"
-                  viewBox="0 0 20 20"
-                >
-                  <path
-                    fillRule="evenodd"
-                    d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
-                    clipRule="evenodd"
-                  />
-                </svg>
-              )}
               <span className="font-medium">{actionMessage.text}</span>
             </div>
           </div>
         )}
 
-        {/* Filter Panel */}
         {showFilter && (
           <div className="bg-white rounded-lg border border-gray-200 p-4 flex flex-wrap gap-4 items-end">
             <div className="flex-1 min-w-[200px]">
@@ -317,7 +267,7 @@ export default function BookingsPage() {
               </label>
               <input
                 type="text"
-                placeholder="Search by name, reference, pod..."
+                placeholder="Search by name... "
                 value={filters.search}
                 onChange={(e) =>
                   setFilters({ ...filters, search: e.target.value })
@@ -336,13 +286,10 @@ export default function BookingsPage() {
                 }
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#008080]"
               >
-                <option value="">All Confirmed Statuses</option>
-                <option value="confirmed">Confirmed</option>
-                <option value="confirmed_unassigned">
-                  Confirmed (Unassigned)
-                </option>
-                <option value="ready_for_checkin">Ready for Check-in</option>
-                <option value="paid">Paid</option>
+                <option value="">All Types</option>
+                <option value="pending">Pending</option>
+                <option value="cancelled">Cancelled</option>
+                <option value="failed">Failed</option>
               </select>
             </div>
             <button
@@ -354,11 +301,10 @@ export default function BookingsPage() {
           </div>
         )}
 
-        {/* Bookings Card */}
         <div className="bg-white rounded-lg border border-gray-100 shadow-sm">
           <div className="p-4 md:p-5 border-b border-gray-100 flex justify-between items-center">
             <h2 className="text-lg font-semibold text-[#333333]">
-              Confirmed Bookings
+              Pending/Cancelled List
             </h2>
             <span className="text-sm text-gray-500">
               {filteredBookings.length} booking
@@ -374,13 +320,12 @@ export default function BookingsPage() {
             <div className="text-center py-12 text-red-500">{error}</div>
           ) : filteredBookings.length === 0 ? (
             <div className="text-center py-12 text-gray-500">
-              No bookings found
+              No pending or cancelled bookings found
             </div>
           ) : (
             <>
               <div className="overflow-x-auto p-4">
                 <table className="w-full text-sm">
-                  {/* Dark Header - Table Design System */}
                   <thead>
                     <tr className="bg-[#333333] text-white">
                       <th className="py-3 px-4 text-left font-medium rounded-l-lg">
@@ -396,13 +341,11 @@ export default function BookingsPage() {
                       <th className="py-3 px-4 text-left font-medium">
                         Status
                       </th>
-                      <th className="py-3 px-4 text-left font-medium">
+                      <th className="py-3 px-4 text-left font-medium rounded-r-lg">
                         Actions
                       </th>
-                      <th className="py-3 px-4 text-left font-medium rounded-r-lg"></th>
                     </tr>
                   </thead>
-                  {/* Alternating Cyan Rows */}
                   <tbody>
                     {paginatedBookings.map((booking, index) => (
                       <tr
@@ -444,18 +387,7 @@ export default function BookingsPage() {
                               disabled={sendingAction === booking.id}
                               className="text-[#008080] hover:underline font-medium disabled:opacity-50 whitespace-nowrap"
                             >
-                              {sendingAction === booking.id
-                                ? "..."
-                                : "Resend Invoice"}
-                            </button>
-                            <button
-                              onClick={() => handleSendConfirmation(booking.id)}
-                              disabled={sendingAction === booking.id}
-                              className="text-[#008080] hover:underline font-medium disabled:opacity-50 whitespace-nowrap"
-                            >
-                              {sendingAction === booking.id
-                                ? "..."
-                                : "Send Confirmation"}
+                              Resend Invoice
                             </button>
                             {(booking.bookingStatus || booking.status) !==
                               "cancelled" && (
@@ -471,17 +403,15 @@ export default function BookingsPage() {
                             )}
                           </div>
                         </td>
-                        <td className="py-3 px-4"></td>
                       </tr>
                     ))}
                   </tbody>
                 </table>
               </div>
 
-              {/* Pagination */}
               {totalPages > 1 && (
                 <div className="p-4 border-t border-gray-100 flex items-center justify-between">
-                  <div className="text-sm text-gray-500">
+                   <div className="text-sm text-gray-500">
                     Showing {startIndex + 1} to{" "}
                     {Math.min(
                       startIndex + itemsPerPage,
@@ -497,31 +427,19 @@ export default function BookingsPage() {
                     >
                       Previous
                     </button>
-                    {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
-                      let pageNum;
-                      if (totalPages <= 5) {
-                        pageNum = i + 1;
-                      } else if (currentPage <= 3) {
-                        pageNum = i + 1;
-                      } else if (currentPage >= totalPages - 2) {
-                        pageNum = totalPages - 4 + i;
-                      } else {
-                        pageNum = currentPage - 2 + i;
-                      }
-                      return (
-                        <button
-                          key={pageNum}
-                          onClick={() => goToPage(pageNum)}
-                          className={`px-3 py-1 rounded-lg ${
-                            currentPage === pageNum
-                              ? "bg-[#008080] text-white"
-                              : "border border-gray-300 hover:bg-gray-50"
-                          }`}
-                        >
-                          {pageNum}
-                        </button>
-                      );
-                    })}
+                    {Array.from({ length: Math.min(5, totalPages) }, (_, i) => (
+                      <button
+                        key={i + 1}
+                        onClick={() => goToPage(i + 1)}
+                        className={`px-3 py-1 rounded-lg ${
+                          currentPage === i + 1
+                            ? "bg-[#008080] text-white"
+                            : "border border-gray-300 hover:bg-gray-50"
+                        }`}
+                      >
+                        {i + 1}
+                      </button>
+                    ))}
                     <button
                       onClick={() => goToPage(currentPage + 1)}
                       disabled={currentPage === totalPages}
@@ -537,48 +455,23 @@ export default function BookingsPage() {
         </div>
       </div>
 
-      {/* Cancellation Confirmation Modal */}
       {showCancelModal && selectedBooking && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
           <div className="bg-white rounded-xl shadow-xl max-w-md w-full p-6 animate-in fade-in zoom-in duration-200">
-            <div className="flex items-center gap-3 text-red-600 mb-4">
-              <div className="w-12 h-12 rounded-full bg-red-100 flex items-center justify-center">
-                <svg
-                  className="w-6 h-6"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
-                  />
-                </svg>
-              </div>
+             <div className="flex items-center gap-3 text-red-600 mb-4">
               <h3 className="text-xl font-bold">Cancel Booking?</h3>
             </div>
-
             <p className="text-gray-600 mb-6">
               Are you sure you want to cancel the booking{" "}
               <span className="font-semibold text-gray-900">
                 {selectedBooking.bookingReference || selectedBooking.id}
-              </span>{" "}
-              for{" "}
-              <span className="font-semibold text-gray-900">
-                {selectedBooking.GuestDirectory?.fullName ||
-                  selectedBooking.guestName}
-              </span>
-              ?
+              </span>?
             </p>
-
             {cancelError && (
               <div className="mb-4 p-3 bg-red-50 text-red-700 text-sm rounded-lg">
                 {cancelError}
               </div>
             )}
-
             <div className="flex gap-3">
               <button
                 onClick={() => {
@@ -594,16 +487,9 @@ export default function BookingsPage() {
               <button
                 onClick={handleCancel}
                 disabled={cancelling}
-                className="flex-1 py-2.5 bg-red-600 text-white rounded-lg font-medium hover:bg-red-700 disabled:opacity-50 flex items-center justify-center gap-2"
+                className="flex-1 py-2.5 bg-red-600 text-white rounded-lg font-medium hover:bg-red-700 disabled:opacity-50"
               >
-                {cancelling ? (
-                  <>
-                    <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
-                    Cancelling...
-                  </>
-                ) : (
-                  "Yes, Cancel"
-                )}
+                {cancelling ? "Cancelling..." : "Yes, Cancel"}
               </button>
             </div>
           </div>

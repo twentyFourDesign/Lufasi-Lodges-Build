@@ -13,6 +13,7 @@ export default function GuestPaymentsPage() {
     const [filteredPayments, setFilteredPayments] = useState([]);
     const [error, setError] = useState(null);
     const [currentPage, setCurrentPage] = useState(1);
+    const [selectedVoucher, setSelectedVoucher] = useState(null);
 
     // Filter
     const [showFilter, setShowFilter] = useState(false);
@@ -72,6 +73,8 @@ export default function GuestPaymentsPage() {
                                 id: booking.id,
                                 bookingReference: booking.bookingReference,
                                 GuestDirectory: booking.GuestDirectory,
+                                totalPrice: booking.totalPrice,
+                                Voucher: booking.Voucher,
                             },
                         });
                     });
@@ -140,7 +143,8 @@ export default function GuestPaymentsPage() {
     };
 
     return (
-        <AdminLayout>
+        <>
+            <AdminLayout>
             <div className="space-y-6">
                 {/* Header */}
                 <div className="flex items-center justify-between">
@@ -243,7 +247,9 @@ export default function GuestPaymentsPage() {
                                                 Booking ID
                                             </th>
                                             <th className="py-3 px-4 text-left font-medium">Name</th>
-                                            <th className="py-3 px-4 text-left font-medium">Price</th>
+                                            <th className="py-3 px-4 text-left font-medium">Complete Booking Price</th>
+                                            <th className="py-3 px-4 text-left font-medium">Amount Paid</th>
+                                            <th className="py-3 px-4 text-left font-medium">Payment Method</th>
                                             <th className="py-3 px-4 text-left font-medium">Status</th>
                                             <th className="py-3 px-4 text-left font-medium">
                                                 Booking Reference
@@ -267,7 +273,35 @@ export default function GuestPaymentsPage() {
                                                     {payment.Booking?.GuestDirectory?.fullName || "Unknown"}
                                                 </td>
                                                 <td className="py-3 px-4 text-[#333333]">
+                                                    {formatCurrency(payment.Booking?.totalPrice)}
+                                                </td>
+                                                <td className="py-3 px-4 text-[#333333]">
                                                     {formatCurrency(payment.amount)}
+                                                </td>
+                                                <td className="py-3 px-4">
+                                                    {payment.paymentMethod === "voucher" ? (
+                                                        <button
+                                                            onClick={() => {
+                                                                if (payment.Booking?.Voucher) {
+                                                                    setSelectedVoucher(payment.Booking.Voucher);
+                                                                } else {
+                                                                    // Fallback: extract from reference if possible
+                                                                    const ref = payment.transactionReference || "";
+                                                                    const parts = ref.split("-");
+                                                                    const code = parts.length >= 2 ? parts[1] : "N/A";
+                                                                    setSelectedVoucher({ code, value: payment.amount, isMock: true });
+                                                                }
+                                                            }}
+                                                            className="text-[#008080] font-medium hover:underline flex items-center gap-1 text-left"
+                                                        >
+                                                            Voucher ({payment.Booking?.Voucher?.code || (payment.transactionReference?.split("-")[1]) || "N/A"})
+                                                            <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                                            </svg>
+                                                        </button>
+                                                    ) : (
+                                                        <span className="capitalize">{payment.paymentMethod}</span>
+                                                    )}
                                                 </td>
                                                 <td className="py-3 px-4">
                                                     <span
@@ -348,5 +382,56 @@ export default function GuestPaymentsPage() {
                 </div>
             </div>
         </AdminLayout>
+
+        {/* Voucher Details Modal */}
+        {selectedVoucher && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+                <div className="bg-white rounded-xl shadow-xl max-w-sm w-full p-6 animate-in fade-in zoom-in duration-200">
+                    <div className="flex justify-between items-center mb-4">
+                        <h3 className="text-xl font-bold text-[#333333]">Voucher Details</h3>
+                        <button onClick={() => setSelectedVoucher(null)} className="text-gray-400 hover:text-gray-600">
+                            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                        </button>
+                    </div>
+                    <div className="space-y-3">
+                        <div className="flex justify-between border-b pb-2">
+                            <span className="text-gray-500">Code</span>
+                            <span className="font-bold text-[#008080]">{selectedVoucher.code}</span>
+                        </div>
+                        <div className="flex justify-between border-b pb-2">
+                            <span className="text-gray-500">Value</span>
+                            <span className="font-medium">{formatCurrency(selectedVoucher.value)}</span>
+                        </div>
+                        {selectedVoucher.validFrom && (
+                            <div className="flex justify-between border-b pb-2">
+                                <span className="text-gray-500">Valid From</span>
+                                <span className="font-medium">{formatDate(selectedVoucher.validFrom)}</span>
+                            </div>
+                        )}
+                        {selectedVoucher.validTo && (
+                            <div className="flex justify-between border-b pb-2">
+                                <span className="text-gray-500">Valid To</span>
+                                <span className="font-medium">{formatDate(selectedVoucher.validTo)}</span>
+                            </div>
+                        )}
+                        <div className="flex justify-between">
+                            <span className="text-gray-500">Status</span>
+                            <span className={`font-medium ${selectedVoucher.isMock ? 'text-gray-600' : (selectedVoucher.isActive ? 'text-green-600' : 'text-red-600')}`}>
+                                {selectedVoucher.isMock ? 'Unknown' : (selectedVoucher.isActive ? 'Active' : 'Inactive')}
+                            </span>
+                        </div>
+                    </div>
+                    <button
+                        onClick={() => setSelectedVoucher(null)}
+                        className="w-full mt-6 py-2 bg-[#008080] text-white rounded-lg font-medium hover:bg-[#006666]"
+                    >
+                        Close
+                    </button>
+                </div>
+            </div>
+            )}
+        </>
     );
 }

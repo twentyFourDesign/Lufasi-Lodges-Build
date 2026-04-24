@@ -3,7 +3,8 @@ import useAuthStore from "@/store/useAuthStore";
 
 const navItems = [
     { name: "Dashboard", path: "/admin/dashboard", icon: "dashboard" },
-    { name: "Bookings", path: "/admin/bookings", icon: "bookings" },
+    { name: "Confirmed Bookings", path: "/admin/bookings", icon: "bookings" },
+    { name: "Pending/Cancelled", path: "/admin/pending-bookings", icon: "bookings" },
     { name: "Booking Calendar", path: "/admin/booking-page", icon: "booking-page" },
     { name: "Pricing & Configuration", path: "/admin/pricing", icon: "pricing" },
     { name: "Guest Payments", path: "/admin/guest-payments", icon: "payments" },
