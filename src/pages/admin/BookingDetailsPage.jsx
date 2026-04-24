@@ -420,14 +420,13 @@ export default function BookingDetailsPage() {
               {guest.fullName || "Guest"}
             </h2>
             <span
-              className={`ml-auto px-3 py-1 rounded-full text-sm font-medium capitalize ${
-                booking.bookingStatus === "confirmed" ||
-                booking.bookingStatus === "paid"
+              className={`ml-auto px-3 py-1 rounded-full text-sm font-medium capitalize ${booking.bookingStatus === "confirmed" ||
+                  booking.bookingStatus === "paid"
                   ? "bg-green-100 text-green-700"
                   : booking.bookingStatus === "cancelled"
                     ? "bg-red-100 text-red-700"
                     : "bg-yellow-100 text-yellow-700"
-              }`}
+                }`}
             >
               {booking.bookingStatus}
             </span>
@@ -524,7 +523,7 @@ export default function BookingDetailsPage() {
                         </span>
                       </div>
                       <div className="space-y-1">
-                        {dome.guests?.map((guestName, gIdx) => 
+                        {dome.guests?.map((guestName, gIdx) =>
                           guestName && (
                             <div key={gIdx} className="text-sm text-gray-600 flex items-center gap-2">
                               <div className="w-1 h-1 bg-gray-300 rounded-full"></div>
@@ -670,13 +669,12 @@ export default function BookingDetailsPage() {
                       <div
                         key={p.id}
                         onClick={() => !isDisabled && togglePodSelection(p.id)}
-                        className={`relative p-3 rounded-xl border transition-all cursor-pointer ${
-                          isSelected
+                        className={`relative p-3 rounded-xl border transition-all cursor-pointer ${isSelected
                             ? "bg-[#008080] border-[#008080] text-white shadow-md shadow-[#008080]/20"
                             : isDisabled
                               ? "bg-gray-50 border-gray-100 opacity-50 cursor-not-allowed"
                               : "bg-white border-gray-200 hover:border-[#008080]/50 hover:bg-gray-50"
-                        }`}
+                          }`}
                       >
                         <div className="flex justify-between items-start mb-1">
                           <span
@@ -700,23 +698,21 @@ export default function BookingDetailsPage() {
                         </div>
                         <div className="flex items-center gap-2">
                           <span
-                            className={`text-[10px] px-1.5 py-0.5 rounded uppercase font-bold ${
-                              isSelected
+                            className={`text-[10px] px-1.5 py-0.5 rounded uppercase font-bold ${isSelected
                                 ? "bg-white/20 text-white"
                                 : p.available
                                   ? "bg-green-100 text-green-700"
                                   : "bg-red-100 text-red-700"
-                            }`}
+                              }`}
                           >
                             {p.available ? "Available" : "Occupied"}
                           </span>
                           {isCurrent && (
                             <span
-                              className={`text-[10px] px-1.5 py-0.5 rounded uppercase font-bold ${
-                                isSelected
+                              className={`text-[10px] px-1.5 py-0.5 rounded uppercase font-bold ${isSelected
                                   ? "bg-white/20 text-white"
                                   : "bg-blue-100 text-blue-700"
-                              }`}
+                                }`}
                             >
                               Current
                             </span>
@@ -804,7 +800,7 @@ export default function BookingDetailsPage() {
             ) : (
               <p className="text-sm text-gray-600 mb-2">N/A</p>
             )}
-            
+
             {booking.welcomeNote && (
               <div className="mt-4 border-t border-gray-200 pt-3">
                 <p className="text-sm font-semibold text-[#333333] mb-1">Welcome Note:</p>
@@ -972,11 +968,10 @@ export default function BookingDetailsPage() {
               <button
                 onClick={handleSendConfirmation}
                 disabled={sendingEmail}
-                className={`flex-1 min-w-[150px] py-3 rounded-lg font-medium disabled:opacity-50 transition-colors ${
-                  booking.bookingStatus === "cancelled"
+                className={`flex-1 min-w-[150px] py-3 rounded-lg font-medium disabled:opacity-50 transition-colors ${booking.bookingStatus === "cancelled"
                     ? "bg-red-500 text-white hover:bg-red-600"
                     : "bg-[#008080] text-white hover:bg-[#006666]"
-                }`}
+                  }`}
               >
                 {sendingEmail
                   ? "Sending..."

@@ -255,6 +255,20 @@ export default function ReviewYourBooking() {
         // Clear applied codes on success
         setAppliedDiscount(null);
         setAppliedVoucher(null);
+
+        if (result.amountDue === 0) {
+          // Redirect directly to confirmation page for zero-amount bookings
+          navigate("/booking-confirmation", {
+            state: {
+              booking: {
+                bookingReference: result.bookingReference,
+                id: result.bookingId,
+              },
+            },
+          });
+          return;
+        }
+
         // Navigate to payment page with payment details
         navigate("/payment", {
           state: {
@@ -555,7 +569,11 @@ export default function ReviewYourBooking() {
                   disabled={creating}
                   className="w-full bg-[#09432B] hover:bg-[#09432B] text-white font-semibold py-3"
                 >
-                  {creating ? "Creating Booking..." : "Proceed to Payment"}
+                  {creating
+                    ? "Creating Booking..."
+                    : pricing.finalTotal === 0
+                      ? "Confirm Booking"
+                      : "Proceed to Payment"}
                 </Button>
 
                 <div className="w-full mt-2">
