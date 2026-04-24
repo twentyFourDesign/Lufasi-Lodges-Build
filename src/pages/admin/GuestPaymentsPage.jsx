@@ -74,6 +74,7 @@ export default function GuestPaymentsPage() {
                                 bookingReference: booking.bookingReference,
                                 GuestDirectory: booking.GuestDirectory,
                                 totalPrice: booking.totalPrice,
+                                fullBookingPrice: booking.fullBookingPrice,
                                 Voucher: booking.Voucher,
                             },
                         });
@@ -247,8 +248,7 @@ export default function GuestPaymentsPage() {
                                                 Booking ID
                                             </th>
                                             <th className="py-3 px-4 text-left font-medium">Name</th>
-                                            <th className="py-3 px-4 text-left font-medium">Complete Booking Price</th>
-                                            <th className="py-3 px-4 text-left font-medium">Amount Paid</th>
+                                            <th className="py-3 px-4 text-left font-medium">Booking Price</th>
                                             <th className="py-3 px-4 text-left font-medium">Payment Method</th>
                                             <th className="py-3 px-4 text-left font-medium">Status</th>
                                             <th className="py-3 px-4 text-left font-medium">
@@ -273,10 +273,7 @@ export default function GuestPaymentsPage() {
                                                     {payment.Booking?.GuestDirectory?.fullName || "Unknown"}
                                                 </td>
                                                 <td className="py-3 px-4 text-[#333333]">
-                                                    {formatCurrency(payment.Booking?.totalPrice)}
-                                                </td>
-                                                <td className="py-3 px-4 text-[#333333]">
-                                                    {formatCurrency(payment.amount)}
+                                                    {formatCurrency(payment.Booking?.fullBookingPrice || payment.Booking?.totalPrice || payment.amount)}
                                                 </td>
                                                 <td className="py-3 px-4">
                                                     {payment.paymentMethod === "voucher" ? (
