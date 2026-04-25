@@ -18,7 +18,7 @@ export default function GuestPaymentsPage() {
     // Filter
     const [showFilter, setShowFilter] = useState(false);
     const [filters, setFilters] = useState({
-        status: "",
+        status: "successful",
         search: "",
     });
 
