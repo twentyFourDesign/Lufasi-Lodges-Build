@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo } from "react";
+import { MoreVertical } from "lucide-react";
 import { BASE_URL } from "@/config";
 import useAuthStore from "@/store/useAuthStore";
 import AdminLayout from "@/components/admin/AdminLayout";
@@ -11,6 +12,10 @@ export default function BookingLogPage() {
     const [error, setError] = useState(null);
     const [viewMode, setViewMode] = useState("Week"); // Week, Month, Year
     const [currentDate, setCurrentDate] = useState(new Date());
+    const [blocks, setBlocks] = useState([]);
+    const [hoveredCell, setHoveredCell] = useState(null);
+    const [blockModal, setBlockModal] = useState({ show: false, podId: null, date: null, isBlock: false });
+    const [actionLoading, setActionLoading] = useState(false);
     const [hideGuestDetails, setHideGuestDetails] = useState(false);
     const [tooltip, setTooltip] = useState({ show: false, booking: null, x: 0, y: 0 });
 
@@ -34,6 +39,7 @@ export default function BookingLogPage() {
             const podsData = await podsRes.json();
 
             setBookings(bookingsData.bookings || []);
+            setBlocks(bookingsData.blocks || []);
             setPods(podsData.pods || []);
         } catch (err) {
             setError(err.message);
@@ -90,6 +96,10 @@ export default function BookingLogPage() {
         setCurrentDate(newDate);
     };
 
+    // Only show bookings that are actively occupying a room.
+    // Cancelled, expired, failed, and abandoned bookings must NOT block calendar cells.
+    const ACTIVE_BOOKING_STATUSES = ["confirmed"];
+
     // Find booking for a specific pod and date
     const getBookingForCell = (podId, date) => {
         const dateStr = date.toISOString().split("T")[0];
@@ -103,12 +113,24 @@ export default function BookingLogPage() {
             return `${year}-${month}-${day}`;
         };
 
-        return bookings.find((b) => {
+        const booking = bookings.find((b) => {
             if (b.podId !== podId) return false;
+
+            // Skip bookings that are NOT actively holding the room
+            const status = (b.bookingStatus || b.status || "").toLowerCase();
+            if (!ACTIVE_BOOKING_STATUSES.includes(status)) return false;
+
             const checkIn = toISODateLocal(b.checkIn);
             const checkOut = toISODateLocal(b.checkOut);
             return dateStr >= checkIn && dateStr < checkOut;
         });
+
+        if (booking) return booking;
+
+        const block = blocks.find((b) => b.podId === podId && b.date === dateStr);
+        if (block) return { isBlock: true, ...block };
+
+        return null;
     };
 
     const formatDayHeader = (date) => {
@@ -120,8 +142,11 @@ export default function BookingLogPage() {
         );
     };
 
-    const handleCellHover = (e, booking) => {
-        if (!booking) {
+    const handleCellHover = (e, booking, podId, date) => {
+        const dateStr = date.toISOString().split("T")[0];
+        setHoveredCell({ podId, dateStr });
+
+        if (!booking || booking.isBlock) {
             setTooltip({ show: false, booking: null, x: 0, y: 0 });
             return;
         }
@@ -132,6 +157,33 @@ export default function BookingLogPage() {
             x: rect.left + rect.width / 2,
             y: rect.bottom + 10,
         });
+    };
+
+    const handleBlockAction = async () => {
+        setActionLoading(true);
+        try {
+            const endpoint = blockModal.isBlock ? '/admin/calendar/unblock' : '/admin/calendar/block';
+            const dateStr = blockModal.date.toISOString().split("T")[0];
+            const res = await fetch(`${BASE_URL}${endpoint}`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    Authorization: `Bearer ${token}`
+                },
+                body: JSON.stringify({
+                    podId: blockModal.podId,
+                    date: dateStr
+                })
+            });
+            const data = await res.json();
+            if (!res.ok) throw new Error(data.error || "Failed to perform action");
+            setBlockModal({ show: false, podId: null, date: null, isBlock: false });
+            fetchData();
+        } catch (err) {
+            alert(err.message);
+        } finally {
+            setActionLoading(false);
+        }
     };
 
     const handlePrint = () => {
@@ -247,20 +299,38 @@ export default function BookingLogPage() {
                                         </td>
                                         {days.map((day, i) => {
                                             const booking = getBookingForCell(pod.id, day);
+                                            const isHovered = hoveredCell?.podId === pod.id && hoveredCell?.dateStr === day.toISOString().split("T")[0];
                                             return (
                                                 <td
                                                     key={i}
-                                                    className={`py-3 px-2 text-center border border-gray-200 cursor-pointer transition-colors ${booking
-                                                            ? "bg-[#008080]/20 hover:bg-[#008080]/30"
+                                                    className={`relative py-3 px-2 text-center border border-gray-200 transition-colors ${booking
+                                                            ? booking.isBlock ? "bg-gray-200" : "bg-[#008080]/20 hover:bg-[#008080]/30"
                                                             : "hover:bg-gray-50"
                                                         }`}
-                                                    onMouseEnter={(e) => handleCellHover(e, booking)}
-                                                    onMouseLeave={() => setTooltip({ show: false, booking: null, x: 0, y: 0 })}
+                                                    onMouseEnter={(e) => handleCellHover(e, booking, pod.id, day)}
+                                                    onMouseLeave={() => {
+                                                        setHoveredCell(null);
+                                                        setTooltip({ show: false, booking: null, x: 0, y: 0 });
+                                                    }}
                                                 >
-                                                    {booking && !hideGuestDetails && (
+                                                    {booking && !booking.isBlock && !hideGuestDetails && (
                                                         <span className="text-xs text-gray-700">
                                                             {booking.GuestDirectory?.fullName?.split(" ")[0] || "Guest"}
                                                         </span>
+                                                    )}
+                                                    {booking?.isBlock && (
+                                                        <span className="text-xs text-gray-500 font-medium">Blocked</span>
+                                                    )}
+                                                    {((isHovered && !booking) || booking?.isBlock) && (
+                                                        <div 
+                                                            className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-white rounded shadow p-1 cursor-pointer hover:bg-gray-100 z-10"
+                                                            onClick={(e) => {
+                                                                e.stopPropagation();
+                                                                setBlockModal({ show: true, podId: pod.id, date: day, isBlock: !!booking?.isBlock });
+                                                            }}
+                                                        >
+                                                            <MoreVertical size={16} className="text-gray-600" />
+                                                        </div>
                                                     )}
                                                 </td>
                                             );
@@ -301,6 +371,36 @@ export default function BookingLogPage() {
                         </div>
                     )}
                 </div>
+
+                {/* Block Room Modal */}
+                {blockModal.show && (
+                    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+                        <div className="bg-white rounded-lg p-6 w-full max-w-md">
+                            <h3 className="text-lg font-bold mb-4">
+                                {blockModal.isBlock ? "Unblock Room" : "Block Room"}
+                            </h3>
+                            <p className="text-gray-600 mb-6">
+                                Are you sure you want to {blockModal.isBlock ? "unblock" : "block"} this room on {blockModal.date.toLocaleDateString()}?
+                            </p>
+                            <div className="flex justify-end gap-3">
+                                <button
+                                    onClick={() => setBlockModal({ show: false, podId: null, date: null, isBlock: false })}
+                                    className="px-4 py-2 text-gray-600 border rounded hover:bg-gray-50"
+                                    disabled={actionLoading}
+                                >
+                                    Cancel
+                                </button>
+                                <button
+                                    onClick={handleBlockAction}
+                                    className={`px-4 py-2 text-white rounded ${blockModal.isBlock ? 'bg-green-600 hover:bg-green-700' : 'bg-red-600 hover:bg-red-700'}`}
+                                    disabled={actionLoading}
+                                >
+                                    {actionLoading ? "Processing..." : blockModal.isBlock ? "Unblock" : "Block"}
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                )}
             </div>
         </AdminLayout>
     );
