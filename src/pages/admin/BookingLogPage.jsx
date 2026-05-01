@@ -14,7 +14,7 @@ export default function BookingLogPage() {
     const [currentDate, setCurrentDate] = useState(new Date());
     const [blocks, setBlocks] = useState([]);
     const [hoveredCell, setHoveredCell] = useState(null);
-    const [blockModal, setBlockModal] = useState({ show: false, podId: null, date: null, isBlock: false });
+    const [blockModal, setBlockModal] = useState({ show: false, podId: null, date: null, isBlock: false, reason: "", otherReason: "", currentReason: null });
     const [actionLoading, setActionLoading] = useState(false);
     const [hideGuestDetails, setHideGuestDetails] = useState(false);
     const [tooltip, setTooltip] = useState({ show: false, booking: null, x: 0, y: 0 });
@@ -160,10 +160,22 @@ export default function BookingLogPage() {
     };
 
     const handleBlockAction = async () => {
+        if (!blockModal.isBlock) {
+            if (!blockModal.reason) {
+                alert("Please select a reason for blocking.");
+                return;
+            }
+            if (blockModal.reason === "Others (Specify)" && (!blockModal.otherReason || !blockModal.otherReason.trim())) {
+                alert("Please specify the reason.");
+                return;
+            }
+        }
+
         setActionLoading(true);
         try {
             const endpoint = blockModal.isBlock ? '/admin/calendar/unblock' : '/admin/calendar/block';
             const dateStr = blockModal.date.toISOString().split("T")[0];
+            const finalReason = blockModal.reason === "Others (Specify)" ? blockModal.otherReason : blockModal.reason;
             const res = await fetch(`${BASE_URL}${endpoint}`, {
                 method: "POST",
                 headers: {
@@ -172,12 +184,13 @@ export default function BookingLogPage() {
                 },
                 body: JSON.stringify({
                     podId: blockModal.podId,
-                    date: dateStr
+                    date: dateStr,
+                    reason: finalReason
                 })
             });
             const data = await res.json();
             if (!res.ok) throw new Error(data.error || "Failed to perform action");
-            setBlockModal({ show: false, podId: null, date: null, isBlock: false });
+            setBlockModal({ show: false, podId: null, date: null, isBlock: false, reason: "", otherReason: "", currentReason: null });
             fetchData();
         } catch (err) {
             alert(err.message);
@@ -326,7 +339,15 @@ export default function BookingLogPage() {
                                                             className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-white rounded shadow p-1 cursor-pointer hover:bg-gray-100 z-10"
                                                             onClick={(e) => {
                                                                 e.stopPropagation();
-                                                                setBlockModal({ show: true, podId: pod.id, date: day, isBlock: !!booking?.isBlock });
+                                                                setBlockModal({ 
+                                                                    show: true, 
+                                                                    podId: pod.id, 
+                                                                    date: day, 
+                                                                    isBlock: !!booking?.isBlock,
+                                                                    reason: "",
+                                                                    otherReason: "",
+                                                                    currentReason: booking?.reason
+                                                                });
                                                             }}
                                                         >
                                                             <MoreVertical size={16} className="text-gray-600" />
@@ -382,9 +403,47 @@ export default function BookingLogPage() {
                             <p className="text-gray-600 mb-6">
                                 Are you sure you want to {blockModal.isBlock ? "unblock" : "block"} this room on {blockModal.date.toLocaleDateString()}?
                             </p>
+                            
+                            {!blockModal.isBlock && (
+                                <div className="mb-6 space-y-4">
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 mb-2">Select Reason <span className="text-red-500">*</span></label>
+                                        <select
+                                            className="w-full border border-gray-300 rounded p-2 text-gray-700"
+                                            value={blockModal.reason || ""}
+                                            onChange={(e) => setBlockModal({ ...blockModal, reason: e.target.value })}
+                                        >
+                                            <option value="" disabled>Select a reason</option>
+                                            <option value="Maintenance">Maintenance</option>
+                                            <option value="Takeover">Takeover</option>
+                                            <option value="Others (Specify)">Others (Specify)</option>
+                                        </select>
+                                    </div>
+                                    {blockModal.reason === "Others (Specify)" && (
+                                        <div>
+                                            <label className="block text-sm font-medium text-gray-700 mb-2">Please specify <span className="text-red-500">*</span></label>
+                                            <input
+                                                type="text"
+                                                className="w-full border border-gray-300 rounded p-2 text-gray-700"
+                                                value={blockModal.otherReason || ""}
+                                                onChange={(e) => setBlockModal({ ...blockModal, otherReason: e.target.value })}
+                                                placeholder="Enter specific reason..."
+                                            />
+                                        </div>
+                                    )}
+                                </div>
+                            )}
+
+                            {blockModal.isBlock && blockModal.currentReason && (
+                                <div className="mb-6 p-3 bg-gray-50 rounded border border-gray-200">
+                                    <p className="text-xs text-gray-500 uppercase tracking-wide font-semibold mb-1">Reason for block:</p>
+                                    <p className="text-sm text-gray-800">{blockModal.currentReason}</p>
+                                </div>
+                            )}
+
                             <div className="flex justify-end gap-3">
                                 <button
-                                    onClick={() => setBlockModal({ show: false, podId: null, date: null, isBlock: false })}
+                                    onClick={() => setBlockModal({ show: false, podId: null, date: null, isBlock: false, reason: "", otherReason: "", currentReason: null })}
                                     className="px-4 py-2 text-gray-600 border rounded hover:bg-gray-50"
                                     disabled={actionLoading}
                                 >
