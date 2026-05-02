@@ -98,7 +98,7 @@ export default function BookingLogPage() {
 
     // Only show bookings that are actively occupying a room.
     // Cancelled, expired, failed, and abandoned bookings must NOT block calendar cells.
-    const ACTIVE_BOOKING_STATUSES = ["confirmed"];
+    const ACTIVE_BOOKING_STATUSES = ["confirmed", "ready_for_checkin"];
 
     // Find booking for a specific pod and date
     const getBookingForCell = (podId, date) => {
