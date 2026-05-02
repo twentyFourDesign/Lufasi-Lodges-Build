@@ -334,7 +334,7 @@ export default function BookingLogPage() {
                                                     {booking?.isBlock && (
                                                         <span className="text-xs text-gray-500 font-medium">Blocked</span>
                                                     )}
-                                                    {((isHovered && !booking) || booking?.isBlock) && (
+                                                    {(isHovered && (!booking || booking?.isBlock)) && (
                                                         <div 
                                                             className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-white rounded shadow p-1 cursor-pointer hover:bg-gray-100 z-10"
                                                             onClick={(e) => {
