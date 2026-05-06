@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import heroImage from "../../assets/image copy.png";
+const heroImage = "/main-home.jpeg";
 import heroImageMobile from "../../assets/image-mobile.png";
 import Navbar from "../../components/shared/Navbar/Navbar";
 import { ArrowRight } from "lucide-react";
