@@ -200,10 +200,13 @@ export default function ReviewYourBooking() {
     }
     const contact = bookingStore.draft.contact || {};
     const { identification, ...contactWithoutId } = contact;
+    const selectedAvailablePod = (bookingStore.draft.availablePods || []).find(
+      (pod) => pod.available === true,
+    );
     const payload = {
       dates: bookingStore.draft.dates,
       contact: contactWithoutId,
-      podId: bookingStore.draft.availablePods[0]?.id,
+      podId: selectedAvailablePod?.id || bookingStore.draft.availablePods?.[0]?.id,
       podCount: bookingStore.draft.podCount,
       boardType: bookingStore.draft.mealPlan?.boardType || "fullBoard",
       guests: bookingStore.draft.guests,

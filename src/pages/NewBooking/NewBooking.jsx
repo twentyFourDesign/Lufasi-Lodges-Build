@@ -40,7 +40,7 @@ export default function NewBooking() {
   // Count available pods
   const availablePodsCount = bookingStore.draft.availablePods
     ? bookingStore.draft.availablePods.filter((pod) => pod.available === true)
-        .length
+      .length
     : 0;
   const [roomCount, setRoomCount] = useState(0);
 
@@ -306,11 +306,11 @@ export default function NewBooking() {
                     </div>
                   </div>
                   <div className="flex flex-col md:items-end items-start mt-[-4px]">
-                     <span className="text-sm text-[#737373] font-bold whitespace-nowrap"> From {" "}
+                    <span className="text-sm text-[#737373] font-bold whitespace-nowrap"> From {" "}
                       {/* {pricingConfig?.basePricePerPod != null
                         ? `₦${formatPrice(pricingConfig.basePricePerPod)}`
                         : "₦--"}{" "} */}
-                        250,000
+                      250,000
                       <span className="font-normal">
                         (Single Occupancy, Full Board)
                       </span>
@@ -337,7 +337,7 @@ export default function NewBooking() {
                       />
                     </div>
                   </div>
-                  
+
                   <button
                     onClick={prevImage}
                     className="absolute -left-3 top-1/2 -translate-y-1/2 bg-white shadow-md border border-gray-200 text-[#09432B] p-2 rounded-full hover:bg-gray-50 transition-all z-10"
@@ -350,14 +350,13 @@ export default function NewBooking() {
                   >
                     <ChevronRight size={20} />
                   </button>
-                  
+
                   <div className="mt-2 flex justify-center gap-1.5">
                     {images.map((_, idx) => (
                       <div
                         key={idx}
-                        className={`w-1.5 h-1.5 rounded-full transition-all ${
-                          idx === currentImageIndex ? "bg-[#09432B] scale-125" : "bg-gray-300"
-                        }`}
+                        className={`w-1.5 h-1.5 rounded-full transition-all ${idx === currentImageIndex ? "bg-[#09432B] scale-125" : "bg-gray-300"
+                          }`}
                       />
                     ))}
                   </div>
@@ -511,11 +510,10 @@ export default function NewBooking() {
                 {`x${roomCount} Rooms`}
               </p>
               <p className="text-sm text-[#737373] font-medium mt-1">
-                {`Guests: ${
-                  (bookingStore.draft.guests?.adults || 0) +
+                {`Guests: ${(bookingStore.draft.guests?.adults || 0) +
                   (bookingStore.draft.guests?.teenagers || 0) +
                   (bookingStore.draft.guests?.children || 0)
-                }`}
+                  }`}
               </p>
             </div>
             <div className="bg-white rounded-xl border border-gray-200 px-5 py-4 shadow-sm">
@@ -550,8 +548,8 @@ export default function NewBooking() {
                 const discountAmount =
                   discountPercent > 0
                     ? Math.round(
-                        baseForStayPreview * (configuredDiscountPercent / 100),
-                      )
+                      baseForStayPreview * (configuredDiscountPercent / 100),
+                    )
                     : 0;
                 const dynamicSubTotal = roomCount ? calculateDynamicSubTotal(bookingStore.draft) : 0;
                 const taxableBase = dynamicSubTotal - discountAmount;

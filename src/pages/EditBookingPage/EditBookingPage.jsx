@@ -103,6 +103,9 @@ export default function EditBookingPage() {
   // API: Update booking
   const handleEditBooking = useCallback(async () => {
     console.log("Updating booking with data:", bookingStore.draft);
+    const selectedAvailablePod = (bookingStore.draft.availablePods || []).find(
+      (pod) => pod.available === true,
+    );
     try {
       const response = await fetch(
         `${BASE_URL}/bookings/${bookingStore.draft.id}`,
@@ -112,7 +115,7 @@ export default function EditBookingPage() {
           body: JSON.stringify({
             dates: bookingStore.draft.dates,
             contact: bookingStore.draft.contact,
-            podId: bookingStore.draft.availablePods[0]?.id,
+            podId: selectedAvailablePod?.id || bookingStore.draft.availablePods?.[0]?.id,
             podCount: bookingStore.draft.podCount || 0,
             boardType:
               bookingStore.draft.mealPlan?.boardType || BoardType.FULL_BOARD,
