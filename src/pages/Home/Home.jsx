@@ -74,6 +74,7 @@ export default function Home() {
           </Button>
 
           <Button
+            asChild
             variant="outline"
             className="
               text-white border border-white/40
@@ -83,7 +84,13 @@ export default function Home() {
               h-10 md:h-12
             "
           >
-            Explore our Lodges
+            <a
+              href="https://www.lufasilodges.com/domes"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              Explore our Lodges
+            </a>
           </Button>
         </div>
 
