@@ -64,6 +64,9 @@ function ExtraRow({ opt, selectedExtras, onToggleExtra }) {
 
 function ExtrasCard({ item, selectedExtras, onToggleExtra }) {
   const [open, setOpen] = useState(item.defaultOpen || false);
+  const categoryImage =
+    (item.options && item.options.length > 0 && item.options[0].imageUrl) ||
+    image1;
 
   return (
     <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
@@ -74,7 +77,11 @@ function ExtrasCard({ item, selectedExtras, onToggleExtra }) {
       >
         <div className="flex items-center gap-4">
           <div className="w-16 h-16 rounded-lg overflow-hidden">
-            <img src={image1} alt="" className="w-full h-full object-cover" />
+            <img
+              src={categoryImage}
+              alt={item.title}
+              className="w-full h-full object-cover"
+            />
           </div>
 
           <div className="text-left">

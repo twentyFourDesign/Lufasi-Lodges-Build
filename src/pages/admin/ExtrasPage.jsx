@@ -96,6 +96,8 @@ export default function ExtrasPage() {
         setShowAddModal(true);
     };
 
+    // Per-extra image updates are now managed via categories instead.
+
     const handleSave = async () => {
         setSaving(true);
         try {
@@ -152,6 +154,82 @@ export default function ExtrasPage() {
             alert(err.message);
         }
     };
+
+    const handleCategoryImageChange = async (categoryName, event) => {
+        const file = event.target.files?.[0];
+        if (!file) return;
+
+        const formData = new FormData();
+        formData.append("image", file);
+
+        try {
+            const encodedCategory = encodeURIComponent(categoryName);
+            const response = await fetch(
+                `${BASE_URL}/extras/category/${encodedCategory}/image`,
+                {
+                    method: "POST",
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                    },
+                    body: formData,
+                },
+            );
+
+            if (!response.ok) {
+                const data = await response.json().catch(() => ({}));
+                throw new Error(data.error || "Failed to upload category image");
+            }
+
+            await fetchExtras();
+        } catch (err) {
+            alert(err.message);
+        } finally {
+            event.target.value = "";
+        }
+    };
+
+    const handleCategoryImageRemove = async (categoryName) => {
+        try {
+            const encodedCategory = encodeURIComponent(categoryName);
+            const response = await fetch(
+                `${BASE_URL}/extras/category/${encodedCategory}/remove-image`,
+                {
+                    method: "POST",
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                    },
+                },
+            );
+
+            if (!response.ok) {
+                const data = await response.json().catch(() => ({}));
+                throw new Error(data.error || "Failed to remove category image");
+            }
+
+            await fetchExtras();
+        } catch (err) {
+            alert(err.message);
+        }
+    };
+
+    const categories = extras.reduce((acc, extra) => {
+        const category = extra.category || "uncategorized";
+        if (!acc[category]) {
+            acc[category] = {
+                name: category,
+                imageUrl: extra.imageUrl || null,
+                count: 1,
+            };
+        } else {
+            acc[category].count += 1;
+            if (!acc[category].imageUrl && extra.imageUrl) {
+                acc[category].imageUrl = extra.imageUrl;
+            }
+        }
+        return acc;
+    }, {});
+
+    const categoryList = Object.values(categories);
 
     return (
         <AdminLayout>
@@ -234,6 +312,7 @@ export default function ExtrasPage() {
                                     <thead>
                                         <tr className="bg-[#333333] text-white">
                                             <th className="py-3 px-4 text-left font-medium rounded-l-lg">Name</th>
+                                            <th className="py-3 px-4 text-left font-medium">Image</th>
                                             <th className="py-3 px-4 text-left font-medium">Description</th>
                                             <th className="py-3 px-4 text-left font-medium">Price</th>
                                             <th className="py-3 px-4 text-left font-medium">Status</th>
@@ -244,6 +323,17 @@ export default function ExtrasPage() {
                                         {paginatedExtras.map((extra, index) => (
                                             <tr key={extra.id} className={index % 2 === 1 ? "bg-[#00FFFF]/20" : ""}>
                                                 <td className="py-3 px-4 text-[#333333] font-medium">{extra.name}</td>
+                                                <td className="py-3 px-4">
+                                                    {extra.imageUrl ? (
+                                                        <img
+                                                            src={extra.imageUrl}
+                                                            alt={extra.name}
+                                                            className="w-12 h-12 object-cover rounded-md border border-gray-200"
+                                                        />
+                                                    ) : (
+                                                        <span className="text-xs text-gray-400">No image</span>
+                                                    )}
+                                                </td>
                                                 <td className="py-3 px-4 text-gray-600">{extra.description || "-"}</td>
                                                 <td className="py-3 px-4 text-[#333333]">{formatCurrency(extra.price)}</td>
                                                 <td className="py-3 px-4">
@@ -290,6 +380,77 @@ export default function ExtrasPage() {
                                 </div>
                             )}
                         </>
+                    )}
+                </div>
+
+                {/* Categories Card */}
+                <div className="bg-white rounded-lg border border-gray-100 shadow-sm">
+                    <div className="p-4 md:p-5 border-b border-gray-100 flex justify-between items-center">
+                        <h2 className="text-lg font-semibold text-[#333333]">Extra Categories</h2>
+                    </div>
+
+                    {loading ? (
+                        <div className="flex items-center justify-center py-8">
+                            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#008080]"></div>
+                        </div>
+                    ) : categoryList.length === 0 ? (
+                        <div className="text-center py-8 text-gray-500">No categories found</div>
+                    ) : (
+                        <div className="overflow-x-auto p-4">
+                            <table className="w-full text-sm">
+                                <thead>
+                                    <tr className="bg-[#333333] text-white">
+                                        <th className="py-3 px-4 text-left font-medium rounded-l-lg">Category</th>
+                                        <th className="py-3 px-4 text-left font-medium">Image</th>
+                                        <th className="py-3 px-4 text-left font-medium">Extras Count</th>
+                                        <th className="py-3 px-4 text-left font-medium rounded-r-lg">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {categoryList.map((cat) => (
+                                        <tr key={cat.name}>
+                                            <td className="py-3 px-4 text-[#333333] font-medium">
+                                                {cat.name}
+                                            </td>
+                                            <td className="py-3 px-4">
+                                                {cat.imageUrl ? (
+                                                    <img
+                                                        src={cat.imageUrl}
+                                                        alt={cat.name}
+                                                        className="w-12 h-12 object-cover rounded-md border border-gray-200"
+                                                    />
+                                                ) : (
+                                                    <span className="text-xs text-gray-400">No image</span>
+                                                )}
+                                            </td>
+                                            <td className="py-3 px-4 text-[#333333]">
+                                                {cat.count}
+                                            </td>
+                                            <td className="py-3 px-4 space-x-3">
+                                                <label className="text-[#008080] hover:underline cursor-pointer">
+                                                    Update Image
+                                                    <input
+                                                        type="file"
+                                                        accept="image/*"
+                                                        className="hidden"
+                                                        onChange={(e) =>
+                                                            handleCategoryImageChange(cat.name, e)
+                                                        }
+                                                    />
+                                                </label>
+                                                <button
+                                                    type="button"
+                                                    className="text-red-500 hover:underline text-sm"
+                                                    onClick={() => handleCategoryImageRemove(cat.name)}
+                                                >
+                                                    Remove Image
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
                     )}
                 </div>
             </div>
