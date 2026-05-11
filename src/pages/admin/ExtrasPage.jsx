@@ -17,6 +17,8 @@ export default function ExtrasPage() {
     const [editingExtra, setEditingExtra] = useState(null);
     const [saving, setSaving] = useState(false);
     const [filters, setFilters] = useState({ search: "", status: "" });
+    const [categoryMetaModal, setCategoryMetaModal] = useState(null);
+    const [savingCategoryMeta, setSavingCategoryMeta] = useState(false);
 
     const [form, setForm] = useState({
         name: "",
@@ -218,6 +220,8 @@ export default function ExtrasPage() {
             acc[category] = {
                 name: category,
                 imageUrl: extra.imageUrl || null,
+                categoryTitle: extra.categoryTitle || null,
+                categorySubtitle: extra.categorySubtitle || null,
                 count: 1,
             };
         } else {
@@ -225,11 +229,96 @@ export default function ExtrasPage() {
             if (!acc[category].imageUrl && extra.imageUrl) {
                 acc[category].imageUrl = extra.imageUrl;
             }
+            if (!acc[category].categoryTitle && extra.categoryTitle) {
+                acc[category].categoryTitle = extra.categoryTitle;
+            }
+            if (!acc[category].categorySubtitle && extra.categorySubtitle) {
+                acc[category].categorySubtitle = extra.categorySubtitle;
+            }
         }
         return acc;
     }, {});
 
     const categoryList = Object.values(categories);
+
+    const openCategoryMetaModal = (cat) => {
+        setCategoryMetaModal({
+            name: cat.name,
+            categoryTitle: cat.categoryTitle || "",
+            categorySubtitle: cat.categorySubtitle || "",
+        });
+    };
+
+    const saveCategoryMeta = async () => {
+        if (!categoryMetaModal) return;
+        setSavingCategoryMeta(true);
+        try {
+            const encoded = encodeURIComponent(categoryMetaModal.name);
+            const response = await fetch(
+                `${BASE_URL}/extras/category/${encoded}/meta`,
+                {
+                    method: "PUT",
+                    headers: {
+                        "Content-Type": "application/json",
+                        Authorization: `Bearer ${token}`,
+                    },
+                    body: JSON.stringify({
+                        categoryTitle: categoryMetaModal.categoryTitle,
+                        categorySubtitle: categoryMetaModal.categorySubtitle,
+                    }),
+                },
+            );
+            if (!response.ok) {
+                const data = await response.json().catch(() => ({}));
+                throw new Error(data.error || "Failed to save category text");
+            }
+            await fetchExtras();
+            setCategoryMetaModal(null);
+        } catch (err) {
+            alert(err.message);
+        } finally {
+            setSavingCategoryMeta(false);
+        }
+    };
+
+    const resetCategoryMetaToDefaults = async () => {
+        if (!categoryMetaModal) return;
+        if (
+            !confirm(
+                "Clear custom heading and subheading for this category? The booking page will use the default title and “Premium … options” line again.",
+            )
+        ) {
+            return;
+        }
+        setSavingCategoryMeta(true);
+        try {
+            const encoded = encodeURIComponent(categoryMetaModal.name);
+            const response = await fetch(
+                `${BASE_URL}/extras/category/${encoded}/meta`,
+                {
+                    method: "PUT",
+                    headers: {
+                        "Content-Type": "application/json",
+                        Authorization: `Bearer ${token}`,
+                    },
+                    body: JSON.stringify({
+                        categoryTitle: "",
+                        categorySubtitle: "",
+                    }),
+                },
+            );
+            if (!response.ok) {
+                const data = await response.json().catch(() => ({}));
+                throw new Error(data.error || "Failed to reset category text");
+            }
+            await fetchExtras();
+            setCategoryMetaModal(null);
+        } catch (err) {
+            alert(err.message);
+        } finally {
+            setSavingCategoryMeta(false);
+        }
+    };
 
     return (
         <AdminLayout>
@@ -401,6 +490,7 @@ export default function ExtrasPage() {
                                 <thead>
                                     <tr className="bg-[#333333] text-white">
                                         <th className="py-3 px-4 text-left font-medium rounded-l-lg">Category</th>
+                                        <th className="py-3 px-4 text-left font-medium">Heading / subheading</th>
                                         <th className="py-3 px-4 text-left font-medium">Image</th>
                                         <th className="py-3 px-4 text-left font-medium">Extras Count</th>
                                         <th className="py-3 px-4 text-left font-medium rounded-r-lg">Actions</th>
@@ -411,6 +501,18 @@ export default function ExtrasPage() {
                                         <tr key={cat.name}>
                                             <td className="py-3 px-4 text-[#333333] font-medium">
                                                 {cat.name}
+                                            </td>
+                                            <td className="py-3 px-4 text-gray-600 max-w-xs">
+                                                <div className="text-xs font-semibold text-[#333333]">
+                                                    {cat.categoryTitle?.trim()
+                                                        ? cat.categoryTitle
+                                                        : `${cat.name.charAt(0).toUpperCase()}${cat.name.slice(1)} (default)`}
+                                                </div>
+                                                <div className="text-xs mt-1 line-clamp-2">
+                                                    {cat.categorySubtitle?.trim()
+                                                        ? cat.categorySubtitle
+                                                        : `Premium ${cat.name} options for your stay (default)`}
+                                                </div>
                                             </td>
                                             <td className="py-3 px-4">
                                                 {cat.imageUrl ? (
@@ -426,7 +528,14 @@ export default function ExtrasPage() {
                                             <td className="py-3 px-4 text-[#333333]">
                                                 {cat.count}
                                             </td>
-                                            <td className="py-3 px-4 space-x-3">
+                                            <td className="py-3 px-4 space-x-3 flex flex-wrap gap-y-1">
+                                                <button
+                                                    type="button"
+                                                    className="text-[#008080] hover:underline text-sm"
+                                                    onClick={() => openCategoryMetaModal(cat)}
+                                                >
+                                                    Edit text
+                                                </button>
                                                 <label className="text-[#008080] hover:underline cursor-pointer">
                                                     Update Image
                                                     <input
@@ -454,6 +563,88 @@ export default function ExtrasPage() {
                     )}
                 </div>
             </div>
+
+            {categoryMetaModal && (
+                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+                    <div className="bg-white rounded-lg w-full max-w-md">
+                        <div className="p-6 border-b border-gray-100 flex justify-between items-center">
+                            <h2 className="text-xl font-semibold text-[#333333]">
+                                Category: {categoryMetaModal.name}
+                            </h2>
+                            <button
+                                type="button"
+                                onClick={() => setCategoryMetaModal(null)}
+                                className="text-gray-400 hover:text-gray-600"
+                            >
+                                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                </svg>
+                            </button>
+                        </div>
+                        <div className="p-6 space-y-4">
+                            <p className="text-xs text-gray-500">
+                                This heading and subheading appear on the guest “Enhance Your Experience” step for this category. They are saved on all extras in the category.
+                            </p>
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">Heading (title)</label>
+                                <input
+                                    type="text"
+                                    maxLength={200}
+                                    value={categoryMetaModal.categoryTitle}
+                                    onChange={(e) =>
+                                        setCategoryMetaModal({
+                                            ...categoryMetaModal,
+                                            categoryTitle: e.target.value,
+                                        })
+                                    }
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#008080]"
+                                    placeholder="e.g. Lakeside Sunset Picnic"
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">Subheading (subtitle)</label>
+                                <textarea
+                                    rows={3}
+                                    value={categoryMetaModal.categorySubtitle}
+                                    onChange={(e) =>
+                                        setCategoryMetaModal({
+                                            ...categoryMetaModal,
+                                            categorySubtitle: e.target.value,
+                                        })
+                                    }
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#008080] resize-none"
+                                    placeholder="Short line under the heading on the booking page"
+                                />
+                            </div>
+                        </div>
+                        <div className="p-6 border-t border-gray-100 flex flex-wrap justify-end gap-3">
+                            <button
+                                type="button"
+                                onClick={() => setCategoryMetaModal(null)}
+                                className="px-6 py-2 border border-gray-300 rounded-lg text-gray-600 hover:bg-gray-50"
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                type="button"
+                                onClick={resetCategoryMetaToDefaults}
+                                disabled={savingCategoryMeta}
+                                className="px-6 py-2 border border-gray-400 rounded-lg text-gray-700 hover:bg-gray-50 disabled:opacity-50"
+                            >
+                                Use defaults
+                            </button>
+                            <button
+                                type="button"
+                                onClick={saveCategoryMeta}
+                                disabled={savingCategoryMeta}
+                                className="px-6 py-2 bg-[#008080] text-white rounded-lg hover:bg-[#006666] disabled:opacity-50"
+                            >
+                                {savingCategoryMeta ? "Saving…" : "Save"}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
 
             {/* Add/Edit Modal */}
             {showAddModal && (
