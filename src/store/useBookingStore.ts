@@ -66,6 +66,11 @@ type BookingDraft = {
     twelveGuestDiscountPercent?: number;
     currency: string;
   };
+  peakRateInfo?: {
+    name: string;
+    percentageAdjustment: number;
+    type: string;
+  } | null;
   bedConfiguration?: string;
   availablePods?: Pod[];
   podCount?: number;
@@ -141,14 +146,20 @@ export const calculateDynamicSubTotal = (draft: BookingDraft): number => {
   const basePricePerPod = pricingConfig.basePricePerPod ?? 400000;
   const extraGuestFee = pricingConfig.extraGuestFee ?? 100000;
 
+  const peakRateInfo = draft.peakRateInfo;
+  const peakMultiplier = 1 + ((peakRateInfo?.percentageAdjustment ?? 0) / 100);
+
+  const adjustedBasePrice = basePricePerPod * peakMultiplier;
+  const adjustedExtraFee = extraGuestFee * peakMultiplier;
+
   const nights = draft.numberOfNights || 1;
   const pods = draft.podCount || 1;
 
-  const baseForStayPreview = pods * basePricePerPod * nights;
+  const baseForStayPreview = pods * adjustedBasePrice * nights;
 
   const effectiveGuests = totalGuests < 1 ? 1 : totalGuests;
   const extraGuests = effectiveGuests > pods ? effectiveGuests - pods : 0;
-  const extraForStay = extraGuests * extraGuestFee * nights;
+  const extraForStay = extraGuests * adjustedExtraFee * nights;
 
   const extrasTotal =
     draft.extras?.reduce(

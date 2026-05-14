@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { BASE_URL } from "@/config";
+import { parseAvailabilityCheckResponse } from "@/lib/utils";
 import useAuthStore from "@/store/useAuthStore";
 import AdminLayout from "@/components/admin/AdminLayout";
 
@@ -66,8 +67,8 @@ export default function BookingDetailsPage() {
       if (!response.ok) throw new Error("Failed to fetch available pods");
       const data = await response.json();
       console.log("Availability results:", data);
-      // Filter only available pods OR pods currently assigned to this booking
-      setAvailablePods(data);
+      const { pods } = parseAvailabilityCheckResponse(data);
+      setAvailablePods(pods);
     } catch (err) {
       console.error("Error fetching available pods:", err);
     } finally {

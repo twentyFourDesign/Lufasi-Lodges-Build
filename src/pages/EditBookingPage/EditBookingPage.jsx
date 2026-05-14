@@ -10,6 +10,7 @@ import EditExtrasModal from "@/components/edit-booking/EditExtrasModal";
 import { format, differenceInCalendarDays } from "date-fns";
 import { BoardType, useBookingStore } from "@/store/useBookingStore";
 import { BASE_URL } from "@/config";
+import { parseAvailabilityCheckResponse } from "@/lib/utils";
 
 const Row = ({ icon, title, subtitle, onClick }) => (
   <div className="w-full border border-[#E5E5E5] rounded-xl bg-white px-4 py-4 flex items-center justify-between">
@@ -57,9 +58,11 @@ export default function EditBookingPage() {
         }),
       });
       const data = await response.json();
+      const { pods, peakRateInfo } = parseAvailabilityCheckResponse(data);
 
       bookingStore.updateDraft({
-        availablePods: data,
+        availablePods: pods,
+        peakRateInfo,
       });
     } catch (error) {
       console.error("Error checking availability:", error);

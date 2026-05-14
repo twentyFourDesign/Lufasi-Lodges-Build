@@ -39,3 +39,18 @@ export function formatDateSafe(date, formatStr = "dd/MM/yyyy") {
   return format(d, formatStr);
 }
 
+/**
+ * POST /availability/check returns { pods, peakRateInfo } (legacy: array of pods only).
+ */
+export function parseAvailabilityCheckResponse(data) {
+  if (!data) return { pods: [], peakRateInfo: null };
+  if (Array.isArray(data)) {
+    return { pods: data, peakRateInfo: null };
+  }
+  const pods = Array.isArray(data.pods) ? data.pods : [];
+  return {
+    pods,
+    peakRateInfo: data.peakRateInfo ?? null,
+  };
+}
+

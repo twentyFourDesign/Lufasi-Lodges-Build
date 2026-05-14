@@ -13,9 +13,16 @@ export default function PricingPage() {
     const [saving, setSaving] = useState(false);
     const [saveMessage, setSaveMessage] = useState(null);
 
+    const [peakRates, setPeakRates] = useState([]);
+    const [loadingPeakRates, setLoadingPeakRates] = useState(true);
+    const [showPeakRateForm, setShowPeakRateForm] = useState(false);
+    const [editingPeakRate, setEditingPeakRate] = useState(null);
+    const [peakRateForm, setPeakRateForm] = useState({ name: '', startDate: '', endDate: '', percentageAdjustment: '', isActive: true });
+
     useEffect(() => {
         fetchMeals();
         fetchPricingConfig();
+        fetchPeakRates();
     }, []);
 
     const fetchMeals = async () => {
@@ -39,6 +46,21 @@ export default function PricingPage() {
             currency: "NGN",
             minimumFractionDigits: 0,
         }).format(amount || 0);
+    };
+
+    const fetchPeakRates = async () => {
+        setLoadingPeakRates(true);
+        try {
+            const response = await fetch(`${BASE_URL}/config/peak-rates`, {
+                headers: { Authorization: `Bearer ${token}` },
+            });
+            const data = await response.json();
+            setPeakRates(data || []);
+        } catch (err) {
+            console.error('Failed to fetch peak rates', err);
+        } finally {
+            setLoadingPeakRates(false);
+        }
     };
 
     const fetchPricingConfig = async () => {
@@ -111,6 +133,58 @@ export default function PricingPage() {
             setSaveMessage({ type: "error", text: err.message || "Failed to update pricing configuration." });
         } finally {
             setSaving(false);
+            setTimeout(() => setSaveMessage(null), 4000);
+        }
+    };
+
+    const handleSavePeakRate = async (e) => {
+        e.preventDefault();
+        try {
+            const isEditing = !!editingPeakRate;
+            const url = isEditing 
+                ? `${BASE_URL}/config/peak-rates/${editingPeakRate.id}` 
+                : `${BASE_URL}/config/peak-rates`;
+            
+            const method = isEditing ? 'PUT' : 'POST';
+
+            const response = await fetch(url, {
+                method,
+                headers: { 
+                    'Content-Type': 'application/json',
+                    Authorization: `Bearer ${token}` 
+                },
+                body: JSON.stringify(peakRateForm),
+            });
+
+            if (!response.ok) {
+                const data = await response.json();
+                throw new Error(data.error || 'Failed to save peak rate');
+            }
+
+            setSaveMessage({ type: "success", text: `Peak rate ${isEditing ? 'updated' : 'created'} successfully.` });
+            setShowPeakRateForm(false);
+            setEditingPeakRate(null);
+            fetchPeakRates();
+        } catch (err) {
+            setSaveMessage({ type: "error", text: err.message });
+        } finally {
+            setTimeout(() => setSaveMessage(null), 4000);
+        }
+    };
+
+    const handleDeletePeakRate = async (id) => {
+        if (!window.confirm("Are you sure you want to delete this peak rate?")) return;
+        try {
+            const response = await fetch(`${BASE_URL}/config/peak-rates/${id}`, {
+                method: 'DELETE',
+                headers: { Authorization: `Bearer ${token}` },
+            });
+            if (!response.ok) throw new Error("Failed to delete");
+            setSaveMessage({ type: "success", text: "Peak rate deleted successfully." });
+            fetchPeakRates();
+        } catch (err) {
+            setSaveMessage({ type: "error", text: err.message });
+        } finally {
             setTimeout(() => setSaveMessage(null), 4000);
         }
     };
@@ -372,6 +446,176 @@ export default function PricingPage() {
                             Total tax rate: <strong>12.5%</strong> (applied to sub-total)
                         </p>
                     </div>
+                </div>
+
+                {/* Peak / Off-Peak Rates Configuration */}
+                <div className="bg-white rounded-lg border border-gray-100 shadow-sm">
+                    <div className="p-4 md:p-5 border-b border-gray-100 flex justify-between items-center">
+                        <div>
+                            <h2 className="text-lg font-semibold text-[#333333]">Peak & Off-Peak Rates</h2>
+                            <p className="text-sm text-gray-500 mt-1">Configure date-based pricing adjustments</p>
+                        </div>
+                        <button
+                            onClick={() => {
+                                setEditingPeakRate(null);
+                                setPeakRateForm({ name: '', startDate: '', endDate: '', percentageAdjustment: '', isActive: true });
+                                setShowPeakRateForm(true);
+                            }}
+                            className="px-4 py-2 bg-[#008080] text-white rounded-lg text-sm font-medium hover:bg-[#006666] transition-colors"
+                        >
+                            + Add Rate
+                        </button>
+                    </div>
+
+                    {showPeakRateForm && (
+                        <div className="p-4 md:p-5 border-b border-gray-100 bg-gray-50">
+                            <form onSubmit={handleSavePeakRate} className="space-y-4">
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 mb-1">Name</label>
+                                        <input
+                                            type="text"
+                                            required
+                                            placeholder="e.g. Christmas Peak, Summer Off-peak"
+                                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#008080]"
+                                            value={peakRateForm.name}
+                                            onChange={(e) => setPeakRateForm({ ...peakRateForm, name: e.target.value })}
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 mb-1">Percentage Adjustment</label>
+                                        <input
+                                            type="number"
+                                            required
+                                            step="0.01"
+                                            placeholder="e.g. 20 for +20%, -15 for -15%"
+                                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#008080]"
+                                            value={peakRateForm.percentageAdjustment}
+                                            onChange={(e) => setPeakRateForm({ ...peakRateForm, percentageAdjustment: e.target.value })}
+                                        />
+                                        <p className="text-xs text-gray-500 mt-1">Positive = higher rates, Negative = Discount</p>
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 mb-1">Start Date</label>
+                                        <input
+                                            type="date"
+                                            required
+                                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#008080]"
+                                            value={peakRateForm.startDate}
+                                            onChange={(e) => setPeakRateForm({ ...peakRateForm, startDate: e.target.value })}
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 mb-1">End Date</label>
+                                        <input
+                                            type="date"
+                                            required
+                                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#008080]"
+                                            value={peakRateForm.endDate}
+                                            onChange={(e) => setPeakRateForm({ ...peakRateForm, endDate: e.target.value })}
+                                        />
+                                    </div>
+                                    <div className="flex items-center mt-6">
+                                        <input
+                                            type="checkbox"
+                                            id="isActive"
+                                            checked={peakRateForm.isActive}
+                                            onChange={(e) => setPeakRateForm({ ...peakRateForm, isActive: e.target.checked })}
+                                            className="w-4 h-4 text-[#008080] rounded border-gray-300 focus:ring-[#008080]"
+                                        />
+                                        <label htmlFor="isActive" className="ml-2 block text-sm font-medium text-gray-700">
+                                            Active
+                                        </label>
+                                    </div>
+                                </div>
+                                <div className="flex justify-end gap-2 pt-2">
+                                    <button
+                                        type="button"
+                                        onClick={() => setShowPeakRateForm(false)}
+                                        className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-100"
+                                    >
+                                        Cancel
+                                    </button>
+                                    <button
+                                        type="submit"
+                                        className="px-4 py-2 bg-[#008080] text-white rounded-lg text-sm font-medium hover:bg-[#006666]"
+                                    >
+                                        {editingPeakRate ? 'Update Rate' : 'Create Rate'}
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    )}
+
+                    {loadingPeakRates ? (
+                        <div className="flex items-center justify-center py-12">
+                            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#008080]"></div>
+                        </div>
+                    ) : peakRates.length === 0 ? (
+                        <div className="text-center py-12 text-gray-500">
+                            No peak or off-peak rates configured.
+                        </div>
+                    ) : (
+                        <div className="p-4">
+                            <div className="overflow-x-auto">
+                                <table className="w-full text-sm">
+                                    <thead>
+                                        <tr className="bg-[#333333] text-white">
+                                            <th className="py-3 px-4 text-left font-medium rounded-l-lg">Name</th>
+                                            <th className="py-3 px-4 text-left font-medium">Dates</th>
+                                            <th className="py-3 px-4 text-left font-medium">Adjustment</th>
+                                            <th className="py-3 px-4 text-left font-medium">Status</th>
+                                            <th className="py-3 px-4 text-right font-medium rounded-r-lg">Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {peakRates.map((rate, index) => (
+                                            <tr key={rate.id} className={index % 2 === 1 ? "bg-gray-50" : ""}>
+                                                <td className="py-3 px-4 text-[#333333] font-medium">{rate.name}</td>
+                                                <td className="py-3 px-4 text-gray-600">
+                                                    {new Date(rate.startDate).toLocaleDateString()} - {new Date(rate.endDate).toLocaleDateString()}
+                                                </td>
+                                                <td className="py-3 px-4">
+                                                    <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${rate.percentageAdjustment > 0 ? 'bg-red-100 text-red-800' : 'bg-green-100 text-green-800'}`}>
+                                                        {rate.percentageAdjustment > 0 ? '+' : ''}{rate.percentageAdjustment}%
+                                                    </span>
+                                                </td>
+                                                <td className="py-3 px-4">
+                                                    <span className={`font-medium ${rate.isActive ? "text-green-600" : "text-gray-400"}`}>
+                                                        {rate.isActive ? "Active" : "Inactive"}
+                                                    </span>
+                                                </td>
+                                                <td className="py-3 px-4 text-right">
+                                                    <button
+                                                        onClick={() => {
+                                                            setEditingPeakRate(rate);
+                                                            setPeakRateForm({
+                                                                name: rate.name,
+                                                                startDate: rate.startDate,
+                                                                endDate: rate.endDate,
+                                                                percentageAdjustment: rate.percentageAdjustment,
+                                                                isActive: rate.isActive
+                                                            });
+                                                            setShowPeakRateForm(true);
+                                                        }}
+                                                        className="text-blue-600 hover:underline mr-3"
+                                                    >
+                                                        Edit
+                                                    </button>
+                                                    <button
+                                                        onClick={() => handleDeletePeakRate(rate.id)}
+                                                        className="text-red-600 hover:underline"
+                                                    >
+                                                        Delete
+                                                    </button>
+                                                </td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    )}
                 </div>
             </div>
         </AdminLayout>

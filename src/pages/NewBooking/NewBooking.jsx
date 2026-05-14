@@ -8,7 +8,7 @@ import { useBookingStore, calculateDynamicSubTotal } from "@/store/useBookingSto
 import { format, differenceInCalendarDays } from "date-fns";
 import { BASE_URL } from "@/config";
 import EditStayDatesModal from "@/components/edit-booking/EditStayDatesModal";
-import { toISODate, formatDateSafe } from "@/lib/utils";
+import { toISODate, formatDateSafe, parseAvailabilityCheckResponse } from "@/lib/utils";
 import image1 from "@/assets/lodges/image.png";
 import image2 from "@/assets/lodges/image copy.png";
 import image3 from "@/assets/lodges/image copy 2.png";
@@ -38,7 +38,7 @@ export default function NewBooking() {
   };
 
   // Count available pods
-  const availablePodsCount = bookingStore.draft.availablePods
+  const availablePodsCount = Array.isArray(bookingStore.draft.availablePods)
     ? bookingStore.draft.availablePods.filter((pod) => pod.available === true)
       .length
     : 0;
@@ -112,11 +112,18 @@ export default function NewBooking() {
       pricingConfig?.extraGuestFee !== undefined
         ? pricingConfig.extraGuestFee
         : 100000;
+
+    const peakRateInfo = bookingStore.draft.peakRateInfo;
+    const peakMultiplier = 1 + ((peakRateInfo?.percentageAdjustment ?? 0) / 100);
+
+    const adjustedBasePrice = basePricePerPod * peakMultiplier;
+    const adjustedExtraFee = extraGuestFee * peakMultiplier;
+
     const effectiveGuests = guestCount < 1 ? 1 : guestCount;
     const pods = podCount < 1 ? 1 : podCount;
-    const basePerNight = pods * basePricePerPod;
+    const basePerNight = pods * adjustedBasePrice;
     const extraGuests = effectiveGuests > pods ? effectiveGuests - pods : 0;
-    const extraPerNight = extraGuests * extraGuestFee;
+    const extraPerNight = extraGuests * adjustedExtraFee;
     return (basePerNight + extraPerNight) * nights;
   };
 
@@ -198,7 +205,7 @@ export default function NewBooking() {
     });
   }, [availablePodsCount, roomCount, bookingStore]);
 
-  const checkPodAvalability = useCallback(async () => {
+  const checkPodAvalability = useCallback(async (customCheckIn, customCheckOut, customAdults) => {
     try {
       const response = await fetch(`${BASE_URL}/availability/check`, {
         method: "POST",
@@ -206,15 +213,18 @@ export default function NewBooking() {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          startDate: bookingStore.draft.dates.checkIn, // Now always YYYY-MM-DD string
-          endDate: bookingStore.draft.dates.checkOut, // Now always YYYY-MM-DD string
-          adults: parseInt(bookingStore.draft.guests.adults) || 1,
+          startDate: customCheckIn || bookingStore.draft.dates?.checkIn,
+          endDate: customCheckOut || bookingStore.draft.dates?.checkOut,
+          adults: customAdults || parseInt(bookingStore.draft.guests?.adults) || 1,
         }),
       });
       const data = await response.json();
+      console.log("checkPodAvalability data:", data);
+      const { pods, peakRateInfo } = parseAvailabilityCheckResponse(data);
 
       bookingStore.updateDraft({
-        availablePods: data,
+        availablePods: pods,
+        peakRateInfo,
       });
     } catch (error) {
       console.error("Error checking availability:", error);
@@ -241,7 +251,12 @@ export default function NewBooking() {
         adults: parseInt(dates.guests.match(/(\d+)/)[1]) || 1,
       },
     });
-    checkPodAvalability();
+    
+    checkPodAvalability(
+      toISODate(checkIn),
+      toISODate(checkOut),
+      parseInt(dates.guests.match(/(\d+)/)[1]) || 1
+    );
     setStayOpen(false);
   };
 
@@ -575,6 +590,15 @@ export default function NewBooking() {
                         ₦{roomCount ? taxAmount.toLocaleString() : "0"}
                       </span>
                     </div>
+
+                    {bookingStore.draft.peakRateInfo && (
+                      <div className="flex justify-between text-[#008080]">
+                        <span>{bookingStore.draft.peakRateInfo.percentageAdjustment > 0 ? 'Peak Rates' : 'Off-Peak Discount'} ({bookingStore.draft.peakRateInfo.percentageAdjustment}%):</span>
+                        <span className="font-semibold text-xs">
+                          Applied to Sub Total
+                        </span>
+                      </div>
+                    )}
 
                     <div className="flex justify-between">
                       <span>Discount</span>

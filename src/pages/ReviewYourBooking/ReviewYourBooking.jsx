@@ -99,13 +99,19 @@ export default function ReviewYourBooking() {
     const nights = bookingStore.draft.numberOfNights || 1;
     const pods = bookingStore.draft.podCount || 1;
     
+    const peakRateInfo = bookingStore.draft.peakRateInfo;
+    const peakMultiplier = 1 + ((peakRateInfo?.percentageAdjustment ?? 0) / 100);
+
+    const adjustedBasePrice = basePricePerPod * peakMultiplier;
+    const adjustedExtraFee = extraGuestFee * peakMultiplier;
+
     // Base amount
-    const baseForStayPreview = pods * basePricePerPod * nights;
+    const baseForStayPreview = pods * adjustedBasePrice * nights;
     
     // Extra guests
     const effectiveGuests = totalGuests < 1 ? 1 : totalGuests;
     const extraGuests = effectiveGuests > pods ? effectiveGuests - pods : 0;
-    const extraForStay = extraGuests * extraGuestFee * nights;
+    const extraForStay = extraGuests * adjustedExtraFee * nights;
     
     // Extras
     const extrasTotal = bookingStore.draft.extras?.reduce((sum, e) => sum + (Number(e.price) * (e.quantity || 1)), 0) || 0;
@@ -465,6 +471,15 @@ export default function ReviewYourBooking() {
                     ₦{formatPrice(pricing.subTotal)}
                   </span>
                 </div>
+
+                {bookingStore.draft.peakRateInfo && (
+                  <div className="flex justify-between text-[#008080]">
+                    <span>{bookingStore.draft.peakRateInfo.percentageAdjustment > 0 ? 'Peak Rates' : 'Off-Peak Discount'} ({bookingStore.draft.peakRateInfo.percentageAdjustment}%):</span>
+                    <span className="font-semibold text-xs">
+                      Applied to Sub Total
+                    </span>
+                  </div>
+                )}
 
                 {pricing.twelveGuestDiscountAmount > 0 && (
                   <div className="flex justify-between text-[#008080]">

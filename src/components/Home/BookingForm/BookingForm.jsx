@@ -19,7 +19,7 @@ import { addDays, differenceInCalendarDays } from "date-fns";
 import { BASE_URL } from "@/config";
 import { useBookingStore } from "@/store/useBookingStore";
 import { useNavigate } from "react-router-dom";
-import { toISODate } from "@/lib/utils";
+import { toISODate, parseAvailabilityCheckResponse } from "@/lib/utils";
 
 export default function BookingForm() {
   const [checkIn, setCheckIn] = useState();
@@ -57,6 +57,7 @@ export default function BookingForm() {
         }),
       });
       const data = await response.json();
+      const { pods, peakRateInfo } = parseAvailabilityCheckResponse(data);
 
       bookingStore.updateDraft({
         dates: {
@@ -69,7 +70,8 @@ export default function BookingForm() {
           children: 0,
         },
         numberOfNights: differenceInCalendarDays(checkOut, checkIn),
-        availablePods: data,
+        availablePods: pods,
+        peakRateInfo,
       });
 
       navigate("/new-booking");
