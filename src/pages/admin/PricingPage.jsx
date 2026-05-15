@@ -78,6 +78,8 @@ export default function PricingPage() {
                 total_pods_available: data.total_pods_available,
                 twelve_guest_discount_percent: data.twelve_guest_discount_percent ?? 10,
                 currency: data.currency,
+                weekday_peak_percent: data.weekday_peak_percent ?? 0,
+                weekday_off_peak_percent: data.weekday_off_peak_percent ?? 0,
             });
         } catch (err) {
         }
@@ -111,6 +113,10 @@ export default function PricingPage() {
                         pricingConfig.twelve_guest_discount_percent ?? 10,
                     ),
                     currency: pricingConfig.currency || "NGN",
+                    weekday_peak_percent: Number(pricingConfig.weekday_peak_percent ?? 0),
+                    weekday_off_peak_percent: Number(
+                        pricingConfig.weekday_off_peak_percent ?? 0,
+                    ),
                 }),
             });
 
@@ -127,6 +133,8 @@ export default function PricingPage() {
                 total_pods_available: data.total_pods_available,
                 twelve_guest_discount_percent: data.twelve_guest_discount_percent ?? 10,
                 currency: data.currency,
+                weekday_peak_percent: data.weekday_peak_percent ?? 0,
+                weekday_off_peak_percent: data.weekday_off_peak_percent ?? 0,
             });
             setSaveMessage({ type: "success", text: "Pricing configuration updated successfully." });
         } catch (err) {
@@ -310,6 +318,47 @@ export default function PricingPage() {
                                         }
                                     />
                                 </div>
+                                <div className="md:col-span-2 border-t border-gray-100 pt-4 mt-2">
+                                    <h3 className="text-sm font-semibold text-[#333333] mb-3">
+                                        Peak & Off-peak (weekdays)
+                                    </h3>
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        <div>
+                                            <label className="block text-sm font-medium text-gray-700 mb-1">
+                                                Peak %
+                                            </label>
+                                            <input
+                                                type="number"
+                                                step="0.01"
+                                                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#008080]"
+                                                value={pricingConfig.weekday_peak_percent ?? 0}
+                                                onChange={(e) =>
+                                                    handleConfigChange(
+                                                        "weekday_peak_percent",
+                                                        e.target.value,
+                                                    )
+                                                }
+                                            />
+                                        </div>
+                                        <div>
+                                            <label className="block text-sm font-medium text-gray-700 mb-1">
+                                                Off-peak %
+                                            </label>
+                                            <input
+                                                type="number"
+                                                step="0.01"
+                                                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#008080]"
+                                                value={pricingConfig.weekday_off_peak_percent ?? 0}
+                                                onChange={(e) =>
+                                                    handleConfigChange(
+                                                        "weekday_off_peak_percent",
+                                                        e.target.value,
+                                                    )
+                                                }
+                                            />
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                         ) : (
                             <div className="text-sm text-gray-500">
@@ -448,12 +497,12 @@ export default function PricingPage() {
                     </div>
                 </div>
 
-                {/* Peak / Off-Peak Rates Configuration */}
+                {/* Seasonal dates */}
                 <div className="bg-white rounded-lg border border-gray-100 shadow-sm">
                     <div className="p-4 md:p-5 border-b border-gray-100 flex justify-between items-center">
                         <div>
-                            <h2 className="text-lg font-semibold text-[#333333]">Peak & Off-Peak Rates</h2>
-                            <p className="text-sm text-gray-500 mt-1">Configure date-based pricing adjustments</p>
+                            <h2 className="text-lg font-semibold text-[#333333]">Seasonal Dates</h2>
+                            <p className="text-sm text-gray-500 mt-1">Date-range pricing adjustments (holidays, events)</p>
                         </div>
                         <button
                             onClick={() => {
@@ -553,7 +602,7 @@ export default function PricingPage() {
                         </div>
                     ) : peakRates.length === 0 ? (
                         <div className="text-center py-12 text-gray-500">
-                            No peak or off-peak rates configured.
+                            No seasonal date ranges configured.
                         </div>
                     ) : (
                         <div className="p-4">

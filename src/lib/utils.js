@@ -43,14 +43,20 @@ export function formatDateSafe(date, formatStr = "dd/MM/yyyy") {
  * POST /availability/check returns { pods, peakRateInfo } (legacy: array of pods only).
  */
 export function parseAvailabilityCheckResponse(data) {
-  if (!data) return { pods: [], peakRateInfo: null };
+  if (!data) {
+    return { pods: [], peakRateInfo: null, weekdayPeakInfo: null, seasonalRatePeriods: [] };
+  }
   if (Array.isArray(data)) {
-    return { pods: data, peakRateInfo: null };
+    return { pods: data, peakRateInfo: null, weekdayPeakInfo: null, seasonalRatePeriods: [] };
   }
   const pods = Array.isArray(data.pods) ? data.pods : [];
   return {
     pods,
     peakRateInfo: data.peakRateInfo ?? null,
+    weekdayPeakInfo: data.weekdayPeakInfo ?? null,
+    seasonalRatePeriods: Array.isArray(data.seasonalRatePeriods)
+      ? data.seasonalRatePeriods
+      : [],
   };
 }
 

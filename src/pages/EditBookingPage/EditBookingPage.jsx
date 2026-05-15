@@ -58,11 +58,14 @@ export default function EditBookingPage() {
         }),
       });
       const data = await response.json();
-      const { pods, peakRateInfo } = parseAvailabilityCheckResponse(data);
+      const { pods, peakRateInfo, weekdayPeakInfo, seasonalRatePeriods } =
+        parseAvailabilityCheckResponse(data);
 
       bookingStore.updateDraft({
         availablePods: pods,
         peakRateInfo,
+        weekdayPeakInfo,
+        seasonalRatePeriods,
       });
     } catch (error) {
       console.error("Error checking availability:", error);

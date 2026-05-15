@@ -57,7 +57,8 @@ export default function BookingForm() {
         }),
       });
       const data = await response.json();
-      const { pods, peakRateInfo } = parseAvailabilityCheckResponse(data);
+      const { pods, peakRateInfo, weekdayPeakInfo, seasonalRatePeriods } =
+        parseAvailabilityCheckResponse(data);
 
       bookingStore.updateDraft({
         dates: {
@@ -72,6 +73,8 @@ export default function BookingForm() {
         numberOfNights: differenceInCalendarDays(checkOut, checkIn),
         availablePods: pods,
         peakRateInfo,
+        weekdayPeakInfo,
+        seasonalRatePeriods,
       });
 
       navigate("/new-booking");

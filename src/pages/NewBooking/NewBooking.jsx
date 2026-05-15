@@ -9,6 +9,7 @@ import { format, differenceInCalendarDays } from "date-fns";
 import { BASE_URL } from "@/config";
 import EditStayDatesModal from "@/components/edit-booking/EditStayDatesModal";
 import { toISODate, formatDateSafe, parseAvailabilityCheckResponse } from "@/lib/utils";
+import { calculateStayRoomSubtotal } from "@/lib/stayPricing";
 import image1 from "@/assets/lodges/image.png";
 import image2 from "@/assets/lodges/image copy.png";
 import image3 from "@/assets/lodges/image copy 2.png";
@@ -103,28 +104,22 @@ export default function NewBooking() {
     return { guestCount, minPods, maxPods };
   };
 
-  const computeSubTotal = (guestCount, podCount, nights) => {
-    const basePricePerPod =
-      pricingConfig?.basePricePerPod !== undefined
-        ? pricingConfig.basePricePerPod
-        : 400000;
-    const extraGuestFee =
-      pricingConfig?.extraGuestFee !== undefined
-        ? pricingConfig.extraGuestFee
-        : 100000;
-
-    const peakRateInfo = bookingStore.draft.peakRateInfo;
-    const peakMultiplier = 1 + ((peakRateInfo?.percentageAdjustment ?? 0) / 100);
-
-    const adjustedBasePrice = basePricePerPod * peakMultiplier;
-    const adjustedExtraFee = extraGuestFee * peakMultiplier;
-
-    const effectiveGuests = guestCount < 1 ? 1 : guestCount;
-    const pods = podCount < 1 ? 1 : podCount;
-    const basePerNight = pods * adjustedBasePrice;
-    const extraGuests = effectiveGuests > pods ? effectiveGuests - pods : 0;
-    const extraPerNight = extraGuests * adjustedExtraFee;
-    return (basePerNight + extraPerNight) * nights;
+  const computeSubTotal = (guestCount, podCount) => {
+    const weekday = bookingStore.draft.weekdayPeakInfo;
+    const { subtotal } = calculateStayRoomSubtotal({
+      checkIn: bookingStore.draft.dates?.checkIn,
+      checkOut: bookingStore.draft.dates?.checkOut,
+      podsCount: podCount,
+      guestsCount: guestCount,
+      basePricePerPod: pricingConfig?.basePricePerPod ?? 400000,
+      extraGuestFee: pricingConfig?.extraGuestFee ?? 100000,
+      weekdayPeakPercent:
+        weekday?.peakPercent ?? pricingConfig?.weekdayPeakPercent ?? 0,
+      weekdayOffPeakPercent:
+        weekday?.offPeakPercent ?? pricingConfig?.weekdayOffPeakPercent ?? 0,
+      seasonalRates: bookingStore.draft.seasonalRatePeriods ?? [],
+    });
+    return subtotal;
   };
 
   useEffect(() => {
@@ -144,6 +139,8 @@ export default function NewBooking() {
             totalPodsAvailable: data.total_pods_available,
             twelveGuestDiscountPercent: data.twelve_guest_discount_percent ?? 10,
             currency: data.currency,
+            weekdayPeakPercent: data.weekday_peak_percent ?? 0,
+            weekdayOffPeakPercent: data.weekday_off_peak_percent ?? 0,
           },
         });
       } catch (error) {
@@ -157,8 +154,6 @@ export default function NewBooking() {
   const onChangeRooms = (type) => {
     const { guestCount, minPods, maxPods } = getPodLimits();
 
-    const nights = bookingStore.draft.numberOfNights || 1;
-
     if (type === "dec") {
       if (roomCount <= minPods) {
         return;
@@ -167,7 +162,7 @@ export default function NewBooking() {
       setRoomCount(nextCount);
       bookingStore.updateDraft({
         podCount: nextCount,
-        subTotal: computeSubTotal(guestCount, nextCount, nights),
+        subTotal: computeSubTotal(guestCount, nextCount),
       });
     } else if (type === "inc") {
       let nextCount = roomCount;
@@ -181,7 +176,7 @@ export default function NewBooking() {
       setRoomCount(nextCount);
       bookingStore.updateDraft({
         podCount: nextCount,
-        subTotal: computeSubTotal(guestCount, nextCount, nights),
+        subTotal: computeSubTotal(guestCount, nextCount),
       });
     }
   };
@@ -197,11 +192,10 @@ export default function NewBooking() {
     if (minPods < 1) {
       return;
     }
-    const nights = bookingStore.draft.numberOfNights || 1;
     setRoomCount(minPods);
     bookingStore.updateDraft({
       podCount: minPods,
-      subTotal: computeSubTotal(guestCount, minPods, nights),
+      subTotal: computeSubTotal(guestCount, minPods),
     });
   }, [availablePodsCount, roomCount, bookingStore]);
 
@@ -220,11 +214,14 @@ export default function NewBooking() {
       });
       const data = await response.json();
       console.log("checkPodAvalability data:", data);
-      const { pods, peakRateInfo } = parseAvailabilityCheckResponse(data);
+      const { pods, peakRateInfo, weekdayPeakInfo, seasonalRatePeriods } =
+        parseAvailabilityCheckResponse(data);
 
       bookingStore.updateDraft({
         availablePods: pods,
         peakRateInfo,
+        weekdayPeakInfo,
+        seasonalRatePeriods,
       });
     } catch (error) {
       console.error("Error checking availability:", error);
@@ -591,12 +588,23 @@ export default function NewBooking() {
                       </span>
                     </div>
 
+                    {(() => {
+                      const w = bookingStore.draft.weekdayPeakInfo;
+                      const showPeak =
+                        w && w.peakPercent !== 0 && (w.peakNights ?? 0) > 0;
+                      const showOffPeak =
+                        w && w.offPeakPercent !== 0 && (w.offPeakNights ?? 0) > 0;
+                      if (!showPeak && !showOffPeak) return null;
+                      return (
+                        <div className="flex gap-3 text-[#008080] text-xs">
+                          {showPeak && <span>Peak rate</span>}
+                          {showOffPeak && <span>Off-peak rate</span>}
+                        </div>
+                      );
+                    })()}
                     {bookingStore.draft.peakRateInfo && (
-                      <div className="flex justify-between text-[#008080]">
-                        <span>{bookingStore.draft.peakRateInfo.percentageAdjustment > 0 ? 'Peak Rates' : 'Off-Peak Discount'} ({bookingStore.draft.peakRateInfo.percentageAdjustment}%):</span>
-                        <span className="font-semibold text-xs">
-                          Applied to Sub Total
-                        </span>
+                      <div className="text-[#008080] text-xs">
+                        Seasonal rate
                       </div>
                     )}
 

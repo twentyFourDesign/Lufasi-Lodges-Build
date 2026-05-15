@@ -1,5 +1,6 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
+import { calculateStayRoomSubtotal } from "@/lib/stayPricing";
 
 export enum BoardType {
   FULL_BOARD = "fullBoard",
@@ -65,12 +66,29 @@ type BookingDraft = {
     totalPodsAvailable: number;
     twelveGuestDiscountPercent?: number;
     currency: string;
+    weekdayPeakPercent?: number;
+    weekdayOffPeakPercent?: number;
   };
   peakRateInfo?: {
     name: string;
     percentageAdjustment: number;
     type: string;
   } | null;
+  weekdayPeakInfo?: {
+    peakPercent: number;
+    offPeakPercent: number;
+    peakDaysLabel?: string;
+    offPeakDaysLabel?: string;
+    peakNights?: number;
+    offPeakNights?: number;
+    nights?: number;
+  } | null;
+  seasonalRatePeriods?: Array<{
+    startDate: string;
+    endDate: string;
+    percentageAdjustment: number;
+    isActive?: boolean;
+  }>;
   bedConfiguration?: string;
   availablePods?: Pod[];
   podCount?: number;
@@ -143,23 +161,27 @@ export const calculateDynamicSubTotal = (draft: BookingDraft): number => {
     totalPodsAvailable: 6,
     currency: "NGN",
   };
-  const basePricePerPod = pricingConfig.basePricePerPod ?? 400000;
-  const extraGuestFee = pricingConfig.extraGuestFee ?? 100000;
-
-  const peakRateInfo = draft.peakRateInfo;
-  const peakMultiplier = 1 + ((peakRateInfo?.percentageAdjustment ?? 0) / 100);
-
-  const adjustedBasePrice = basePricePerPod * peakMultiplier;
-  const adjustedExtraFee = extraGuestFee * peakMultiplier;
-
-  const nights = draft.numberOfNights || 1;
+  const checkIn = draft.dates?.checkIn;
+  const checkOut = draft.dates?.checkOut;
   const pods = draft.podCount || 1;
 
-  const baseForStayPreview = pods * adjustedBasePrice * nights;
+  const weekday = draft.weekdayPeakInfo;
+  const weekdayPeakPercent =
+    weekday?.peakPercent ?? pricingConfig.weekdayPeakPercent ?? 0;
+  const weekdayOffPeakPercent =
+    weekday?.offPeakPercent ?? pricingConfig.weekdayOffPeakPercent ?? 0;
 
-  const effectiveGuests = totalGuests < 1 ? 1 : totalGuests;
-  const extraGuests = effectiveGuests > pods ? effectiveGuests - pods : 0;
-  const extraForStay = extraGuests * adjustedExtraFee * nights;
+  const { subtotal: roomSubtotal } = calculateStayRoomSubtotal({
+    checkIn,
+    checkOut,
+    podsCount: pods,
+    guestsCount: totalGuests,
+    basePricePerPod: pricingConfig.basePricePerPod ?? 400000,
+    extraGuestFee: pricingConfig.extraGuestFee ?? 100000,
+    weekdayPeakPercent,
+    weekdayOffPeakPercent,
+    seasonalRates: draft.seasonalRatePeriods ?? [],
+  });
 
   const extrasTotal =
     draft.extras?.reduce(
@@ -167,5 +189,5 @@ export const calculateDynamicSubTotal = (draft: BookingDraft): number => {
       0,
     ) || 0;
 
-  return baseForStayPreview + extraForStay + extrasTotal;
+  return roomSubtotal + extrasTotal;
 };

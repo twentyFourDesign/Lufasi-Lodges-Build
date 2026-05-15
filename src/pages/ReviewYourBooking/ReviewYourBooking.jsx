@@ -17,6 +17,7 @@ import { useBookingStore } from "@/store/useBookingStore";
 import { format } from "date-fns/format";
 import { BASE_URL } from "@/config";
 import { formatDateSafe } from "@/lib/utils";
+import { calculateStayRoomSubtotal } from "@/lib/stayPricing";
 import {
   Dialog,
   DialogContent,
@@ -96,28 +97,45 @@ export default function ReviewYourBooking() {
     const pricingConfig = bookingStore.draft.pricingConfig || {};
     const basePricePerPod = pricingConfig.basePricePerPod ?? 400000;
     const extraGuestFee = pricingConfig.extraGuestFee ?? 100000;
-    const nights = bookingStore.draft.numberOfNights || 1;
     const pods = bookingStore.draft.podCount || 1;
-    
-    const peakRateInfo = bookingStore.draft.peakRateInfo;
-    const peakMultiplier = 1 + ((peakRateInfo?.percentageAdjustment ?? 0) / 100);
+    const checkIn = bookingStore.draft.dates?.checkIn;
+    const checkOut = bookingStore.draft.dates?.checkOut;
 
-    const adjustedBasePrice = basePricePerPod * peakMultiplier;
-    const adjustedExtraFee = extraGuestFee * peakMultiplier;
+    const weekday = bookingStore.draft.weekdayPeakInfo;
+    const weekdayPeakPercent =
+      weekday?.peakPercent ?? pricingConfig.weekdayPeakPercent ?? 0;
+    const weekdayOffPeakPercent =
+      weekday?.offPeakPercent ?? pricingConfig.weekdayOffPeakPercent ?? 0;
+    const seasonalRates = bookingStore.draft.seasonalRatePeriods ?? [];
 
-    // Base amount
-    const baseForStayPreview = pods * adjustedBasePrice * nights;
-    
-    // Extra guests
-    const effectiveGuests = totalGuests < 1 ? 1 : totalGuests;
-    const extraGuests = effectiveGuests > pods ? effectiveGuests - pods : 0;
-    const extraForStay = extraGuests * adjustedExtraFee * nights;
-    
-    // Extras
-    const extrasTotal = bookingStore.draft.extras?.reduce((sum, e) => sum + (Number(e.price) * (e.quantity || 1)), 0) || 0;
-    
-    // Re-calculate subTotal dynamically to avoid stale fallbacks
-    const subTotal = baseForStayPreview + extraForStay + extrasTotal;
+    const stayPricingArgs = {
+      checkIn,
+      checkOut,
+      podsCount: pods,
+      basePricePerPod,
+      extraGuestFee,
+      weekdayPeakPercent,
+      weekdayOffPeakPercent,
+      seasonalRates,
+    };
+
+    const { subtotal: roomSubtotal } = calculateStayRoomSubtotal({
+      ...stayPricingArgs,
+      guestsCount: totalGuests < 1 ? 1 : totalGuests,
+    });
+
+    const { subtotal: baseForStayPreview } = calculateStayRoomSubtotal({
+      ...stayPricingArgs,
+      guestsCount: pods,
+    });
+
+    const extrasTotal =
+      bookingStore.draft.extras?.reduce(
+        (sum, e) => sum + Number(e.price) * (e.quantity || 1),
+        0,
+      ) || 0;
+
+    const subTotal = roomSubtotal + extrasTotal;
     
     // 1. Twelve Guest Discount
     const configuredDiscountPercent = pricingConfig.twelveGuestDiscountPercent ?? 10;
@@ -472,13 +490,22 @@ export default function ReviewYourBooking() {
                   </span>
                 </div>
 
+                {(() => {
+                  const w = bookingStore.draft.weekdayPeakInfo;
+                  const showPeak =
+                    w && w.peakPercent !== 0 && (w.peakNights ?? 0) > 0;
+                  const showOffPeak =
+                    w && w.offPeakPercent !== 0 && (w.offPeakNights ?? 0) > 0;
+                  if (!showPeak && !showOffPeak) return null;
+                  return (
+                    <div className="flex gap-3 text-[#008080] text-xs">
+                      {showPeak && <span>Peak rate</span>}
+                      {showOffPeak && <span>Off-peak rate</span>}
+                    </div>
+                  );
+                })()}
                 {bookingStore.draft.peakRateInfo && (
-                  <div className="flex justify-between text-[#008080]">
-                    <span>{bookingStore.draft.peakRateInfo.percentageAdjustment > 0 ? 'Peak Rates' : 'Off-Peak Discount'} ({bookingStore.draft.peakRateInfo.percentageAdjustment}%):</span>
-                    <span className="font-semibold text-xs">
-                      Applied to Sub Total
-                    </span>
-                  </div>
+                  <div className="text-[#008080] text-xs">Seasonal rate</div>
                 )}
 
                 {pricing.twelveGuestDiscountAmount > 0 && (
