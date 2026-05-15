@@ -71,15 +71,15 @@ export default function PricingPage() {
             }
             const data = await response.json();
             setPricingConfig({
-                base_price_per_pod: data.base_price_per_pod,
-                extra_guest_fee: data.extra_guest_fee,
+                base_price_per_pod_off_peak: data.base_price_per_pod_off_peak,
+                base_price_per_pod_peak: data.base_price_per_pod_peak,
+                extra_guest_fee_off_peak: data.extra_guest_fee_off_peak,
+                extra_guest_fee_peak: data.extra_guest_fee_peak,
                 max_guests_per_pod: data.max_guests_per_pod,
                 min_guests_per_pod: data.min_guests_per_pod,
                 total_pods_available: data.total_pods_available,
                 twelve_guest_discount_percent: data.twelve_guest_discount_percent ?? 10,
                 currency: data.currency,
-                weekday_peak_percent: data.weekday_peak_percent ?? 0,
-                weekday_off_peak_percent: data.weekday_off_peak_percent ?? 0,
             });
         } catch (err) {
         }
@@ -104,8 +104,16 @@ export default function PricingPage() {
                     Authorization: `Bearer ${token}`,
                 },
                 body: JSON.stringify({
-                    base_price_per_pod: Number(pricingConfig.base_price_per_pod),
-                    extra_guest_fee: Number(pricingConfig.extra_guest_fee),
+                    base_price_per_pod_off_peak: Number(
+                        pricingConfig.base_price_per_pod_off_peak,
+                    ),
+                    base_price_per_pod_peak: Number(
+                        pricingConfig.base_price_per_pod_peak,
+                    ),
+                    extra_guest_fee_off_peak: Number(
+                        pricingConfig.extra_guest_fee_off_peak,
+                    ),
+                    extra_guest_fee_peak: Number(pricingConfig.extra_guest_fee_peak),
                     max_guests_per_pod: Number(pricingConfig.max_guests_per_pod),
                     min_guests_per_pod: Number(pricingConfig.min_guests_per_pod),
                     total_pods_available: Number(pricingConfig.total_pods_available),
@@ -113,10 +121,6 @@ export default function PricingPage() {
                         pricingConfig.twelve_guest_discount_percent ?? 10,
                     ),
                     currency: pricingConfig.currency || "NGN",
-                    weekday_peak_percent: Number(pricingConfig.weekday_peak_percent ?? 0),
-                    weekday_off_peak_percent: Number(
-                        pricingConfig.weekday_off_peak_percent ?? 0,
-                    ),
                 }),
             });
 
@@ -126,15 +130,15 @@ export default function PricingPage() {
 
             const data = await response.json();
             setPricingConfig({
-                base_price_per_pod: data.base_price_per_pod,
-                extra_guest_fee: data.extra_guest_fee,
+                base_price_per_pod_off_peak: data.base_price_per_pod_off_peak,
+                base_price_per_pod_peak: data.base_price_per_pod_peak,
+                extra_guest_fee_off_peak: data.extra_guest_fee_off_peak,
+                extra_guest_fee_peak: data.extra_guest_fee_peak,
                 max_guests_per_pod: data.max_guests_per_pod,
                 min_guests_per_pod: data.min_guests_per_pod,
                 total_pods_available: data.total_pods_available,
                 twelve_guest_discount_percent: data.twelve_guest_discount_percent ?? 10,
                 currency: data.currency,
-                weekday_peak_percent: data.weekday_peak_percent ?? 0,
-                weekday_off_peak_percent: data.weekday_off_peak_percent ?? 0,
             });
             setSaveMessage({ type: "success", text: "Pricing configuration updated successfully." });
         } catch (err) {
@@ -224,31 +228,41 @@ export default function PricingPage() {
                     <div className="p-4 md:p-5">
                         {pricingConfig ? (
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                                        Base Price Per Pod (Per Night)
-                                    </label>
-                                    <input
-                                        type="number"
-                                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#008080]"
-                                        value={pricingConfig.base_price_per_pod}
-                                        onChange={(e) =>
-                                            handleConfigChange("base_price_per_pod", e.target.value)
-                                        }
-                                    />
-                                </div>
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                                        Extra Guest Fee (Per Night)
-                                    </label>
-                                    <input
-                                        type="number"
-                                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#008080]"
-                                        value={pricingConfig.extra_guest_fee}
-                                        onChange={(e) =>
-                                            handleConfigChange("extra_guest_fee", e.target.value)
-                                        }
-                                    />
+                                <div className="md:col-span-2">
+                                    <h3 className="text-sm font-semibold text-[#333333] mb-3">
+                                        Nightly rates
+                                    </h3>
+                                    <div className="overflow-x-auto">
+                                        <table className="w-full text-sm border border-gray-200 rounded-lg">
+                                            <thead>
+                                                <tr className="bg-gray-50">
+                                                    <th className="py-2 px-3 text-left font-medium text-gray-700" />
+                                                    <th className="py-2 px-3 text-left font-medium text-gray-700">Off-peak (Sun-Thu)</th>
+                                                    <th className="py-2 px-3 text-left font-medium text-gray-700">Peak (Fri-Sat)</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                <tr className="border-t border-gray-100">
+                                                    <td className="py-2 px-3 text-gray-700">Base price per pod</td>
+                                                    <td className="py-2 px-3">
+                                                        <input type="number" className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#008080]" value={pricingConfig.base_price_per_pod_off_peak ?? ""} onChange={(e) => handleConfigChange("base_price_per_pod_off_peak", e.target.value)} />
+                                                    </td>
+                                                    <td className="py-2 px-3">
+                                                        <input type="number" className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#008080]" value={pricingConfig.base_price_per_pod_peak ?? ""} onChange={(e) => handleConfigChange("base_price_per_pod_peak", e.target.value)} />
+                                                    </td>
+                                                </tr>
+                                                <tr className="border-t border-gray-100">
+                                                    <td className="py-2 px-3 text-gray-700">Extra guest fee</td>
+                                                    <td className="py-2 px-3">
+                                                        <input type="number" className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#008080]" value={pricingConfig.extra_guest_fee_off_peak ?? ""} onChange={(e) => handleConfigChange("extra_guest_fee_off_peak", e.target.value)} />
+                                                    </td>
+                                                    <td className="py-2 px-3">
+                                                        <input type="number" className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#008080]" value={pricingConfig.extra_guest_fee_peak ?? ""} onChange={(e) => handleConfigChange("extra_guest_fee_peak", e.target.value)} />
+                                                    </td>
+                                                </tr>
+                                            </tbody>
+                                        </table>
+                                    </div>
                                 </div>
                                 <div>
                                     <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -317,47 +331,6 @@ export default function PricingPage() {
                                             handleConfigChange("currency", e.target.value)
                                         }
                                     />
-                                </div>
-                                <div className="md:col-span-2 border-t border-gray-100 pt-4 mt-2">
-                                    <h3 className="text-sm font-semibold text-[#333333] mb-3">
-                                        Peak & Off-peak (weekdays)
-                                    </h3>
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                        <div>
-                                            <label className="block text-sm font-medium text-gray-700 mb-1">
-                                                Peak %
-                                            </label>
-                                            <input
-                                                type="number"
-                                                step="0.01"
-                                                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#008080]"
-                                                value={pricingConfig.weekday_peak_percent ?? 0}
-                                                onChange={(e) =>
-                                                    handleConfigChange(
-                                                        "weekday_peak_percent",
-                                                        e.target.value,
-                                                    )
-                                                }
-                                            />
-                                        </div>
-                                        <div>
-                                            <label className="block text-sm font-medium text-gray-700 mb-1">
-                                                Off-peak %
-                                            </label>
-                                            <input
-                                                type="number"
-                                                step="0.01"
-                                                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#008080]"
-                                                value={pricingConfig.weekday_off_peak_percent ?? 0}
-                                                onChange={(e) =>
-                                                    handleConfigChange(
-                                                        "weekday_off_peak_percent",
-                                                        e.target.value,
-                                                    )
-                                                }
-                                            />
-                                        </div>
-                                    </div>
                                 </div>
                             </div>
                         ) : (

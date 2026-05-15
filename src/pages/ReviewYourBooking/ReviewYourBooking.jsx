@@ -95,27 +95,16 @@ export default function ReviewYourBooking() {
     const guestCounts = bookingStore.draft.guests || {};
     const totalGuests = (guestCounts.adults || 0) + (guestCounts.teenagers || 0) + (guestCounts.children || 0);
     const pricingConfig = bookingStore.draft.pricingConfig || {};
-    const basePricePerPod = pricingConfig.basePricePerPod ?? 400000;
-    const extraGuestFee = pricingConfig.extraGuestFee ?? 100000;
     const pods = bookingStore.draft.podCount || 1;
     const checkIn = bookingStore.draft.dates?.checkIn;
     const checkOut = bookingStore.draft.dates?.checkOut;
-
-    const weekday = bookingStore.draft.weekdayPeakInfo;
-    const weekdayPeakPercent =
-      weekday?.peakPercent ?? pricingConfig.weekdayPeakPercent ?? 0;
-    const weekdayOffPeakPercent =
-      weekday?.offPeakPercent ?? pricingConfig.weekdayOffPeakPercent ?? 0;
     const seasonalRates = bookingStore.draft.seasonalRatePeriods ?? [];
 
     const stayPricingArgs = {
       checkIn,
       checkOut,
       podsCount: pods,
-      basePricePerPod,
-      extraGuestFee,
-      weekdayPeakPercent,
-      weekdayOffPeakPercent,
+      pricingConfig,
       seasonalRates,
     };
 
@@ -492,10 +481,8 @@ export default function ReviewYourBooking() {
 
                 {(() => {
                   const w = bookingStore.draft.weekdayPeakInfo;
-                  const showPeak =
-                    w && w.peakPercent !== 0 && (w.peakNights ?? 0) > 0;
-                  const showOffPeak =
-                    w && w.offPeakPercent !== 0 && (w.offPeakNights ?? 0) > 0;
+                  const showPeak = w && (w.peakNights ?? 0) > 0;
+                  const showOffPeak = w && (w.offPeakNights ?? 0) > 0;
                   if (!showPeak && !showOffPeak) return null;
                   return (
                     <div className="flex gap-3 text-[#008080] text-xs">

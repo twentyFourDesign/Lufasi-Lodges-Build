@@ -105,18 +105,12 @@ export default function NewBooking() {
   };
 
   const computeSubTotal = (guestCount, podCount) => {
-    const weekday = bookingStore.draft.weekdayPeakInfo;
     const { subtotal } = calculateStayRoomSubtotal({
       checkIn: bookingStore.draft.dates?.checkIn,
       checkOut: bookingStore.draft.dates?.checkOut,
       podsCount: podCount,
       guestsCount: guestCount,
-      basePricePerPod: pricingConfig?.basePricePerPod ?? 400000,
-      extraGuestFee: pricingConfig?.extraGuestFee ?? 100000,
-      weekdayPeakPercent:
-        weekday?.peakPercent ?? pricingConfig?.weekdayPeakPercent ?? 0,
-      weekdayOffPeakPercent:
-        weekday?.offPeakPercent ?? pricingConfig?.weekdayOffPeakPercent ?? 0,
+      pricingConfig: pricingConfig ?? {},
       seasonalRates: bookingStore.draft.seasonalRatePeriods ?? [],
     });
     return subtotal;
@@ -134,13 +128,15 @@ export default function NewBooking() {
           pricingConfig: {
             basePricePerPod: data.base_price_per_pod,
             extraGuestFee: data.extra_guest_fee,
+            basePricePerPodOffPeak: data.base_price_per_pod_off_peak,
+            basePricePerPodPeak: data.base_price_per_pod_peak,
+            extraGuestFeeOffPeak: data.extra_guest_fee_off_peak,
+            extraGuestFeePeak: data.extra_guest_fee_peak,
             maxGuestsPerPod: data.max_guests_per_pod,
             minGuestsPerPod: data.min_guests_per_pod,
             totalPodsAvailable: data.total_pods_available,
             twelveGuestDiscountPercent: data.twelve_guest_discount_percent ?? 10,
             currency: data.currency,
-            weekdayPeakPercent: data.weekday_peak_percent ?? 0,
-            weekdayOffPeakPercent: data.weekday_off_peak_percent ?? 0,
           },
         });
       } catch (error) {
@@ -590,10 +586,8 @@ export default function NewBooking() {
 
                     {(() => {
                       const w = bookingStore.draft.weekdayPeakInfo;
-                      const showPeak =
-                        w && w.peakPercent !== 0 && (w.peakNights ?? 0) > 0;
-                      const showOffPeak =
-                        w && w.offPeakPercent !== 0 && (w.offPeakNights ?? 0) > 0;
+                      const showPeak = w && (w.peakNights ?? 0) > 0;
+                      const showOffPeak = w && (w.offPeakNights ?? 0) > 0;
                       if (!showPeak && !showOffPeak) return null;
                       return (
                         <div className="flex gap-3 text-[#008080] text-xs">

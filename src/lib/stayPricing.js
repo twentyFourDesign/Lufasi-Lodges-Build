@@ -41,6 +41,46 @@ function toYmd(date) {
   return `${y}-${m}-${d}`;
 }
 
+function num(v, fallback = 0) {
+  const n = Number(v);
+  return Number.isFinite(n) ? n : fallback;
+}
+
+function getNightRatesFromConfig(config, isPeakNight) {
+  const legacyBase = num(
+    config?.basePricePerPod ?? config?.base_price_per_pod,
+    400000,
+  );
+  const legacyExtra = num(
+    config?.extraGuestFee ?? config?.extra_guest_fee,
+    100000,
+  );
+
+  if (isPeakNight) {
+    return {
+      basePerPod: num(
+        config?.basePricePerPodPeak ?? config?.base_price_per_pod_peak,
+        legacyBase,
+      ),
+      extraGuestFee: num(
+        config?.extraGuestFeePeak ?? config?.extra_guest_fee_peak,
+        legacyExtra,
+      ),
+    };
+  }
+
+  return {
+    basePerPod: num(
+      config?.basePricePerPodOffPeak ?? config?.base_price_per_pod_off_peak,
+      legacyBase,
+    ),
+    extraGuestFee: num(
+      config?.extraGuestFeeOffPeak ?? config?.extra_guest_fee_off_peak,
+      legacyExtra,
+    ),
+  };
+}
+
 function getSeasonalPercentForDate(dateYmd, seasonalRates) {
   if (!seasonalRates?.length) return 0;
 
@@ -65,17 +105,12 @@ export function calculateStayRoomSubtotal({
   checkOut,
   podsCount,
   guestsCount,
-  basePricePerPod,
-  extraGuestFee,
-  weekdayPeakPercent = 0,
-  weekdayOffPeakPercent = 0,
+  pricingConfig = {},
   seasonalRates = [],
 }) {
   const pods = podsCount < 1 ? 1 : podsCount;
   const totalGuests = guestsCount < 1 ? 1 : guestsCount;
   const extraGuests = totalGuests > pods ? totalGuests - pods : 0;
-  const base = Number(basePricePerPod || 400000);
-  const extraFee = Number(extraGuestFee || 100000);
 
   const nights = iterStayNights(checkIn, checkOut);
   if (!nights.length) {
@@ -89,12 +124,15 @@ export function calculateStayRoomSubtotal({
   for (const nightDate of nights) {
     const ymd = toYmd(nightDate);
     const isPeak = isWeekdayPeakNight(nightDate);
-    const weekdayPct = isPeak ? weekdayPeakPercent : weekdayOffPeakPercent;
+    const { basePerPod, extraGuestFee } = getNightRatesFromConfig(
+      pricingConfig,
+      isPeak,
+    );
     const seasonalPct = getSeasonalPercentForDate(ymd, seasonalRates);
-    const multiplier =
-      (1 + weekdayPct / 100) * (1 + seasonalPct / 100);
-    const nightBase = pods * base * multiplier;
-    const nightExtra = extraGuests * extraFee * multiplier;
+    const multiplier = 1 + seasonalPct / 100;
+
+    const nightBase = pods * basePerPod * multiplier;
+    const nightExtra = extraGuests * extraGuestFee * multiplier;
     subtotal += nightBase + nightExtra;
     if (isPeak) peakNights += 1;
     else offPeakNights += 1;

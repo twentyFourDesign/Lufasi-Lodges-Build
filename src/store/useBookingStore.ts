@@ -61,13 +61,15 @@ type BookingDraft = {
   pricingConfig?: {
     basePricePerPod: number;
     extraGuestFee: number;
+    basePricePerPodPeak?: number;
+    basePricePerPodOffPeak?: number;
+    extraGuestFeePeak?: number;
+    extraGuestFeeOffPeak?: number;
     maxGuestsPerPod: number;
     minGuestsPerPod: number;
     totalPodsAvailable: number;
     twelveGuestDiscountPercent?: number;
     currency: string;
-    weekdayPeakPercent?: number;
-    weekdayOffPeakPercent?: number;
   };
   peakRateInfo?: {
     name: string;
@@ -75,8 +77,6 @@ type BookingDraft = {
     type: string;
   } | null;
   weekdayPeakInfo?: {
-    peakPercent: number;
-    offPeakPercent: number;
     peakDaysLabel?: string;
     offPeakDaysLabel?: string;
     peakNights?: number;
@@ -165,21 +165,12 @@ export const calculateDynamicSubTotal = (draft: BookingDraft): number => {
   const checkOut = draft.dates?.checkOut;
   const pods = draft.podCount || 1;
 
-  const weekday = draft.weekdayPeakInfo;
-  const weekdayPeakPercent =
-    weekday?.peakPercent ?? pricingConfig.weekdayPeakPercent ?? 0;
-  const weekdayOffPeakPercent =
-    weekday?.offPeakPercent ?? pricingConfig.weekdayOffPeakPercent ?? 0;
-
   const { subtotal: roomSubtotal } = calculateStayRoomSubtotal({
     checkIn,
     checkOut,
     podsCount: pods,
     guestsCount: totalGuests,
-    basePricePerPod: pricingConfig.basePricePerPod ?? 400000,
-    extraGuestFee: pricingConfig.extraGuestFee ?? 100000,
-    weekdayPeakPercent,
-    weekdayOffPeakPercent,
+    pricingConfig,
     seasonalRates: draft.seasonalRatePeriods ?? [],
   });
 
