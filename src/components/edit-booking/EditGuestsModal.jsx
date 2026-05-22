@@ -87,8 +87,8 @@ export default function EditGuestsModal({ open, onOpenChange, value, onSave }) {
               Age Policy
             </div>
             <div className="text-xs text-[#444] mt-1">
-              Children aged 0-12 years are not permitted standard unless full 
-              camp takeover or school holidays.
+              Children aged 0-12 years are only permitted on a full camp
+              takeover or on dates designated by the lodge.
             </div>
           </div>
         </div>

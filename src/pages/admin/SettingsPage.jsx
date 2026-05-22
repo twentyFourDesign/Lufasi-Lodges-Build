@@ -187,7 +187,7 @@ export default function SettingsPage() {
     };
 
     const handleDeleteHoliday = async (holidayId) => {
-        if (!confirm("Are you sure you want to delete this holiday?")) return;
+        if (!confirm("Are you sure you want to delete this date range?")) return;
         try {
             const response = await fetch(`${BASE_URL}/config/holidays/${holidayId}`, {
                 method: "DELETE",
@@ -424,15 +424,20 @@ export default function SettingsPage() {
                     </div>
                 </div>
 
-                {/* School Holiday Management Section */}
+                {/* Children-Allowed Dates Section */}
                 <div className="bg-white rounded-lg border border-gray-100 shadow-sm overflow-hidden">
                     <div className="p-6 border-b border-gray-100 flex justify-between items-center">
-                        <h2 className="text-lg font-semibold text-[#333333]">School Holiday Management</h2>
+                        <div>
+                            <h2 className="text-lg font-semibold text-[#333333]">Children-Allowed Dates</h2>
+                            <p className="text-sm text-gray-500 mt-1">
+                                Date ranges when guests can book with children aged 0-12 without a full camp takeover (e.g. school holidays, family weekends).
+                            </p>
+                        </div>
                         <button
                             onClick={() => setShowAddHolidayModal(true)}
                             className="px-4 py-2 bg-[#008080] text-white rounded-lg flex items-center gap-2 hover:bg-[#006666]"
                         >
-                            Add Holiday +
+                            Add Date Range +
                         </button>
                     </div>
 
@@ -440,7 +445,7 @@ export default function SettingsPage() {
                         <table className="w-full">
                             <thead>
                                 <tr className="bg-[#333333] text-white">
-                                    <th className="text-left px-6 py-3 font-medium">Holiday Name</th>
+                                    <th className="text-left px-6 py-3 font-medium">Name</th>
                                     <th className="text-left px-6 py-3 font-medium">Start Date</th>
                                     <th className="text-left px-6 py-3 font-medium">End Date</th>
                                     <th className="text-left px-6 py-3 font-medium">Actions</th>
@@ -476,7 +481,7 @@ export default function SettingsPage() {
                                 {holidays.length === 0 && (
                                     <tr>
                                         <td colSpan={4} className="px-6 py-8 text-center text-gray-500">
-                                            No school holidays configured
+                                            No children-allowed date ranges configured
                                         </td>
                                     </tr>
                                 )}
@@ -655,7 +660,7 @@ export default function SettingsPage() {
                 <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
                     <div className="bg-white rounded-lg w-full max-w-md">
                         <div className="p-6 border-b border-gray-100 flex justify-between items-center">
-                            <h2 className="text-xl font-semibold text-[#333333]">Add School Holiday</h2>
+                            <h2 className="text-xl font-semibold text-[#333333]">Add Children-Allowed Date Range</h2>
                             <button onClick={() => setShowAddHolidayModal(false)} className="text-gray-400 hover:text-gray-600">
                                 <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -664,10 +669,10 @@ export default function SettingsPage() {
                         </div>
                         <div className="p-6 space-y-4">
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">Holiday Name *</label>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">Name *</label>
                                 <input
                                     type="text"
-                                    placeholder="e.g., Summer Holiday"
+                                    placeholder="e.g., Summer Holiday, Easter Break"
                                     value={newHoliday.name}
                                     onChange={(e) => setNewHoliday({ ...newHoliday, name: e.target.value })}
                                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#008080]"
@@ -704,7 +709,7 @@ export default function SettingsPage() {
                                 disabled={saving || !newHoliday.name || !newHoliday.startDate || !newHoliday.endDate}
                                 className="px-6 py-2 bg-[#008080] text-white rounded-lg hover:bg-[#006666] disabled:opacity-50"
                             >
-                                {saving ? "Saving..." : "Add Holiday"}
+                                {saving ? "Saving..." : "Add Date Range"}
                             </button>
                         </div>
                     </div>
@@ -716,7 +721,7 @@ export default function SettingsPage() {
                 <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
                     <div className="bg-white rounded-lg w-full max-w-md">
                         <div className="p-6 border-b border-gray-100 flex justify-between items-center">
-                            <h2 className="text-xl font-semibold text-[#333333]">Edit School Holiday</h2>
+                            <h2 className="text-xl font-semibold text-[#333333]">Edit Children-Allowed Date Range</h2>
                             <button onClick={() => setShowEditHolidayModal(false)} className="text-gray-400 hover:text-gray-600">
                                 <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -725,7 +730,7 @@ export default function SettingsPage() {
                         </div>
                         <div className="p-6 space-y-4">
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">Holiday Name *</label>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">Name *</label>
                                 <input
                                     type="text"
                                     value={editingHoliday.name}

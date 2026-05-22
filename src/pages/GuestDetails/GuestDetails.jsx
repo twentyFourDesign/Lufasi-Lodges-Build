@@ -334,25 +334,27 @@ export default function GuestDetails() {
                 <div className="flex items-center gap-2 mt-4 text-amber-700 bg-amber-50 p-3 rounded-lg border border-amber-200">
                   <Info className="w-4 h-4 flex-shrink-0" />
                   <p className="text-xs font-semibold">
-                    Children aged 0-12 are only permitted when booking a full camp takeover (all 6 domes) or during designated school holidays.
+                    Children aged 0-12 are only permitted when booking a full camp takeover (all 6 domes) or on dates designated by the lodge.
                   </p>
                 </div>
               )}
             </div>
-            <div className="bg-[#C5F8FF] rounded-xl px-5 py-5 border border-[#8FE8FF] shadow-sm">
-              <div className="flex items-start gap-3">
-                <Info className="w-5 h-5 text-[#0A4C30] flex-shrink-0 mt-0.5" />
-                <div className="min-w-0">
-                  <h4 className="text-[#0A4C30] font-semibold text-sm">Age Policy</h4>
-                  <p className="text-sm text-[#0A4C30] mt-1 leading-relaxed">
-                    Children aged 0–12 years are not permitted unless you book the entire camp for exclusive use (6 Domes) or it is a designated school holiday. Please contact us if you'd like to arrange a full camp takeover.
-                  </p>
-                  <button className="mt-2 text-sm font-semibold text-[#09432B] underline hover:text-[#083f28]">
-                    Learn more
-                  </button>
+            {!isChildrenPermitted() && (
+              <div className="bg-[#C5F8FF] rounded-xl px-5 py-5 border border-[#8FE8FF] shadow-sm">
+                <div className="flex items-start gap-3">
+                  <Info className="w-5 h-5 text-[#0A4C30] flex-shrink-0 mt-0.5" />
+                  <div className="min-w-0">
+                    <h4 className="text-[#0A4C30] font-semibold text-sm">Age Policy</h4>
+                    <p className="text-sm text-[#0A4C30] mt-1 leading-relaxed">
+                      Children aged 0–12 years are not permitted unless you book the entire camp for exclusive use (6 Domes) or your stay falls on a date designated by the lodge. Please contact us if you'd like to arrange a full camp takeover.
+                    </p>
+                    <button className="mt-2 text-sm font-semibold text-[#09432B] underline hover:text-[#083f28]">
+                      Learn more
+                    </button>
+                  </div>
                 </div>
               </div>
-            </div>
+            )}
           </div>
           <div className="md:col-span-4 space-y-4">
             <div className="bg-white rounded-xl border border-gray-200 p-4 shadow-sm">
