@@ -234,14 +234,14 @@ export default function GuestDetails() {
                 incDisabled: !canAddUnder13({ infants: infants + 1 }),
               })}
               {renderGuestCounter({
-                label: "Toddlers (1–3 years) — 25% less adult rate",
+                label: "Toddlers (1–3 years) — 75% of base pod rate",
                 value: toddlers,
                 onChange: onChangeToddlers,
                 decDisabled: toddlers <= 0 || !canSetGuests({ toddlers: toddlers - 1 }),
                 incDisabled: !canAddUnder13({ toddlers: toddlers + 1 }),
               })}
               {renderGuestCounter({
-                label: "Children (4–12 years) — 50% less adult rate",
+                label: "Children (4–12 years) — 50% of base pod rate",
                 value: children,
                 onChange: onChangeChildren,
                 decDisabled: children <= 0 || !canSetGuests({ children: children - 1 }),
