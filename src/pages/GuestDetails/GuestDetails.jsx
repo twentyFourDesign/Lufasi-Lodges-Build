@@ -17,6 +17,10 @@ import { useBookingStore, calculateDynamicSubTotal } from "@/store/useBookingSto
 import { format } from "date-fns";
 import { BASE_URL } from "@/config";
 import { formatDateSafe } from "@/lib/utils";
+import {
+  isFamilyCompositionAllowed,
+  normalizeFamilyGuests,
+} from "@/lib/familyRules";
 function formatPrice(n) {
   return n.toLocaleString();
 }
@@ -27,7 +31,9 @@ export default function GuestDetails() {
   const pricingConfig = bookingStore.draft.pricingConfig;
   const [adults, setAdults] = useState(bookingStore.draft.guests?.adults || 2);
   const [teens, setTeens] = useState(bookingStore.draft.guests?.teenagers || 0);
+  const [toddlers, setToddlers] = useState(bookingStore.draft.guests?.toddlers || 0);
   const [children, setChildren] = useState(bookingStore.draft.guests?.children || 0);
+  const [infants, setInfants] = useState(bookingStore.draft.guests?.infants || 0);
   const [subTotal, setSubTotal] = useState(bookingStore.draft?.subTotal || 0);
   const [schoolHolidays, setSchoolHolidays] = useState([]);
 
@@ -66,149 +72,122 @@ export default function GuestDetails() {
     });
   };
 
-  const isValidGuestCount = (newTotalGuests) => {
+  const isValidGuestCount = (nextGuests) => {
     const podCount = bookingStore.draft.podCount || 1;
-    
-    // Total guests must be at least 1 per pod (unless 1 pod, then 1 guest)
-    // And at most 2 per pod.
-    // However, if we follow the NewBooking logic strictly:
-    if (newTotalGuests < 1) return false;
-    
-    let minPods = 0;
-    let maxPods = 0;
-
-    if (newTotalGuests === 1) { minPods = 1; maxPods = 1; }
-    else if (newTotalGuests === 2) { minPods = 1; maxPods = 2; }
-    else if (newTotalGuests === 3) { minPods = 2; maxPods = 3; }
-    else if (newTotalGuests === 4) { minPods = 2; maxPods = 4; }
-    else if (newTotalGuests === 5) { minPods = 3; maxPods = 5; }
-    else if (newTotalGuests === 6) { minPods = 3; maxPods = 6; }
-    else if (newTotalGuests === 7) { minPods = 4; maxPods = 6; }
-    else if (newTotalGuests === 8) { minPods = 4; maxPods = 6; }
-    else if (newTotalGuests === 9) { minPods = 5; maxPods = 6; }
-    else if (newTotalGuests === 10) { minPods = 5; maxPods = 6; }
-    else if (newTotalGuests === 11) { minPods = 6; maxPods = 6; }
-    else if (newTotalGuests === 12) { minPods = 6; maxPods = 6; }
-    else { return false; } // Max 12 guests total
-
-    return podCount >= minPods && podCount <= maxPods;
+    return isFamilyCompositionAllowed(nextGuests, podCount);
   };
 
-  const computeSubTotal = (guestCount, podCount, nights) => {
-    const basePricePerPod =
-      pricingConfig?.basePricePerPod !== undefined
-        ? pricingConfig.basePricePerPod
-        : 400000;
-    const extraGuestFee =
-      pricingConfig?.extraGuestFee !== undefined
-        ? pricingConfig.extraGuestFee
-        : 100000;
-    const effectiveGuests = guestCount < 1 ? 1 : guestCount;
-    const pods = podCount < 1 ? 1 : podCount;
-    const basePerNight = pods * basePricePerPod;
-    const extraGuests = effectiveGuests > pods ? effectiveGuests - pods : 0;
-    const extraPerNight = extraGuests * extraGuestFee;
-    return (basePerNight + extraPerNight) * nights;
+  const currentGuests = () => ({
+    adults,
+    teenagers: teens,
+    toddlers,
+    children,
+    infants,
+  });
+
+  const updateGuestCounts = (nextGuests) => {
+    const normalized = normalizeFamilyGuests(nextGuests);
+    if (!isValidGuestCount(normalized)) return;
+    if (
+      (normalized.infants + normalized.toddlers + normalized.children > 0) &&
+      !isChildrenPermitted()
+    ) {
+      return;
+    }
+
+    const nextDraft = {
+      ...bookingStore.draft,
+      guests: normalized,
+    };
+    const nextSubTotal = calculateDynamicSubTotal(nextDraft);
+
+    setAdults(normalized.adults);
+    setTeens(normalized.teenagers);
+    setToddlers(normalized.toddlers);
+    setChildren(normalized.children);
+    setInfants(normalized.infants);
+    setSubTotal(nextSubTotal);
+    bookingStore.updateDraft({
+      guests: normalized,
+      subTotal: nextSubTotal,
+    });
   };
 
   const onChangeAdults = (type) => {
-    if (type === "dec" && adults > 1) {
-      const nextAdults = adults - 1;
-      const guestCount = nextAdults + teens + children;
-      if (!isValidGuestCount(guestCount)) return;
-
-      const nights = bookingStore.draft.numberOfNights || 1;
-      const pods = bookingStore.draft.podCount || 1;
-      const nextSubTotal = computeSubTotal(guestCount, pods, nights);
-      setAdults(nextAdults);
-      setSubTotal(nextSubTotal);
-      bookingStore.updateDraft({
-        guests: {
-          ...bookingStore.draft.guests,
-          adults: nextAdults,
-        },
-        subTotal: nextSubTotal,
-      });
-    } else if (type === "inc") {
-      const nextAdults = adults + 1;
-      const guestCount = nextAdults + teens + children;
-      if (!isValidGuestCount(guestCount)) return;
-
-      const nights = bookingStore.draft.numberOfNights || 1;
-      const pods = bookingStore.draft.podCount || 1;
-      const nextSubTotal = computeSubTotal(guestCount, pods, nights);
-      setAdults(nextAdults);
-      setSubTotal(nextSubTotal);
-      bookingStore.updateDraft({
-        guests: {
-          ...bookingStore.draft.guests,
-          adults: nextAdults,
-        },
-        subTotal: nextSubTotal,
-      });
-    }
+    const nextAdults = type === "dec" ? adults - 1 : adults + 1;
+    if (nextAdults < 1) return;
+    updateGuestCounts({ ...currentGuests(), adults: nextAdults });
   };
 
   const onChangeTeens = (type) => {
-    if (type === "dec" && teens > 0) {
-      const nextTeens = teens - 1;
-      const guestCount = adults + nextTeens + children;
-      if (!isValidGuestCount(guestCount)) return;
+    const nextTeens = type === "dec" ? teens - 1 : teens + 1;
+    if (nextTeens < 0) return;
+    updateGuestCounts({ ...currentGuests(), teenagers: nextTeens });
+  };
 
-      const nights = bookingStore.draft.numberOfNights || 1;
-      const pods = bookingStore.draft.podCount || 1;
-      const nextSubTotal = computeSubTotal(guestCount, pods, nights);
-      setTeens(nextTeens);
-      setSubTotal(nextSubTotal);
-      bookingStore.updateDraft({
-        guests: {
-          ...bookingStore.draft.guests,
-          teenagers: nextTeens,
-        },
-        subTotal: nextSubTotal,
-      });
-    } else if (type === "inc") {
-      const nextTeens = teens + 1;
-      const guestCount = adults + nextTeens + children;
-      if (!isValidGuestCount(guestCount)) return;
-
-      const nights = bookingStore.draft.numberOfNights || 1;
-      const pods = bookingStore.draft.podCount || 1;
-      const nextSubTotal = computeSubTotal(guestCount, pods, nights);
-      setTeens(nextTeens);
-      setSubTotal(nextSubTotal);
-      bookingStore.updateDraft({
-        guests: {
-          ...bookingStore.draft.guests,
-          teenagers: nextTeens,
-        },
-        subTotal: nextSubTotal,
-      });
-    }
+  const onChangeToddlers = (type) => {
+    const nextToddlers = type === "dec" ? toddlers - 1 : toddlers + 1;
+    if (nextToddlers < 0) return;
+    updateGuestCounts({ ...currentGuests(), toddlers: nextToddlers });
   };
 
   const onChangeChildren = (type) => {
-    if (type === "dec" && children > 0) {
-      const nextChildren = children - 1;
-      const guestCount = adults + teens + nextChildren;
-      if (!isValidGuestCount(guestCount)) return;
-
-      setChildren(nextChildren);
-      bookingStore.updateDraft({
-        guests: { ...bookingStore.draft.guests, children: nextChildren }
-      });
-    } else if (type === "inc") {
-      if (!isChildrenPermitted()) return;
-      const nextChildren = children + 1;
-      const guestCount = adults + teens + nextChildren;
-      if (!isValidGuestCount(guestCount)) return;
-
-      setChildren(nextChildren);
-      bookingStore.updateDraft({
-        guests: { ...bookingStore.draft.guests, children: nextChildren }
-      });
-    }
+    const nextChildren = type === "dec" ? children - 1 : children + 1;
+    if (nextChildren < 0) return;
+    updateGuestCounts({ ...currentGuests(), children: nextChildren });
   };
+
+  const onChangeInfants = (type) => {
+    const nextInfants = type === "dec" ? infants - 1 : infants + 1;
+    if (nextInfants < 0) return;
+    updateGuestCounts({ ...currentGuests(), infants: nextInfants });
+  };
+
+  const canSetGuests = (patch) =>
+    isValidGuestCount({ ...currentGuests(), ...patch });
+
+  const canAddUnder13 = (patch) => isChildrenPermitted() && canSetGuests(patch);
+
+  const renderGuestCounter = ({ label, value, onChange, decDisabled, incDisabled }) => (
+    <div
+      className="
+    flex flex-col items-center text-center py-6
+    sm:flex-row sm:justify-between sm:text-left
+  "
+    >
+      <span className="text-lg font-semibold text-[#09432B]">{label}</span>
+
+      <div className="flex items-center gap-6 mt-4 sm:mt-0">
+        <button
+          onClick={() => onChange("dec")}
+          className={`w-12 h-12 rounded-full border-2 border-[#0F5B45] flex items-center justify-center text-xl ${
+            decDisabled
+              ? "text-gray-300 border-gray-300 cursor-not-allowed opacity-30"
+              : "text-[#0F5B45]"
+          }`}
+          disabled={decDisabled}
+        >
+          –
+        </button>
+
+        <span className="text-2xl font-bold text-[#09432B] w-8 text-center">
+          {value}
+        </span>
+
+        <button
+          onClick={() => onChange("inc")}
+          className={`w-12 h-12 rounded-full border-2 border-[#0F5B45] flex items-center justify-center text-xl ${
+            incDisabled
+              ? "text-gray-300 border-gray-300 cursor-not-allowed opacity-30"
+              : "text-[#0F5B45]"
+          }`}
+          disabled={incDisabled}
+        >
+          +
+        </button>
+      </div>
+    </div>
+  );
 
   return (
     <div className="overflow-x-hidden min-h-screen w-full bg-[#F7F5F0]">
@@ -233,102 +212,41 @@ export default function GuestDetails() {
         <div className="grid grid-cols-1 md:grid-cols-12 gap-8">
           <div className="md:col-span-8 space-y-8">
             <div className="bg-white rounded-xl px-6 py-8 shadow-sm border border-gray-200">
-              <div
-                className="
-    flex flex-col items-center text-center py-6
-    sm:flex-row sm:justify-between sm:text-left
-  "
-              >
-                <span className="text-lg font-semibold text-[#09432B]">
-                  Adults (18+ years)
-                </span>
-
-                <div className="flex items-center gap-6 mt-4 sm:mt-0">
-                  <button
-                    onClick={() => onChangeAdults("dec")}
-                    className={`w-12 h-12 rounded-full border-2 border-[#0F5B45] flex items-center justify-center text-[#0F5B45] text-xl ${adults <= 1 || !isValidGuestCount(adults + teens + children - 1) ? 'opacity-30 cursor-not-allowed' : ''}`}
-                    disabled={adults <= 1 || !isValidGuestCount(adults + teens + children - 1)}
-                  >
-                    –
-                  </button>
-
-                  <span className="text-2xl font-bold text-[#09432B] w-8 text-center">
-                    {adults}
-                  </span>
-
-                  <button
-                    onClick={() => onChangeAdults("inc")}
-                    className={`w-12 h-12 rounded-full border-2 border-[#0F5B45] flex items-center justify-center text-[#0F5B45] text-xl ${!isValidGuestCount(adults + teens + children + 1) ? 'opacity-30 cursor-not-allowed' : ''}`}
-                    disabled={!isValidGuestCount(adults + teens + children + 1)}
-                  >
-                    +
-                  </button>
-                </div>
-              </div>
-              <div
-                className="
-    flex flex-col items-center text-center py-6
-    sm:flex-row sm:justify-between sm:text-left
-  "
-              >
-                <span className="text-lg font-semibold text-[#09432B]">
-                  Teens (13–17 years)
-                </span>
-
-                <div className="flex items-center gap-6 mt-4 sm:mt-0">
-                  <button
-                    onClick={() => onChangeTeens("dec")}
-                    className={`w-12 h-12 rounded-full border-2 border-[#0F5B45] flex items-center justify-center text-[#0F5B45] text-xl ${teens <= 0 || !isValidGuestCount(adults + teens + children - 1) ? 'opacity-30 cursor-not-allowed' : ''}`}
-                    disabled={teens <= 0 || !isValidGuestCount(adults + teens + children - 1)}
-                  >
-                    –
-                  </button>
-
-                  <span className="text-2xl font-bold text-[#09432B] w-8 text-center">
-                    {teens}
-                  </span>
-
-                  <button
-                    onClick={() => onChangeTeens("inc")}
-                    className={`w-12 h-12 rounded-full border-2 border-[#0F5B45] flex items-center justify-center text-[#0F5B45] text-xl ${!isValidGuestCount(adults + teens + children + 1) ? 'opacity-30 cursor-not-allowed' : ''}`}
-                    disabled={!isValidGuestCount(adults + teens + children + 1)}
-                  >
-                    +
-                  </button>
-                </div>
-              </div>
-              <div
-                className="
-    flex flex-col items-center text-center py-6
-    sm:flex-row sm:justify-between sm:text-left
-  "
-              >
-                <span className="text-lg font-semibold text-[#09432B]">
-                  Children & Infants (0–12 years)
-                </span>
-
-                <div className="flex items-center gap-6 mt-4 sm:mt-0">
-                  <button
-                    onClick={() => onChangeChildren("dec")}
-                    className={`w-12 h-12 rounded-full border-2 border-[#0F5B45] flex items-center justify-center text-[#0F5B45] text-xl ${children <= 0 || !isValidGuestCount(adults + teens + children - 1) ? 'opacity-30 cursor-not-allowed' : ''}`}
-                    disabled={children <= 0 || !isValidGuestCount(adults + teens + children - 1)}
-                  >
-                    –
-                  </button>
-
-                  <span className="text-2xl font-bold text-[#09432B] w-8 text-center">
-                    {children}
-                  </span>
-
-                  <button
-                    onClick={() => onChangeChildren("inc")}
-                    className={`w-12 h-12 rounded-full border-2 border-[#0F5B45] flex items-center justify-center text-xl ${!isChildrenPermitted() || !isValidGuestCount(adults + teens + children + 1) ? 'text-gray-300 border-gray-300 cursor-not-allowed opacity-30' : 'text-[#0F5B45]'}`}
-                    disabled={!isChildrenPermitted() || !isValidGuestCount(adults + teens + children + 1)}
-                  >
-                    +
-                  </button>
-                </div>
-              </div>
+              {renderGuestCounter({
+                label: "Adults (18+ years)",
+                value: adults,
+                onChange: onChangeAdults,
+                decDisabled: adults <= 1 || !canSetGuests({ adults: adults - 1 }),
+                incDisabled: !canSetGuests({ adults: adults + 1 }),
+              })}
+              {renderGuestCounter({
+                label: "Teens (13–17 years)",
+                value: teens,
+                onChange: onChangeTeens,
+                decDisabled: teens <= 0 || !canSetGuests({ teenagers: teens - 1 }),
+                incDisabled: !canSetGuests({ teenagers: teens + 1 }),
+              })}
+              {renderGuestCounter({
+                label: "Infants (0–1 year) — Free",
+                value: infants,
+                onChange: onChangeInfants,
+                decDisabled: infants <= 0 || !canSetGuests({ infants: infants - 1 }),
+                incDisabled: !canAddUnder13({ infants: infants + 1 }),
+              })}
+              {renderGuestCounter({
+                label: "Toddlers (1–3 years) — 25% less adult rate",
+                value: toddlers,
+                onChange: onChangeToddlers,
+                decDisabled: toddlers <= 0 || !canSetGuests({ toddlers: toddlers - 1 }),
+                incDisabled: !canAddUnder13({ toddlers: toddlers + 1 }),
+              })}
+              {renderGuestCounter({
+                label: "Children (4–12 years) — 50% less adult rate",
+                value: children,
+                onChange: onChangeChildren,
+                decDisabled: children <= 0 || !canSetGuests({ children: children - 1 }),
+                incDisabled: !canAddUnder13({ children: children + 1 }),
+              })}
               
               {!isChildrenPermitted() && (
                 <div className="flex items-center gap-2 mt-4 text-amber-700 bg-amber-50 p-3 rounded-lg border border-amber-200">
@@ -430,7 +348,9 @@ export default function GuestDetails() {
                 const totalGuests =
                   (guestCounts.adults || 0) +
                   (guestCounts.teenagers || 0) +
-                  (guestCounts.children || 0);
+                  (guestCounts.toddlers || 0) +
+                  (guestCounts.children || 0) +
+                  (guestCounts.infants || 0);
                 const pricingConfig = bookingStore.draft.pricingConfig || {};
                 const basePricePerPod =
                   pricingConfig.basePricePerPod !== undefined

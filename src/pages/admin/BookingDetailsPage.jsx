@@ -453,12 +453,12 @@ export default function BookingDetailsPage() {
             </div>
             <p className="text-sm text-gray-600">
               {bookingGuests.adults || 2} Adults (18+)
-              {bookingGuests.children > 0 &&
-                `, ${bookingGuests.children} Children`}
               {bookingGuests.toddlers > 0 &&
                 `, ${bookingGuests.toddlers} Toddlers`}
               {bookingGuests.children > 0 &&
                 `, ${bookingGuests.children} Children`}
+              {bookingGuests.infants > 0 &&
+                `, ${bookingGuests.infants} Infants`}
             </p>
             <p className="text-sm text-gray-600">
               1- {guest.fullName || "Guest"} - {guest.email || ""}

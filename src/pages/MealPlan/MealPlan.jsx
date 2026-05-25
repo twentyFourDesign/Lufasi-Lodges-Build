@@ -258,7 +258,9 @@ export default function MealPlan() {
                 const totalGuests =
                   (guestCounts.adults || 0) +
                   (guestCounts.teenagers || 0) +
-                  (guestCounts.children || 0);
+                  (guestCounts.toddlers || 0) +
+                  (guestCounts.children || 0) +
+                  (guestCounts.infants || 0);
                 const pricingConfig = bookingStore.draft.pricingConfig || {};
                 const basePricePerPod =
                   pricingConfig.basePricePerPod !== undefined

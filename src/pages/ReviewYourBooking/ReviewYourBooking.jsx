@@ -18,6 +18,7 @@ import { format } from "date-fns/format";
 import { BASE_URL } from "@/config";
 import { formatDateSafe } from "@/lib/utils";
 import { calculateStayRoomSubtotal } from "@/lib/stayPricing";
+import { isFamilyCompositionAllowed } from "@/lib/familyRules";
 import {
   Dialog,
   DialogContent,
@@ -93,7 +94,12 @@ export default function ReviewYourBooking() {
 
   const calculatePricing = () => {
     const guestCounts = bookingStore.draft.guests || {};
-    const totalGuests = (guestCounts.adults || 0) + (guestCounts.teenagers || 0) + (guestCounts.children || 0);
+    const totalGuests =
+      (guestCounts.adults || 0) +
+      (guestCounts.teenagers || 0) +
+      (guestCounts.toddlers || 0) +
+      (guestCounts.children || 0) +
+      (guestCounts.infants || 0);
     const pricingConfig = bookingStore.draft.pricingConfig || {};
     const pods = bookingStore.draft.podCount || 1;
     const checkIn = bookingStore.draft.dates?.checkIn;
@@ -110,12 +116,12 @@ export default function ReviewYourBooking() {
 
     const { subtotal: roomSubtotal } = calculateStayRoomSubtotal({
       ...stayPricingArgs,
-      guestsCount: totalGuests < 1 ? 1 : totalGuests,
+      guestCounts,
     });
 
     const { subtotal: baseForStayPreview } = calculateStayRoomSubtotal({
       ...stayPricingArgs,
-      guestsCount: pods,
+      guestCounts: { adults: pods },
     });
 
     const extrasTotal =
@@ -199,6 +205,9 @@ export default function ReviewYourBooking() {
     const guests = draft.guests || {};
     if (!guests.adults || guests.adults < 1) {
       return "At least one adult guest is required for a booking.";
+    }
+    if (!isFamilyCompositionAllowed(guests, draft.podCount || 1)) {
+      return "Guest mix does not match the family occupancy rules for the selected number of domes.";
     }
     return null;
   };
@@ -423,9 +432,21 @@ export default function ReviewYourBooking() {
                 </div>
                 <div>
                   <h4 className="font-semibold text-[#09432B]">Guests</h4>
-                  <p className="text-sm text-[#6B6B6B]">
-                    {bookingStore.draft.guests?.adults || 0} Adults (18+)
-                  </p>
+                  <div className="text-sm text-[#6B6B6B] space-y-1">
+                    <p>{bookingStore.draft.guests?.adults || 0} Adults (18+)</p>
+                    {(bookingStore.draft.guests?.teenagers || 0) > 0 && (
+                      <p>{bookingStore.draft.guests?.teenagers} Teens (13–17)</p>
+                    )}
+                    {(bookingStore.draft.guests?.infants || 0) > 0 && (
+                      <p>{bookingStore.draft.guests?.infants} Infants (0–1)</p>
+                    )}
+                    {(bookingStore.draft.guests?.toddlers || 0) > 0 && (
+                      <p>{bookingStore.draft.guests?.toddlers} Toddlers (1–3)</p>
+                    )}
+                    {(bookingStore.draft.guests?.children || 0) > 0 && (
+                      <p>{bookingStore.draft.guests?.children} Children (4–12)</p>
+                    )}
+                  </div>
                 </div>
               </CardContent>
             </Card>

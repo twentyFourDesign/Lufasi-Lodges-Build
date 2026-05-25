@@ -520,7 +520,9 @@ export default function NewBooking() {
               <p className="text-sm text-[#737373] font-medium mt-1">
                 {`Guests: ${(bookingStore.draft.guests?.adults || 0) +
                   (bookingStore.draft.guests?.teenagers || 0) +
-                  (bookingStore.draft.guests?.children || 0)
+                  (bookingStore.draft.guests?.toddlers || 0) +
+                  (bookingStore.draft.guests?.children || 0) +
+                  (bookingStore.draft.guests?.infants || 0)
                   }`}
               </p>
             </div>
@@ -541,7 +543,9 @@ export default function NewBooking() {
                 const totalGuests =
                   (guestCounts.adults || 0) +
                   (guestCounts.teenagers || 0) +
-                  (guestCounts.children || 0);
+                  (guestCounts.toddlers || 0) +
+                  (guestCounts.children || 0) +
+                  (guestCounts.infants || 0);
                 const basePricePerPod =
                   pricingConfig?.basePricePerPod !== undefined
                     ? pricingConfig.basePricePerPod

@@ -68,7 +68,9 @@ export default function BookingForm() {
         guests: {
           adults: parseInt(guests.match(/(\d+)/)[1]) || 1,
           teenagers: 0,
+          toddlers: 0,
           children: 0,
+          infants: 0,
         },
         numberOfNights: differenceInCalendarDays(checkOut, checkIn),
         availablePods: pods,

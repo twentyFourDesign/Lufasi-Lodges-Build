@@ -54,7 +54,9 @@ type BookingDraft = {
   guests?: {
     adults: number;
     teenagers: number;
+    toddlers?: number;
     children: number;
+    infants?: number;
   };
   numberOfNights?: number;
   basePrice?: number;
@@ -148,11 +150,13 @@ export const useBookingStore = create<BookingStore>()(
 );
 
 export const calculateDynamicSubTotal = (draft: BookingDraft): number => {
-  const guestCounts = draft.guests || { adults: 0, teenagers: 0, children: 0 };
-  const totalGuests =
-    (guestCounts.adults || 0) +
-    (guestCounts.teenagers || 0) +
-    (guestCounts.children || 0);
+  const guestCounts = draft.guests || {
+    adults: 0,
+    teenagers: 0,
+    toddlers: 0,
+    children: 0,
+    infants: 0,
+  };
   const pricingConfig = draft.pricingConfig || {
     basePricePerPod: 400000,
     extraGuestFee: 100000,
@@ -169,7 +173,7 @@ export const calculateDynamicSubTotal = (draft: BookingDraft): number => {
     checkIn,
     checkOut,
     podsCount: pods,
-    guestsCount: totalGuests,
+    guestCounts,
     pricingConfig,
     seasonalRates: draft.seasonalRatePeriods ?? [],
   });

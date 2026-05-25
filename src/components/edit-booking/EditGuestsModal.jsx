@@ -10,7 +10,7 @@ import { Button } from "@/components/ui/button";
 
 export default function EditGuestsModal({ open, onOpenChange, value, onSave }) {
   const [local, setLocal] = useState(
-    value || { adults: 2, teenagers: 0, children: 0 }
+    value || { adults: 2, teenagers: 0, infants: 0, toddlers: 0, children: 0 }
   );
 
   const change = (key, delta) => {
@@ -66,7 +66,33 @@ export default function EditGuestsModal({ open, onOpenChange, value, onSave }) {
             </div>
 
             <div className="w-full flex items-center justify-between">
-              <div className="text-sm">Children (0-12 years)</div>
+              <div className="text-sm">Infants (0-1 year)</div>
+              <div className="flex items-center gap-3">
+                <Button variant="outline" onClick={() => change("infants", -1)}>
+                  -
+                </Button>
+                <div className="min-w-[32px] text-center">{local.infants || 0}</div>
+                <Button variant="outline" onClick={() => change("infants", 1)}>
+                  +
+                </Button>
+              </div>
+            </div>
+
+            <div className="w-full flex items-center justify-between">
+              <div className="text-sm">Toddlers (1-3 years)</div>
+              <div className="flex items-center gap-3">
+                <Button variant="outline" onClick={() => change("toddlers", -1)}>
+                  -
+                </Button>
+                <div className="min-w-[32px] text-center">{local.toddlers || 0}</div>
+                <Button variant="outline" onClick={() => change("toddlers", 1)}>
+                  +
+                </Button>
+              </div>
+            </div>
+
+            <div className="w-full flex items-center justify-between">
+              <div className="text-sm">Children (4-12 years)</div>
               <div className="flex items-center gap-3">
                 <Button variant="outline" onClick={() => change("children", -1)}>
                   -
