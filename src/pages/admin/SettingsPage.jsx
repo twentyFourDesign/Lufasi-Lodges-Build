@@ -36,6 +36,12 @@ export default function SettingsPage() {
     const [uploadingImage, setUploadingImage] = useState(false);
     const [currentDefaultImage, setCurrentDefaultImage] = useState(`${BASE_URL}/uploads/pods/default-pod.png`);
 
+    // Admin login background image upload state
+    const [loginBgImage, setLoginBgImage] = useState(null);
+    const [uploadingLoginBg, setUploadingLoginBg] = useState(false);
+    const [currentLoginBg, setCurrentLoginBg] = useState(`${BASE_URL}/uploads/branding/admin-login-bg.png?t=${Date.now()}`);
+    const [loginBgMissing, setLoginBgMissing] = useState(false);
+
     useEffect(() => {
         fetchUsers();
         fetchHolidays();
@@ -205,6 +211,46 @@ export default function SettingsPage() {
         setShowEditHolidayModal(true);
     };
 
+    // Handle admin login background upload
+    const handleLoginBgUpload = async () => {
+        if (!loginBgImage) {
+            alert("Please select an image first");
+            return;
+        }
+
+        setUploadingLoginBg(true);
+        try {
+            const formData = new FormData();
+            formData.append("image", loginBgImage);
+
+            const response = await fetch(`${BASE_URL}/uploads/admin-login-bg`, {
+                method: "POST",
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                },
+                body: formData,
+            });
+
+            if (!response.ok) {
+                const data = await response.json();
+                throw new Error(data.error || "Failed to upload image");
+            }
+
+            const data = await response.json();
+            const url = data.imageUrl?.startsWith("http")
+                ? data.imageUrl
+                : `${BASE_URL}/uploads/branding/admin-login-bg.png`;
+            setCurrentLoginBg(`${url}?t=${Date.now()}`);
+            setLoginBgMissing(false);
+            setLoginBgImage(null);
+            alert("Admin login background updated successfully!");
+        } catch (err) {
+            alert("Upload failed: " + err.message);
+        } finally {
+            setUploadingLoginBg(false);
+        }
+    };
+
     // Handle default pod image upload
     const handleDefaultImageUpload = async () => {
         if (!defaultPodImage) {
@@ -344,6 +390,96 @@ export default function SettingsPage() {
                                 {defaultPodImage && (
                                     <button
                                         onClick={() => setDefaultPodImage(null)}
+                                        className="px-4 py-2 border border-gray-300 rounded-lg text-gray-600 hover:bg-gray-50"
+                                    >
+                                        Cancel
+                                    </button>
+                                )}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                {/* Admin Login Background Section */}
+                <div className="bg-white rounded-lg border border-gray-100 shadow-sm p-6">
+                    <h2 className="text-lg font-semibold text-[#333333] mb-4">Admin Login Background</h2>
+                    <p className="text-sm text-gray-500 mb-4">
+                        This image is used as the background on the admin login page.
+                    </p>
+                    <div className="flex items-start gap-6 flex-wrap">
+                        {/* Current Image */}
+                        <div className="flex-shrink-0">
+                            <p className="text-xs font-medium text-gray-500 mb-2">Current Background</p>
+                            <div className="w-48 h-32 bg-gray-100 rounded-lg border border-gray-200 overflow-hidden">
+                                {loginBgMissing ? (
+                                    <div className="w-full h-full flex items-center justify-center text-center text-gray-400 text-xs px-2">
+                                        Using default fallback image
+                                    </div>
+                                ) : (
+                                    <img
+                                        src={currentLoginBg}
+                                        alt="Current admin login background"
+                                        className="w-full h-full object-cover"
+                                        onError={() => setLoginBgMissing(true)}
+                                    />
+                                )}
+                            </div>
+                        </div>
+
+                        {/* New Image Preview */}
+                        <div className="flex-shrink-0">
+                            <p className="text-xs font-medium text-gray-500 mb-2">New Image Preview</p>
+                            <div className="w-48 h-32 bg-gray-100 rounded-lg border-2 border-dashed border-gray-300 overflow-hidden flex items-center justify-center">
+                                {loginBgImage ? (
+                                    <img
+                                        src={URL.createObjectURL(loginBgImage)}
+                                        alt="New background preview"
+                                        className="w-full h-full object-cover"
+                                    />
+                                ) : (
+                                    <div className="text-center text-gray-400">
+                                        <svg className="w-8 h-8 mx-auto mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                        </svg>
+                                        <span className="text-xs">No image selected</span>
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+
+                        {/* Upload Controls */}
+                        <div className="flex-1 min-w-[200px]">
+                            <p className="text-xs font-medium text-gray-500 mb-2">Upload New Background</p>
+                            <div className="flex flex-col gap-3">
+                                <input
+                                    type="file"
+                                    accept="image/*"
+                                    onChange={(e) => setLoginBgImage(e.target.files?.[0] || null)}
+                                    className="hidden"
+                                    id="admin-login-bg-input"
+                                />
+                                <label
+                                    htmlFor="admin-login-bg-input"
+                                    className="inline-flex items-center justify-center px-4 py-2 border border-gray-300 rounded-lg text-gray-600 hover:bg-gray-50 cursor-pointer"
+                                >
+                                    <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+                                    </svg>
+                                    Choose Image
+                                </label>
+                                {loginBgImage && (
+                                    <p className="text-sm text-gray-600 truncate">{loginBgImage.name}</p>
+                                )}
+                                <button
+                                    onClick={handleLoginBgUpload}
+                                    disabled={!loginBgImage || uploadingLoginBg}
+                                    className="px-4 py-2 bg-[#008080] text-white rounded-lg hover:bg-[#006666] disabled:opacity-50 disabled:cursor-not-allowed"
+                                >
+                                    {uploadingLoginBg ? "Uploading..." : "Upload & Replace"}
+                                </button>
+                                {loginBgImage && (
+                                    <button
+                                        onClick={() => setLoginBgImage(null)}
                                         className="px-4 py-2 border border-gray-300 rounded-lg text-gray-600 hover:bg-gray-50"
                                     >
                                         Cancel

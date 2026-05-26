@@ -1,7 +1,11 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import useAuthStore from "@/store/useAuthStore";
 import { isAdminSubdomain } from "@/utils/subdomain";
+import { BASE_URL } from "@/config";
+
+const FALLBACK_LOGIN_BG = "/default-pod.png";
+const DYNAMIC_LOGIN_BG = `${BASE_URL}/uploads/branding/admin-login-bg.png`;
 
 export default function AdminLogin() {
     const navigate = useNavigate();
@@ -12,6 +16,23 @@ export default function AdminLogin() {
         password: "",
     });
     const [validationErrors, setValidationErrors] = useState({});
+    const [backgroundUrl, setBackgroundUrl] = useState(FALLBACK_LOGIN_BG);
+
+    useEffect(() => {
+        let cancelled = false;
+        const candidate = `${DYNAMIC_LOGIN_BG}?t=${Date.now()}`;
+        const img = new Image();
+        img.onload = () => {
+            if (!cancelled) setBackgroundUrl(candidate);
+        };
+        img.onerror = () => {
+            if (!cancelled) setBackgroundUrl(FALLBACK_LOGIN_BG);
+        };
+        img.src = candidate;
+        return () => {
+            cancelled = true;
+        };
+    }, []);
 
     const handleChange = (e) => {
         const { name, value } = e.target;
@@ -60,7 +81,7 @@ export default function AdminLogin() {
         <div
             className="fixed inset-0 flex items-center justify-center"
             style={{
-                backgroundImage: "url('/default-pod.png')",
+                backgroundImage: `url('${backgroundUrl}')`,
                 backgroundSize: "cover",
                 backgroundPosition: "center",
                 backgroundRepeat: "no-repeat",
