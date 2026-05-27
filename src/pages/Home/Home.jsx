@@ -8,93 +8,95 @@ import BookingForm from "@/components/Home/BookingForm/BookingForm";
 import Footer from "@/components/shared/Footer/Footer";
 import { Link } from "react-router-dom";
 import ComingSoonPage from "@/components/shared/ComingSoonPage";
-import { isComingSoonEnabled, BASE_URL } from "@/config";
+import { isComingSoonEnabled } from "@/config";
+// import { BASE_URL } from "@/config"; // Uncomment when re-enabling EmailTestButton below
 
-// TEMPORARY: floating email-test button on the home page. Remove once SMTP is verified.
-function EmailTestButton() {
-  const [email, setEmail] = useState("vishurizz0@gmail.com");
-  const [status, setStatus] = useState(null);
-  const [loading, setLoading] = useState(false);
-  const [open, setOpen] = useState(false);
-
-  const sendTest = async () => {
-    setLoading(true);
-    setStatus(null);
-    try {
-      const res = await fetch(`${BASE_URL}/config/email/test-public`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ to: email }),
-      });
-      const data = await res.json();
-      setStatus({ ok: !!data.ok, data });
-    } catch (err) {
-      setStatus({ ok: false, data: { error: err.message } });
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  return (
-    <div className="fixed bottom-4 right-4 z-50">
-      {open ? (
-        <div className="bg-white rounded-lg shadow-2xl border border-gray-200 p-4 w-80 text-left">
-          <div className="flex items-center justify-between mb-3">
-            <h4 className="font-semibold text-[#09432B]">Email SMTP Test</h4>
-            <button
-              onClick={() => setOpen(false)}
-              className="text-gray-400 hover:text-gray-600 text-lg leading-none"
-              aria-label="Close"
-            >
-              ×
-            </button>
-          </div>
-          <label className="block text-xs text-gray-600 mb-1">Send test to</label>
-          <input
-            type="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            className="w-full px-3 py-2 border border-gray-300 rounded text-sm mb-3 text-black"
-            placeholder="you@example.com"
-          />
-          <button
-            onClick={sendTest}
-            disabled={loading || !email}
-            className="w-full bg-[#09432B] text-white text-sm font-semibold py-2 rounded hover:bg-[#083f28] disabled:opacity-60 disabled:cursor-not-allowed"
-          >
-            {loading ? "Sending..." : "Send test email"}
-          </button>
-          {status && (
-            <div
-              className={`mt-3 text-xs rounded p-2 border ${
-                status.ok
-                  ? "bg-green-50 border-green-200 text-green-800"
-                  : "bg-red-50 border-red-200 text-red-800"
-              }`}
-            >
-              <div className="font-semibold mb-1">
-                {status.ok ? "Sent ✓" : "Failed ✗"}
-              </div>
-              <pre className="whitespace-pre-wrap break-all">
-                {JSON.stringify(status.data, null, 2)}
-              </pre>
-              {status.ok && (
-                <div className="mt-1 italic">Check inbox (and Spam).</div>
-              )}
-            </div>
-          )}
-        </div>
-      ) : (
-        <button
-          onClick={() => setOpen(true)}
-          className="bg-[#09432B] text-white text-xs font-semibold px-3 py-2 rounded-full shadow-lg hover:bg-[#083f28]"
-        >
-          Test email
-        </button>
-      )}
-    </div>
-  );
-}
+// TEMPORARY: floating email-test button on the home page. Re-enable by uncommenting
+// the component below, the BASE_URL import above, and the <EmailTestButton /> mount.
+// function EmailTestButton() {
+//   const [email, setEmail] = useState("vishurizz0@gmail.com");
+//   const [status, setStatus] = useState(null);
+//   const [loading, setLoading] = useState(false);
+//   const [open, setOpen] = useState(false);
+//
+//   const sendTest = async () => {
+//     setLoading(true);
+//     setStatus(null);
+//     try {
+//       const res = await fetch(`${BASE_URL}/config/email/test-public`, {
+//         method: "POST",
+//         headers: { "Content-Type": "application/json" },
+//         body: JSON.stringify({ to: email }),
+//       });
+//       const data = await res.json();
+//       setStatus({ ok: !!data.ok, data });
+//     } catch (err) {
+//       setStatus({ ok: false, data: { error: err.message } });
+//     } finally {
+//       setLoading(false);
+//     }
+//   };
+//
+//   return (
+//     <div className="fixed bottom-4 right-4 z-50">
+//       {open ? (
+//         <div className="bg-white rounded-lg shadow-2xl border border-gray-200 p-4 w-80 text-left">
+//           <div className="flex items-center justify-between mb-3">
+//             <h4 className="font-semibold text-[#09432B]">Email SMTP Test</h4>
+//             <button
+//               onClick={() => setOpen(false)}
+//               className="text-gray-400 hover:text-gray-600 text-lg leading-none"
+//               aria-label="Close"
+//             >
+//               ×
+//             </button>
+//           </div>
+//           <label className="block text-xs text-gray-600 mb-1">Send test to</label>
+//           <input
+//             type="email"
+//             value={email}
+//             onChange={(e) => setEmail(e.target.value)}
+//             className="w-full px-3 py-2 border border-gray-300 rounded text-sm mb-3 text-black"
+//             placeholder="you@example.com"
+//           />
+//           <button
+//             onClick={sendTest}
+//             disabled={loading || !email}
+//             className="w-full bg-[#09432B] text-white text-sm font-semibold py-2 rounded hover:bg-[#083f28] disabled:opacity-60 disabled:cursor-not-allowed"
+//           >
+//             {loading ? "Sending..." : "Send test email"}
+//           </button>
+//           {status && (
+//             <div
+//               className={`mt-3 text-xs rounded p-2 border ${
+//                 status.ok
+//                   ? "bg-green-50 border-green-200 text-green-800"
+//                   : "bg-red-50 border-red-200 text-red-800"
+//               }`}
+//             >
+//               <div className="font-semibold mb-1">
+//                 {status.ok ? "Sent ✓" : "Failed ✗"}
+//               </div>
+//               <pre className="whitespace-pre-wrap break-all">
+//                 {JSON.stringify(status.data, null, 2)}
+//               </pre>
+//               {status.ok && (
+//                 <div className="mt-1 italic">Check inbox (and Spam).</div>
+//               )}
+//             </div>
+//           )}
+//         </div>
+//       ) : (
+//         <button
+//           onClick={() => setOpen(true)}
+//           className="bg-[#09432B] text-white text-xs font-semibold px-3 py-2 rounded-full shadow-lg hover:bg-[#083f28]"
+//         >
+//           Test email
+//         </button>
+//       )}
+//     </div>
+//   );
+// }
 
 export default function Home() {
   const [isMobile, setIsMobile] = useState(false);
@@ -189,8 +191,8 @@ export default function Home() {
         <Footer />
       </div>
 
-      {/* TEMP: remove once Gmail SMTP is verified */}
-      <EmailTestButton />
+      {/* TEMP: re-enable for SMTP testing */}
+      {/* <EmailTestButton /> */}
     </div>
   );
 }
