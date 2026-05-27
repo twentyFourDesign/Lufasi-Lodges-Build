@@ -446,6 +446,11 @@ export default function ReviewYourBooking() {
                     {(bookingStore.draft.guests?.children || 0) > 0 && (
                       <p>{bookingStore.draft.guests?.children} Children (4–12)</p>
                     )}
+                    {(bookingStore.draft.popUpBeds || 0) > 0 && (
+                      <p className="text-[#09432B] italic">
+                        + {bookingStore.draft.popUpBeds} Pop-up bed{(bookingStore.draft.popUpBeds || 0) === 1 ? "" : "s"} (no extra charge)
+                      </p>
+                    )}
                   </div>
                 </div>
               </CardContent>

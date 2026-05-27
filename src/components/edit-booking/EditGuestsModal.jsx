@@ -7,15 +7,27 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
+import { getMaxPopUpBeds } from "@/lib/familyRules";
 
-export default function EditGuestsModal({ open, onOpenChange, value, onSave }) {
+export default function EditGuestsModal({ open, onOpenChange, value, onSave, podCount = 1 }) {
   const [local, setLocal] = useState(
-    value || { adults: 2, teenagers: 0, infants: 0, toddlers: 0, children: 0 }
+    value || {
+      adults: 2,
+      teenagers: 0,
+      infants: 0,
+      toddlers: 0,
+      children: 0,
+      popUpBeds: 0,
+    }
   );
+
+  const maxPopUp = getMaxPopUpBeds(local, podCount);
 
   const change = (key, delta) => {
     setLocal((s) => {
       const next = { ...s, [key]: Math.max(0, (s[key] || 0) + delta) };
+      const cappedPop = Math.min(next.popUpBeds || 0, getMaxPopUpBeds(next, podCount));
+      next.popUpBeds = cappedPop;
       return next;
     });
   };
@@ -103,6 +115,32 @@ export default function EditGuestsModal({ open, onOpenChange, value, onSave }) {
                 </Button>
               </div>
             </div>
+
+            {maxPopUp > 0 && (
+              <div className="w-full flex items-center justify-between">
+                <div>
+                  <div className="text-sm">Pop-up bed for child</div>
+                  <div className="text-[11px] text-gray-500">No extra charge</div>
+                </div>
+                <div className="flex items-center gap-3">
+                  <Button
+                    variant="outline"
+                    onClick={() => change("popUpBeds", -1)}
+                    disabled={(local.popUpBeds || 0) <= 0}
+                  >
+                    -
+                  </Button>
+                  <div className="min-w-[32px] text-center">{local.popUpBeds || 0}</div>
+                  <Button
+                    variant="outline"
+                    onClick={() => change("popUpBeds", 1)}
+                    disabled={(local.popUpBeds || 0) >= maxPopUp}
+                  >
+                    +
+                  </Button>
+                </div>
+              </div>
+            )}
           </div>
 
           <div

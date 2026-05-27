@@ -20,6 +20,8 @@ import { formatDateSafe } from "@/lib/utils";
 import {
   isFamilyCompositionAllowed,
   normalizeFamilyGuests,
+  findMinValidPodCount,
+  getMaxPopUpBeds,
 } from "@/lib/familyRules";
 function formatPrice(n) {
   return n.toLocaleString();
@@ -34,8 +36,14 @@ export default function GuestDetails() {
   const [toddlers, setToddlers] = useState(bookingStore.draft.guests?.toddlers || 0);
   const [children, setChildren] = useState(bookingStore.draft.guests?.children || 0);
   const [infants, setInfants] = useState(bookingStore.draft.guests?.infants || 0);
+  const [popUpBeds, setPopUpBeds] = useState(bookingStore.draft.popUpBeds || 0);
   const [subTotal, setSubTotal] = useState(bookingStore.draft?.subTotal || 0);
   const [schoolHolidays, setSchoolHolidays] = useState([]);
+  const [noticeMessage, setNoticeMessage] = useState(null);
+
+  const availablePodsCount = Array.isArray(bookingStore.draft.availablePods)
+    ? bookingStore.draft.availablePods.filter((p) => p.available === true).length
+    : 6;
 
   useEffect(() => {
     async function fetchHolidays() {
@@ -72,11 +80,6 @@ export default function GuestDetails() {
     });
   };
 
-  const isValidGuestCount = (nextGuests) => {
-    const podCount = bookingStore.draft.podCount || 1;
-    return isFamilyCompositionAllowed(nextGuests, podCount);
-  };
-
   const currentGuests = () => ({
     adults,
     teenagers: teens,
@@ -85,20 +88,64 @@ export default function GuestDetails() {
     infants,
   });
 
+  /**
+   * Returns the pod count that should be used for the given composition.
+   * - Keeps the current pod count if it already satisfies the rules.
+   * - Otherwise auto-bumps to the smallest valid pod count, capped by availability.
+   * - Returns null if no valid configuration fits.
+   */
+  const resolvePodCount = (normalizedGuests) => {
+    const currentPods = Number(bookingStore.draft.podCount) || 1;
+    if (isFamilyCompositionAllowed(normalizedGuests, currentPods)) {
+      return { pods: currentPods, bumped: false };
+    }
+    const needed = findMinValidPodCount(normalizedGuests);
+    if (needed === null) return { pods: null, bumped: false };
+    if (needed > availablePodsCount) return { pods: null, bumped: false };
+    return { pods: needed, bumped: true };
+  };
+
+  const isValidGuestCount = (nextGuests) => {
+    const { pods } = resolvePodCount(normalizeFamilyGuests(nextGuests));
+    return pods !== null;
+  };
+
   const updateGuestCounts = (nextGuests) => {
     const normalized = normalizeFamilyGuests(nextGuests);
-    if (!isValidGuestCount(normalized)) return;
-    if (
-      (normalized.infants + normalized.toddlers + normalized.children > 0) &&
-      !isChildrenPermitted()
-    ) {
+    const hasUnder13 =
+      normalized.infants + normalized.toddlers + normalized.children > 0;
+
+    const { pods, bumped } = resolvePodCount(normalized);
+    if (pods === null) {
+      setNoticeMessage(
+        "We can't fit this guest mix in the available domes. Please change your dates or reduce guests.",
+      );
       return;
     }
 
-    const nextDraft = {
-      ...bookingStore.draft,
+    if (hasUnder13 && !isChildrenPermitted() && pods !== 6) {
+      setNoticeMessage(
+        "Children aged 0–12 are only permitted on Children-Allowed Dates or with a full camp takeover (6 domes).",
+      );
+      return;
+    }
+
+    const podCountChanged = pods !== (Number(bookingStore.draft.podCount) || 1);
+
+    const maxPopUps = getMaxPopUpBeds(normalized, pods);
+    const nextPopUps = Math.min(popUpBeds, maxPopUps);
+
+    const nextDraftPartial = {
       guests: normalized,
+      podCount: pods,
+      popUpBeds: nextPopUps,
     };
+    // If pod count changed, bed configuration must be redone for the new dome count.
+    if (podCountChanged) {
+      nextDraftPartial.domeDetails = [];
+      nextDraftPartial.bedConfiguration = "";
+    }
+    const nextDraft = { ...bookingStore.draft, ...nextDraftPartial };
     const nextSubTotal = calculateDynamicSubTotal(nextDraft);
 
     setAdults(normalized.adults);
@@ -106,11 +153,26 @@ export default function GuestDetails() {
     setToddlers(normalized.toddlers);
     setChildren(normalized.children);
     setInfants(normalized.infants);
+    setPopUpBeds(nextPopUps);
     setSubTotal(nextSubTotal);
-    bookingStore.updateDraft({
-      guests: normalized,
-      subTotal: nextSubTotal,
-    });
+    bookingStore.updateDraft({ ...nextDraftPartial, subTotal: nextSubTotal });
+
+    if (bumped && podCountChanged) {
+      setNoticeMessage(
+        `Your guest mix now requires ${pods} dome${pods === 1 ? "" : "s"}. We've updated your room count to match — please review your bed configuration.`,
+      );
+    } else {
+      setNoticeMessage(null);
+    }
+  };
+
+  const onChangePopUpBeds = (type) => {
+    const next = type === "dec" ? popUpBeds - 1 : popUpBeds + 1;
+    const podCount = Number(bookingStore.draft.podCount) || 1;
+    const max = getMaxPopUpBeds(currentGuests(), podCount);
+    if (next < 0 || next > max) return;
+    setPopUpBeds(next);
+    bookingStore.updateDraft({ popUpBeds: next });
   };
 
   const onChangeAdults = (type) => {
@@ -247,13 +309,40 @@ export default function GuestDetails() {
                 decDisabled: children <= 0 || !canSetGuests({ children: children - 1 }),
                 incDisabled: !canAddUnder13({ children: children + 1 }),
               })}
-              
+
+              {(children + toddlers) > 0 && (() => {
+                const podCount = Number(bookingStore.draft.podCount) || 1;
+                const max = getMaxPopUpBeds(currentGuests(), podCount);
+                if (max <= 0) return null;
+                return (
+                  <div className="border-t pt-2">
+                    {renderGuestCounter({
+                      label: "Pop-up bed for child (no extra charge)",
+                      value: popUpBeds,
+                      onChange: onChangePopUpBeds,
+                      decDisabled: popUpBeds <= 0,
+                      incDisabled: popUpBeds >= max,
+                    })}
+                    <p className="text-xs text-gray-500 -mt-2">
+                      Optional. Without it, the child shares the king bed.
+                    </p>
+                  </div>
+                );
+              })()}
+
               {!isChildrenPermitted() && (
                 <div className="flex items-center gap-2 mt-4 text-amber-700 bg-amber-50 p-3 rounded-lg border border-amber-200">
                   <Info className="w-4 h-4 flex-shrink-0" />
                   <p className="text-xs font-semibold">
                     Children aged 0-12 are only permitted when booking a full camp takeover (all 6 domes) or on dates designated by the lodge.
                   </p>
+                </div>
+              )}
+
+              {noticeMessage && (
+                <div className="flex items-start gap-2 mt-4 text-blue-700 bg-blue-50 p-3 rounded-lg border border-blue-200">
+                  <Info className="w-4 h-4 flex-shrink-0 mt-0.5" />
+                  <p className="text-xs font-semibold">{noticeMessage}</p>
                 </div>
               )}
             </div>

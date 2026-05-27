@@ -188,9 +188,11 @@ export default function EditBookingPage() {
     }, 2000);
   };
 
-  const setGuests = (guests) => {
+  const setGuests = (guestsWithPopUp) => {
+    const { popUpBeds, ...guests } = guestsWithPopUp || {};
     bookingStore.updateDraft({
       guests,
+      popUpBeds: Number(popUpBeds) || 0,
     });
     setTimeout(() => {
       handleEditBooking();
@@ -351,7 +353,11 @@ export default function EditBookingPage() {
       <EditGuestsModal
         open={guestOpen}
         onOpenChange={setGuestOpen}
-        value={bookingStore.draft.guests}
+        value={{
+          ...(bookingStore.draft.guests || {}),
+          popUpBeds: bookingStore.draft.popUpBeds || 0,
+        }}
+        podCount={bookingStore.draft.podCount || 1}
         onSave={setGuests}
       />
 

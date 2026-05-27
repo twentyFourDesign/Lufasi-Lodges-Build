@@ -58,6 +58,7 @@ type BookingDraft = {
     children: number;
     infants?: number;
   };
+  popUpBeds?: number;
   numberOfNights?: number;
   basePrice?: number;
   pricingConfig?: {

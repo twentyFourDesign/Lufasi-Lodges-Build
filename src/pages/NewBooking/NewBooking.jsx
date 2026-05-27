@@ -10,6 +10,11 @@ import { BASE_URL } from "@/config";
 import EditStayDatesModal from "@/components/edit-booking/EditStayDatesModal";
 import { toISODate, formatDateSafe, parseAvailabilityCheckResponse } from "@/lib/utils";
 import { calculateStayRoomSubtotal } from "@/lib/stayPricing";
+import {
+  findMinValidPodCount,
+  findMaxValidPodCount,
+  isFamilyCompositionAllowed,
+} from "@/lib/familyRules";
 import image1 from "@/assets/lodges/image.png";
 import image2 from "@/assets/lodges/image copy.png";
 import image3 from "@/assets/lodges/image copy 2.png";
@@ -48,67 +53,40 @@ export default function NewBooking() {
   const podTags = ["Air conditioning", "Wifi", "Forest View"];
 
   const getPodLimits = () => {
-    const adults = bookingStore.draft.guests?.adults || 0;
-    const guestCount = adults > 0 ? adults : 1;
+    const guestsRaw = bookingStore.draft.guests || {};
+    const guests = {
+      adults: guestsRaw.adults || 0,
+      teenagers: guestsRaw.teenagers || 0,
+      toddlers: guestsRaw.toddlers || 0,
+      children: guestsRaw.children || 0,
+      infants: guestsRaw.infants || 0,
+    };
+    const guestCount = guests.adults + guests.teenagers;
 
-    let minPods = 0;
-    let maxPods = 0;
-
-    if (availablePodsCount > 0) {
-      if (guestCount === 1) {
-        minPods = 1;
-        maxPods = 1;
-      } else if (guestCount === 2) {
-        minPods = 1;
-        maxPods = 2;
-      } else if (guestCount === 3) {
-        minPods = 2;
-        maxPods = 3;
-      } else if (guestCount === 4) {
-        minPods = 2;
-        maxPods = 4;
-      } else if (guestCount === 5) {
-        minPods = 3;
-        maxPods = 5;
-      } else if (guestCount === 6) {
-        minPods = 3;
-        maxPods = 6;
-      } else if (guestCount === 7) {
-        minPods = 4;
-        maxPods = 6;
-      } else if (guestCount === 8) {
-        minPods = 4;
-        maxPods = 6;
-      } else if (guestCount === 9) {
-        minPods = 5;
-        maxPods = 6;
-      } else if (guestCount === 10) {
-        minPods = 5;
-        maxPods = 6;
-      } else if (guestCount === 11) {
-        minPods = 6;
-        maxPods = 6;
-      } else if (guestCount === 12) {
-        minPods = 6;
-        maxPods = 6;
-      }
-
-      if (maxPods > availablePodsCount) {
-        maxPods = availablePodsCount;
-      }
-      if (minPods > maxPods) {
-        minPods = maxPods;
-      }
+    if (availablePodsCount <= 0) {
+      return { guestCount, guests, minPods: 0, maxPods: 0 };
     }
 
-    return { guestCount, minPods, maxPods };
+    const minByRules = findMinValidPodCount(guests);
+    const maxByRules = findMaxValidPodCount(guests, availablePodsCount);
+
+    if (minByRules === null || maxByRules === null) {
+      return { guestCount, guests, minPods: 0, maxPods: 0 };
+    }
+
+    const minPods = Math.min(minByRules, availablePodsCount);
+    const maxPods = Math.min(maxByRules, availablePodsCount);
+
+    return { guestCount, guests, minPods, maxPods };
   };
 
   const computeSubTotal = (guestCount, podCount) => {
+    const { guests } = getPodLimits();
     const { subtotal } = calculateStayRoomSubtotal({
       checkIn: bookingStore.draft.dates?.checkIn,
       checkOut: bookingStore.draft.dates?.checkOut,
       podsCount: podCount,
+      guestCounts: guests,
       guestsCount: guestCount,
       pricingConfig: pricingConfig ?? {},
       seasonalRates: bookingStore.draft.seasonalRatePeriods ?? [],
@@ -184,14 +162,20 @@ export default function NewBooking() {
     if (roomCount !== 0) {
       return;
     }
-    const { guestCount, minPods } = getPodLimits();
+    const { guestCount, guests, minPods, maxPods } = getPodLimits();
     if (minPods < 1) {
       return;
     }
-    setRoomCount(minPods);
+    const draftPods = Number(bookingStore.draft.podCount) || 0;
+    const validDraftPods =
+      draftPods >= minPods &&
+      draftPods <= maxPods &&
+      isFamilyCompositionAllowed(guests, draftPods);
+    const initial = validDraftPods ? draftPods : minPods;
+    setRoomCount(initial);
     bookingStore.updateDraft({
-      podCount: minPods,
-      subTotal: computeSubTotal(guestCount, minPods),
+      podCount: initial,
+      subTotal: computeSubTotal(guestCount, initial),
     });
   }, [availablePodsCount, roomCount, bookingStore]);
 
@@ -385,7 +369,7 @@ export default function NewBooking() {
                   ))}
                 </div>
 
-                {availablePodsCount > 0 ? (
+                {availablePodsCount > 0 && getPodLimits().maxPods > 0 ? (
                   <div
                     className="flex flex-col items-center text-center rounded-md p-4 mt-3"
                     style={{
@@ -401,7 +385,8 @@ export default function NewBooking() {
                     <div className="flex items-center gap-6 mt-4 sm:mt-0">
                       <button
                         onClick={() => onChangeRooms("dec")}
-                        className="w-12 h-12 rounded-full border-2 border-[#0F5B45] flex items-center justify-center text-[#0F5B45] text-xl"
+                        disabled={roomCount <= getPodLimits().minPods}
+                        className="w-12 h-12 rounded-full border-2 border-[#0F5B45] flex items-center justify-center text-[#0F5B45] text-xl disabled:pointer-events-none disabled:opacity-50"
                       >
                         –
                       </button>
@@ -422,10 +407,49 @@ export default function NewBooking() {
                       </button>
                     </div>
                     <span className="text-md text-[#09432B] pt-4">
-                      {availablePodsCount - roomCount === 0
-                        ? "Max availability reached for these dates."
-                        : `Only ${availablePodsCount - roomCount} left for your dates`}
+                      {(() => {
+                        const { minPods, maxPods } = getPodLimits();
+                        if (minPods === maxPods) {
+                          return `Your guest mix requires exactly ${minPods} dome${minPods === 1 ? "" : "s"}.`;
+                        }
+                        if (availablePodsCount - roomCount === 0) {
+                          return "Max availability reached for these dates.";
+                        }
+                        return `Only ${availablePodsCount - roomCount} left for your dates`;
+                      })()}
                     </span>
+                  </div>
+                ) : availablePodsCount > 0 ? (
+                  <div
+                    className="flex flex-col rounded-md p-4 mt-3"
+                    style={{
+                      background:
+                        "linear-gradient(135deg, rgba(181,171,132,0.18) 0%, rgba(161,146,87,0.18) 100%)",
+                      border: "1px solid rgba(181,171,132,0.35)",
+                    }}
+                  >
+                    <span className="text-md font-semibold text-[#09432B] pb-2">
+                      Not enough domes available for your guest mix
+                    </span>
+                    <span className="text-sm text-[#09432B] pb-4">
+                      Your selected guests need more domes than are available
+                      for these dates. Please change your dates or adjust your
+                      guests.
+                    </span>
+                    <div className="flex flex-wrap gap-2 justify-end">
+                      <button
+                        onClick={() => navigate("/")}
+                        className="border-2 border-[#0F5B45] text-[#0F5B45] font-semibold px-4 py-2 text-sm rounded"
+                      >
+                        Change guests
+                      </button>
+                      <button
+                        onClick={() => setStayOpen(true)}
+                        className="border-2 border-[#0F5B45] text-[#0F5B45] font-semibold px-4 py-2 text-sm rounded"
+                      >
+                        Change dates
+                      </button>
+                    </div>
                   </div>
                 ) : (
                   <div
