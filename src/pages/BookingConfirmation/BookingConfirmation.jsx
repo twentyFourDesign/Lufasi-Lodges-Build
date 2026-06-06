@@ -7,9 +7,9 @@ import { Link, useLocation } from "react-router-dom";
 
 export default function BookingConfirmation() {
   const location = useLocation();
-  const { bookingReference } = location.state?.booking || {
-    bookingReference: "N/A",
-  };
+  const state = location.state || {};
+  const bookingReference =
+    state.booking?.bookingReference || state.bookingReference || "N/A";
   return (
     <div className="min-h-screen bg-[#F7F5EF] ">
       <CommonNavbar />

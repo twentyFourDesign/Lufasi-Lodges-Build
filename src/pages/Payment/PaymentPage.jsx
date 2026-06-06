@@ -5,7 +5,8 @@ import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { CreditCard, Loader2, Shield, Clock, AlertCircle } from "lucide-react";
 import CommonNavbar from "@/components/shared/common/CommonNavbar/CommonNavbar";
-import { BASE_URL } from "@/config";
+import { BASE_URL, VAT_RATE } from "@/config";
+import { trackBeginCheckout } from "@/lib/analytics";
 
 function formatPrice(n) {
     return "₦" + Number(n || 0).toLocaleString("en-NG");
@@ -32,8 +33,11 @@ export default function PaymentPage() {
         // Redirect if no payment data
         if (!paymentLink || !bookingReference) {
             navigate("/", { replace: true });
+            return;
         }
-    }, [paymentLink, bookingReference, navigate]);
+        // GA4 funnel event — user reached the payment step (value ex-VAT)
+        trackBeginCheckout({ value: amountDue / (1 + VAT_RATE) });
+    }, [paymentLink, bookingReference, navigate, amountDue]);
 
     useEffect(() => {
         if (!bookingId) {

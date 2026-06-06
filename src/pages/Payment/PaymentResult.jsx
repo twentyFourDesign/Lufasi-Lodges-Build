@@ -13,8 +13,17 @@ import {
     RefreshCw
 } from "lucide-react";
 import CommonNavbar from "@/components/shared/common/CommonNavbar/CommonNavbar";
-import { BASE_URL } from "@/config";
+import { BASE_URL, VAT_RATE } from "@/config";
 import { Link } from "react-router-dom";
+import { trackPurchase } from "@/lib/analytics";
+
+function diffNights(checkIn, checkOut) {
+  if (!checkIn || !checkOut) return undefined;
+  const a = new Date(checkIn);
+  const b = new Date(checkOut);
+  const n = Math.ceil((b - a) / (1000 * 60 * 60 * 24));
+  return Number.isFinite(n) && n > 0 ? n : undefined;
+}
 
 function formatPrice(n) {
     return "₦" + Number(n || 0).toLocaleString("en-NG");
@@ -64,18 +73,40 @@ export default function PaymentResult() {
 
             if (data.success && (data.paymentStatus === "successful" || data.status === "success")) {
                 setStatus("success");
+                const amountPaid = parseFloat(data.booking?.totalPrice || 0);
+                const roomName =
+                    data.booking?.Pod?.title ||
+                    data.booking?.Pod?.podName ||
+                    "Geodesic Dome";
+                const pods = data.booking?.podCount || 1;
+                const nights = diffNights(data.booking?.checkIn, data.booking?.checkOut);
                 // Map the verify endpoint response to expected format
                 setPaymentData({
                     bookingReference: data.booking?.bookingReference,
-                    amount: parseFloat(data.booking?.totalPrice || 0),
+                    amount: amountPaid,
                     paymentReference: data.payment?.transactionReference,
                     paymentStatus: data.paymentStatus,
                     gateway: data.payment?.gateway,
                     paidAt: data.payment?.paidAt,
+                    roomName,
+                    pods,
+                    nights,
                     guest: {
                         name: data.booking?.GuestDirectory?.fullName,
                         email: data.booking?.GuestDirectory?.email,
                     }
+                });
+
+                // GA4 conversion — fires once per booking reference (deduped),
+                // only here on confirmed successful payment.
+                // Value is reported ex-VAT (totalPrice includes 12.5% tax).
+                const valueExVat = amountPaid / (1 + VAT_RATE);
+                trackPurchase({
+                    transactionId: data.booking?.bookingReference,
+                    value: valueExVat,
+                    roomName,
+                    pods,
+                    nights,
                 });
             } else if (data.paymentStatus === "failed" || data.status === "failed") {
                 setStatus("failed");
