@@ -20,6 +20,7 @@ import PendingBookingsPage from "@/pages/admin/PendingBookingsPage";
 import BookingDetailsPage from "@/pages/admin/BookingDetailsPage";
 import SettingsPage from "@/pages/admin/SettingsPage";
 import PricingPage from "@/pages/admin/PricingPage";
+import ChannexSyncPage from "@/pages/admin/ChannexSyncPage";
 import GuestPaymentsPage from "@/pages/admin/GuestPaymentsPage";
 import BookingLogPage from "@/pages/admin/BookingLogPage";
 import PageContentSettingsPage from "@/pages/admin/PageContentSettingsPage";
@@ -207,6 +208,14 @@ export default function AppRoutes() {
         element={
           <ProtectedRoute>
             <PricingPage />
+          </ProtectedRoute>
+        }
+      />
+        <Route
+        path="/admin/channel-manager"
+        element={
+          <ProtectedRoute allowedRoles={["admin"]}>
+            <ChannexSyncPage />
           </ProtectedRoute>
         }
       />

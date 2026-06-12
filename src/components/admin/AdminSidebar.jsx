@@ -7,6 +7,7 @@ const navItems = [
     { name: "Pending/Cancelled", path: "/admin/pending-bookings", icon: "bookings" },
     { name: "Booking Calendar", path: "/admin/booking-page", icon: "booking-page" },
     { name: "Pricing & Configuration", path: "/admin/pricing", icon: "pricing" },
+    { name: "Channel Manager", path: "/admin/channel-manager", icon: "channel" },
     { name: "Guest Payments", path: "/admin/guest-payments", icon: "payments" },
     { name: "Vouchers & Discount", path: "/admin/vouchers", icon: "vouchers" },
     { name: "Extras", path: "/admin/extras", icon: "extras" },
@@ -36,6 +37,11 @@ const icons = {
     pricing: (
         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg>
+    ),
+    channel: (
+        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
         </svg>
     ),
     payments: (
