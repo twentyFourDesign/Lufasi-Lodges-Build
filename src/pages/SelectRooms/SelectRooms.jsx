@@ -13,7 +13,8 @@ import {
 } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { useBookingStore, calculateDynamicSubTotal } from "@/store/useBookingStore";
-import { formatDateSafe, parseAvailabilityCheckResponse, resolveMediaUrl, DEFAULT_POD_IMAGE_URL } from "@/lib/utils";
+import { BASE_URL } from "@/config";
+import { formatDateSafe, parseAvailabilityCheckResponse, resolveMediaUrl, DEFAULT_POD_IMAGE_URL, toISODate } from "@/lib/utils";
 import { calculateStayRoomSubtotal } from "@/lib/stayPricing";
 import {
   findMinValidPodCount,
@@ -114,7 +115,11 @@ export default function SelectRooms() {
 
   const refreshAvailability = useCallback(async () => {
     const { dates, guests } = bookingStore.draft;
-    if (!dates?.checkIn || !dates?.checkOut) return;
+    if (!dates?.checkIn || !dates?.checkOut) return false;
+
+    const startDate = toISODate(dates.checkIn);
+    const endDate = toISODate(dates.checkOut);
+    if (!startDate || !endDate) return false;
 
     setFetchError(null);
     try {
@@ -122,14 +127,13 @@ export default function SelectRooms() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          startDate: dates.checkIn,
-          endDate: dates.checkOut,
-          adults:
-            (guests?.adults || 0) + (guests?.teenagers || 0),
+          startDate,
+          endDate,
+          adults: (guests?.adults || 0) + (guests?.teenagers || 0),
         }),
       });
       if (!response.ok) {
-        throw new Error("Failed to check availability");
+        throw new Error(`Availability check failed (${response.status})`);
       }
       const data = await response.json();
       const { pods, peakRateInfo, weekdayPeakInfo, seasonalRatePeriods } =
@@ -140,9 +144,16 @@ export default function SelectRooms() {
         weekdayPeakInfo,
         seasonalRatePeriods,
       });
+      return true;
     } catch (err) {
       console.error("SelectRooms availability error:", err);
-      setFetchError("We couldn't refresh room availability. Please try again.");
+      const hasCachedPods =
+        Array.isArray(bookingStore.draft.availablePods) &&
+        bookingStore.draft.availablePods.length > 0;
+      if (!hasCachedPods) {
+        setFetchError("We couldn't refresh room availability. Please try again.");
+      }
+      return false;
     }
   }, [bookingStore]);
 

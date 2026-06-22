@@ -1,7 +1,26 @@
 import { useState, useEffect } from "react";
 import { BASE_URL } from "@/config";
+import { resolveMediaUrl, DEFAULT_POD_IMAGE_URL } from "@/lib/utils";
 import useAuthStore from "@/store/useAuthStore";
 import AdminLayout from "@/components/admin/AdminLayout";
+
+function PodImageThumb({ src, alt, className = "" }) {
+    const [url, setUrl] = useState(() => resolveMediaUrl(src));
+
+    useEffect(() => {
+        setUrl(resolveMediaUrl(src));
+    }, [src]);
+
+    return (
+        <img
+            src={url}
+            alt={alt}
+            className={className}
+            loading="lazy"
+            onError={() => setUrl(DEFAULT_POD_IMAGE_URL)}
+        />
+    );
+}
 
 export default function PodsManagementPage() {
     const { token } = useAuthStore();
@@ -162,8 +181,27 @@ export default function PodsManagementPage() {
             headers: { Authorization: `Bearer ${token}` },
             body: formData,
         });
-        if (!response.ok) throw new Error("Failed to upload image");
-        return response.json();
+        const data = await response.json().catch(() => ({}));
+        if (!response.ok) {
+            throw new Error(data.error || "Failed to upload image");
+        }
+        return data;
+    };
+
+    const setPrimaryPodImage = async (imageId) => {
+        try {
+            const response = await fetch(`${BASE_URL}/pods/images/${imageId}/primary`, {
+                method: "PUT",
+                headers: { Authorization: `Bearer ${token}` },
+            });
+            const data = await response.json().catch(() => ({}));
+            if (!response.ok) {
+                throw new Error(data.error || "Failed to set primary image");
+            }
+            await fetchPods();
+        } catch (err) {
+            alert(err.message);
+        }
     };
 
     const deletePodImage = async (imageId) => {
@@ -261,8 +299,8 @@ export default function PodsManagementPage() {
                                 <div className="relative">
                                     <div className="flex overflow-x-auto gap-1 scrollbar-hide">
                                         {pod.images.map((img, i) => (
-                                            <div key={i} className="flex-shrink-0 w-32 h-24 md:w-40 md:h-28">
-                                                <img
+                                            <div key={img.id || i} className="flex-shrink-0 w-32 h-24 md:w-40 md:h-28">
+                                                <PodImageThumb
                                                     src={img.imageUrl}
                                                     alt={`${pod.podName} - Image ${i + 1}`}
                                                     className="w-full h-full object-cover"
@@ -387,11 +425,34 @@ export default function PodsManagementPage() {
                                             />
                                         </div>
                                         <div>
-                                            <label className="block text-sm font-medium text-gray-700 mb-1">Media Assets</label>
+                                            <label className="block text-sm font-medium text-gray-700 mb-1">
+                                                Media Assets
+                                            </label>
+                                            <p className="text-xs text-gray-500 mb-2">
+                                                Delete broken images, upload new ones, then set primary for the booking thumbnail.
+                                            </p>
                                             <div className="flex gap-2 flex-wrap">
                                                 {pod.images?.map((img, i) => (
                                                     <div key={img.id || i} className="relative w-16 h-16 bg-gray-200 rounded-lg overflow-hidden group">
-                                                        <img src={img.imageUrl} alt="" className="w-full h-full object-cover" />
+                                                        <PodImageThumb
+                                                            src={img.imageUrl}
+                                                            alt={`${pod.podName} image ${i + 1}`}
+                                                            className="w-full h-full object-cover"
+                                                        />
+                                                        {img.isPrimary && (
+                                                            <span className="absolute bottom-0 left-0 right-0 bg-[#008080] text-white text-[9px] text-center py-0.5">
+                                                                Primary
+                                                            </span>
+                                                        )}
+                                                        {!img.isPrimary && (
+                                                            <button
+                                                                type="button"
+                                                                onClick={() => setPrimaryPodImage(img.id)}
+                                                                className="absolute bottom-0 left-0 right-0 bg-black/70 text-white text-[9px] py-0.5 opacity-0 group-hover:opacity-100 transition-opacity"
+                                                            >
+                                                                Set primary
+                                                            </button>
+                                                        )}
                                                         <button
                                                             type="button"
                                                             onClick={() => deletePodImage(img.id)}
@@ -580,7 +641,9 @@ export default function PodsManagementPage() {
                                         <svg className="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
                                         </svg>
-                                        <span className="mt-2 text-sm text-gray-500">Click to upload images</span>
+                                            <p className="text-xs text-gray-500 mt-2">
+                                                JPG, PNG or WebP. Max 5 MB per image. First image becomes the booking thumbnail.
+                                            </p>
                                     </label>
                                     {selectedImages.length > 0 && (
                                         <div className="flex flex-wrap gap-2 mt-3">
