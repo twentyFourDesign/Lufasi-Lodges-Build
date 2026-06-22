@@ -13,8 +13,7 @@ import {
 } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { useBookingStore, calculateDynamicSubTotal } from "@/store/useBookingStore";
-import { BASE_URL } from "@/config";
-import { formatDateSafe, parseAvailabilityCheckResponse } from "@/lib/utils";
+import { formatDateSafe, parseAvailabilityCheckResponse, resolveMediaUrl, DEFAULT_POD_IMAGE_URL } from "@/lib/utils";
 import { calculateStayRoomSubtotal } from "@/lib/stayPricing";
 import {
   findMinValidPodCount,
@@ -25,6 +24,24 @@ import {
 
 function formatPrice(n) {
   return n.toLocaleString();
+}
+
+function PodThumbnail({ src, alt, className = "" }) {
+  const [imgSrc, setImgSrc] = useState(() => resolveMediaUrl(src));
+
+  useEffect(() => {
+    setImgSrc(resolveMediaUrl(src));
+  }, [src]);
+
+  return (
+    <img
+      src={imgSrc}
+      alt={alt}
+      loading="lazy"
+      onError={() => setImgSrc(DEFAULT_POD_IMAGE_URL)}
+      className={className}
+    />
+  );
 }
 
 function buildDomeDetailsFromSelection(selectedPodIds, availablePods) {
@@ -167,9 +184,7 @@ export default function SelectRooms() {
         }
       }
 
-      if (!availablePods.length) {
-        await refreshAvailability();
-      }
+      await refreshAvailability();
       setLoading(false);
     }
 
@@ -421,7 +436,7 @@ export default function SelectRooms() {
                 </CardContent>
               </Card>
             ) : (
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="flex flex-col gap-2.5">
                 {availablePods.map((pod) => {
                   const isSelected = selectedPodIds.includes(pod.id);
                   const isDisabled = !pod.available;
@@ -432,62 +447,58 @@ export default function SelectRooms() {
                       type="button"
                       onClick={() => togglePodSelection(pod.id)}
                       disabled={isDisabled}
-                      className={`relative text-left rounded-xl border-2 p-4 transition-all ${
+                      className={`relative flex w-full items-center gap-3 rounded-lg border-2 px-3 py-2.5 text-left transition-all ${
                         isSelected
-                          ? "border-[#09432B] bg-[#E6F2EE] shadow-md"
+                          ? "border-[#09432B] bg-[#E6F2EE] shadow-sm"
                           : isDisabled
                             ? "border-gray-200 bg-gray-50 opacity-60 cursor-not-allowed"
-                            : "border-gray-200 bg-white hover:border-[#09432B]/50 hover:shadow-sm"
+                            : "border-gray-200 bg-white hover:border-[#09432B]/40 hover:shadow-sm"
                       }`}
                     >
-                      {isSelected && (
-                        <div className="absolute top-3 right-3 w-6 h-6 rounded-full bg-[#09432B] flex items-center justify-center">
-                          <Check className="w-4 h-4 text-white" />
-                        </div>
-                      )}
-
-                      {pod.img && (
-                        <div className="w-full aspect-[4/3] rounded-lg overflow-hidden bg-gray-100 mb-3">
-                          <img
-                            src={pod.img}
-                            alt={pod.title}
-                            className="w-full h-full object-cover"
-                          />
-                        </div>
-                      )}
-
-                      <h3 className="text-lg font-bold text-[#09432B] pr-8">
-                        {pod.title}
-                      </h3>
-
-                      {pod.desc && (
-                        <p className="text-xs text-[#737373] mt-1 line-clamp-2">
-                          {pod.desc}
-                        </p>
-                      )}
-
-                      <div className="flex items-center gap-2 mt-3">
-                        <span
-                          className={`text-[10px] px-2 py-0.5 rounded-full uppercase font-bold ${
-                            pod.available
-                              ? "bg-green-100 text-green-700"
-                              : "bg-red-100 text-red-700"
-                          }`}
-                        >
-                          {pod.available ? "Available" : "Occupied"}
-                        </span>
+                      <div className="w-20 h-16 sm:w-24 sm:h-[4.5rem] shrink-0 rounded-md overflow-hidden bg-gray-100">
+                        <PodThumbnail
+                          src={pod.img}
+                          alt={pod.title}
+                          className="w-full h-full object-cover"
+                        />
                       </div>
 
-                      {Array.isArray(pod.tags) && pod.tags.length > 0 && (
-                        <div className="flex flex-wrap gap-1.5 mt-2">
-                          {pod.tags.slice(0, 3).map((tag) => (
-                            <span
-                              key={tag}
-                              className="text-[10px] bg-[#F2EFE7] text-[#09432B] px-2 py-0.5 rounded-full"
-                            >
-                              {tag}
-                            </span>
-                          ))}
+                      <div className="flex-1 min-w-0 py-0.5">
+                        <h3 className="text-sm sm:text-base font-bold text-[#09432B] truncate pr-6">
+                          {pod.title}
+                        </h3>
+
+                        {pod.desc && (
+                          <p className="text-[11px] sm:text-xs text-[#737373] mt-0.5 line-clamp-1">
+                            {pod.desc}
+                          </p>
+                        )}
+
+                        <div className="flex flex-wrap items-center gap-1.5 mt-1.5">
+                          <span
+                            className={`text-[9px] sm:text-[10px] px-1.5 py-0.5 rounded-full uppercase font-bold ${
+                              pod.available
+                                ? "bg-green-100 text-green-700"
+                                : "bg-red-100 text-red-700"
+                            }`}
+                          >
+                            {pod.available ? "Available" : "Occupied"}
+                          </span>
+                          {Array.isArray(pod.tags) &&
+                            pod.tags.slice(0, 2).map((tag) => (
+                              <span
+                                key={tag}
+                                className="text-[9px] sm:text-[10px] bg-[#F2EFE7] text-[#09432B] px-1.5 py-0.5 rounded-full truncate max-w-[7rem]"
+                              >
+                                {tag}
+                              </span>
+                            ))}
+                        </div>
+                      </div>
+
+                      {isSelected && (
+                        <div className="absolute top-2.5 right-2.5 w-5 h-5 rounded-full bg-[#09432B] flex items-center justify-center shrink-0">
+                          <Check className="w-3 h-3 text-white" />
                         </div>
                       )}
                     </button>
