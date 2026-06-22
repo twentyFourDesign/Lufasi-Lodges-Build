@@ -31,16 +31,24 @@ export default function MealPlan() {
   const navigate = useNavigate();
   const podCount = bookingStore.draft.podCount || 1;
   const pricingConfig = bookingStore.draft.pricingConfig;
-  const domeDetails = bookingStore.draft.domeDetails || 
-    Array.from({ length: podCount }, () => ({
-      bedConfig: "1 x King Bed (6 foot)",
-      guests: ["", ""]
-    }));
+  const domeDetails = bookingStore.draft.domeDetails?.length
+    ? bookingStore.draft.domeDetails
+    : Array.from({ length: podCount }, () => ({
+        bedConfig: "1 x King Bed (6 foot)",
+        guests: ["", ""],
+      }));
   const bedConfig = domeDetails[0]?.bedConfig || "1 x King Bed (6 foot)";
 
   useEffect(() => {
     if (!bookingStore.draft.dates || !bookingStore.draft.podCount) {
       navigate("/book-your-stay", { replace: true });
+      return;
+    }
+    if (
+      !bookingStore.draft.selectedPodIds?.length ||
+      bookingStore.draft.selectedPodIds.length !== bookingStore.draft.podCount
+    ) {
+      navigate("/select-rooms", { replace: true });
       return;
     }
 
@@ -66,8 +74,11 @@ export default function MealPlan() {
     });
   };
 
-  // Guard: Don't render if booking data is missing (redirect will happen)
-  if (!bookingStore.draft.dates || !bookingStore.draft.podCount) {
+  if (
+    !bookingStore.draft.dates ||
+    !bookingStore.draft.podCount ||
+    !bookingStore.draft.selectedPodIds?.length
+  ) {
     return null;
   }
 
@@ -81,7 +92,7 @@ export default function MealPlan() {
           className="flex items-center gap-2 text-sm text-gray-700 mb-6 pl-0 hover:bg-transparent"
         >
           <ArrowLeft className="w-4 h-4" />
-          <Link to="/new-booking">Back</Link>
+          <Link to="/select-rooms">Back</Link>
         </Button>
 
         <h2 className="text-2xl md:text-5xl font-bold text-[#09432B] text-center">
@@ -89,7 +100,7 @@ export default function MealPlan() {
         </h2>
 
         <p className="text-center text-sm md:text-lg font-medium text-[#737373] mt-2 mb-10">
-          Step 2 of 6 – Full Board meals are always included
+          Step 3 of 6 – Full Board meals are always included
         </p>
 
         <div className="grid grid-cols-1 md:grid-cols-12 gap-8">
@@ -111,7 +122,7 @@ export default function MealPlan() {
                   {Array.from({ length: podCount }).map((_, domeIdx) => (
                     <div key={domeIdx} className={domeIdx > 0 ? "pt-6 border-t border-gray-100" : ""}>
                       <h4 className="text-lg font-bold text-[#09432B] mb-4">
-                        Dome {domeIdx + 1}
+                        {domeDetails[domeIdx]?.podName || `Dome ${domeIdx + 1}`}
                       </h4>
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <button
@@ -237,7 +248,7 @@ export default function MealPlan() {
               </div>
 
               <p className="text-sm text-[#737373] font-medium">
-                {`x${bookingStore.draft.podCount || 0} Rooms`}
+                {domeDetails.map((d) => d.podName || "Dome").join(", ")}
               </p>
             </div>
 
@@ -329,10 +340,10 @@ export default function MealPlan() {
                 className="w-full bg-[#09432B] hover:bg-[#083f28] text-white text-base font-bold py-6 rounded-none rounded-b-xl"
               >
                 <Link
-                  to="/guest-details"
+                  to="/extras"
                   className="flex items-center gap-2 justify-center"
                 >
-                  Continue to Guest Details →
+                  Continue to Extras →
                 </Link>
               </Button>
             </div>

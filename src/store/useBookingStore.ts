@@ -94,7 +94,15 @@ type BookingDraft = {
   }>;
   bedConfiguration?: string;
   availablePods?: Pod[];
+  selectedPodIds?: string[];
+  podId?: string;
   podCount?: number;
+  domeDetails?: Array<{
+    podId?: string;
+    podName?: string;
+    bedConfig: string;
+    guests: string[];
+  }>;
   availableMealPlans?: BoardOption[];
   mealPlan?: BoardOption;
   subTotal?: number;

@@ -205,7 +205,7 @@ export default function Extras() {
           className="flex items-center gap-2 text-sm text-gray-700 mb-6 pl-0 hover:bg-transparent"
         >
           <ArrowLeft className="w-4 h-4" />
-          <Link to="/guest-details">Back</Link>
+          <Link to="/meal-plan">Back</Link>
         </Button>
 
         <h2 className="text-2xl md:text-5xl font-bold text-[#09432B] text-center">

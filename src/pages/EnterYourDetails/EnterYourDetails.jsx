@@ -344,7 +344,8 @@ export default function EnterDetails() {
                       className="border rounded-lg overflow-hidden bg-white shadow-sm"
                     >
                       <AccordionTrigger className="bg-[#C8FBFF] px-4 py-3 text-[#09432B] text-base md:text-xl font-bold hover:no-underline">
-                        Dome {domeIdx + 1} - Accommodation Details
+                        {(bookingStore.draft.domeDetails?.[domeIdx]?.podName ||
+                          `Dome ${domeIdx + 1}`) + " - Accommodation Details"}
                       </AccordionTrigger>
                       <AccordionContent className="bg-[#C8FBFF]/30 px-6 py-6 space-y-6">
                         <FormField

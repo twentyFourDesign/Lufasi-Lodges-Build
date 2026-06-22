@@ -4,6 +4,7 @@ import BookYourStay from "@/pages/BookYourStay/BookYourStay";
 import NewBooking from "@/pages/NewBooking/NewBooking";
 import MealPlan from "@/pages/MealPlan/MealPlan";
 import GuestDetails from "@/pages/GuestDetails/GuestDetails";
+import SelectRooms from "@/pages/SelectRooms/SelectRooms";
 import ExtrasPage from "@/pages/Extras/Extras";
 import EnterYourDetails from "@/pages/EnterYourDetails/EnterYourDetails";
 import ReviewYourBooking from "@/pages/ReviewYourBooking/ReviewYourBooking";
@@ -122,6 +123,7 @@ export default function AppRoutes() {
         <Route path="/new-booking" element={<NewBooking />} />
         <Route path="/meal-plan" element={<MealPlan />} />
         <Route path="/guest-details" element={<GuestDetails />} />
+        <Route path="/select-rooms" element={<SelectRooms />} />
         <Route path="/extras" element={<ExtrasPage />} />
         <Route path="/enter-your-details" element={<EnterYourDetails />} />
         <Route path="/review-your-booking" element={<ReviewYourBooking />} />

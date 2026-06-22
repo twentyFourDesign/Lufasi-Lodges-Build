@@ -70,7 +70,7 @@ export default function BookYourStay() {
               </div>
 
               <p className="font-bold text-[#09432B] text-lg flex items-center gap-1">
-                <Link to="/new-booking">New Booking</Link>
+                <Link to="/">New Booking</Link>
                 <ArrowLeft className="w-4 h-4 rotate-180 mt-1" />
               </p>
             </CardContent>

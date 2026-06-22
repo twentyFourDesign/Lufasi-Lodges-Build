@@ -221,7 +221,7 @@ export default function BookingForm() {
         seasonalRatePeriods,
       });
 
-      navigate("/new-booking");
+      navigate("/guest-details");
     } catch (error) {
       console.error("Error checking availability:", error);
       setSubmitError("We couldn't check availability right now. Please try again.");

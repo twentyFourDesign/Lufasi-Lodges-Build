@@ -22,6 +22,7 @@ import {
   normalizeFamilyGuests,
   findMinValidPodCount,
   getMaxPopUpBeds,
+  hasUnder13Guests,
 } from "@/lib/familyRules";
 function formatPrice(n) {
   return n.toLocaleString();
@@ -44,6 +45,44 @@ export default function GuestDetails() {
   const availablePodsCount = Array.isArray(bookingStore.draft.availablePods)
     ? bookingStore.draft.availablePods.filter((p) => p.available === true).length
     : 6;
+
+  useEffect(() => {
+    if (!bookingStore.draft.dates?.checkIn || !bookingStore.draft.dates?.checkOut) {
+      navigate("/", { replace: true });
+      return;
+    }
+
+    const normalized = normalizeFamilyGuests(
+      bookingStore.draft.guests || {
+        adults,
+        teenagers: teens,
+        toddlers,
+        children,
+        infants,
+      },
+    );
+    const { pods } = resolvePodCount(normalized);
+    if (pods !== null && pods !== Number(bookingStore.draft.podCount)) {
+      const nextDraft = {
+        ...bookingStore.draft,
+        guests: normalized,
+        podCount: pods,
+        selectedPodIds: [],
+        podId: undefined,
+        domeDetails: [],
+        bedConfiguration: "",
+      };
+      bookingStore.updateDraft({
+        guests: normalized,
+        podCount: pods,
+        selectedPodIds: [],
+        podId: undefined,
+        domeDetails: [],
+        bedConfiguration: "",
+        subTotal: calculateDynamicSubTotal(nextDraft),
+      });
+    }
+  }, []);
 
   useEffect(() => {
     async function fetchHolidays() {
@@ -144,6 +183,8 @@ export default function GuestDetails() {
     if (podCountChanged) {
       nextDraftPartial.domeDetails = [];
       nextDraftPartial.bedConfiguration = "";
+      nextDraftPartial.selectedPodIds = [];
+      nextDraftPartial.podId = undefined;
     }
     const nextDraft = { ...bookingStore.draft, ...nextDraftPartial };
     const nextSubTotal = calculateDynamicSubTotal(nextDraft);
@@ -210,6 +251,13 @@ export default function GuestDetails() {
 
   const canAddUnder13 = (patch) => isChildrenPermitted() && canSetGuests(patch);
 
+  const canContinue =
+    isValidGuestCount(currentGuests()) &&
+    (!hasUnder13Guests(currentGuests()) ||
+      isChildrenPermitted() ||
+      Number(bookingStore.draft.podCount) === 6) &&
+    !noticeMessage;
+
   const renderGuestCounter = ({ label, value, onChange, decDisabled, incDisabled }) => (
     <div
       className="
@@ -261,14 +309,14 @@ export default function GuestDetails() {
           className="flex items-center gap-2 text-sm text-gray-700 mb-6 pl-0 hover:bg-transparent"
         >
           <ArrowLeft className="w-4 h-4" />
-          <Link to="/meal-plan">Back</Link>
+          <Link to="/">Back</Link>
         </Button>
         <h2 className="text-2xl md:text-5xl font-bold text-[#09432B] text-center">
           Guest Details
         </h2>
 
         <p className="text-center text-sm md:text-lg font-medium text-[#737373] mt-2 mb-10">
-          Step 3 of 6 – Who’s joining you?
+          Step 1 of 6 – Who’s joining you?
         </p>
 
         <div className="grid grid-cols-1 md:grid-cols-12 gap-8">
@@ -403,7 +451,12 @@ export default function GuestDetails() {
               </div>
 
               <p className="text-sm text-[#737373] font-medium">
-                {`x${bookingStore.draft.podCount || 0} Rooms`}
+                {bookingStore.draft.selectedPodIds?.length > 0
+                  ? bookingStore.draft.domeDetails
+                      ?.map((d) => d.podName)
+                      .filter(Boolean)
+                      .join(", ") || `x${bookingStore.draft.podCount || 0} Rooms`
+                  : `${bookingStore.draft.podCount || 0} dome${(bookingStore.draft.podCount || 0) === 1 ? "" : "s"} required — choose on next step`}
               </p>
             </div>
             <div className="bg-white rounded-xl border border-gray-200 px-5 py-4 shadow-sm">
@@ -503,15 +556,26 @@ export default function GuestDetails() {
               </div>
 
               <Button
-                asChild
-                className="w-full bg-[#09432B] hover:bg-[#083f28] text-white text-base font-bold py-6 rounded-none rounded-b-xl"
+                asChild={canContinue}
+                className={`w-full text-white text-base font-bold py-6 rounded-none rounded-b-xl ${
+                  canContinue
+                    ? "bg-[#09432B] hover:bg-[#083f28]"
+                    : "bg-gray-400 cursor-not-allowed opacity-50"
+                }`}
+                disabled={!canContinue}
               >
-                <Link
-                  to="/extras"
-                  className="flex items-center gap-2 justify-center"
-                >
-                  Continue to Extras →
-                </Link>
+                {canContinue ? (
+                  <Link
+                    to="/select-rooms"
+                    className="flex items-center gap-2 justify-center"
+                  >
+                    Continue to Choose Your Dome →
+                  </Link>
+                ) : (
+                  <span className="flex items-center gap-2 justify-center">
+                    Continue to Choose Your Dome →
+                  </span>
+                )}
               </Button>
             </div>
             <Button

@@ -186,6 +186,15 @@ export default function ReviewYourBooking() {
     if (!draft.podCount || draft.podCount < 1) {
       return "Please select at least one room before continuing.";
     }
+    if (
+      !draft.selectedPodIds?.length ||
+      draft.selectedPodIds.length !== draft.podCount
+    ) {
+      return "Please select your preferred dome(s) before continuing.";
+    }
+    if (!draft.podId) {
+      return "Please select your preferred dome before continuing.";
+    }
     const contact = draft.contact || {};
     if (!contact.firstName || !contact.lastName) {
       return "Please enter your first and last name on the details page.";
@@ -222,13 +231,17 @@ export default function ReviewYourBooking() {
     }
     const contact = bookingStore.draft.contact || {};
     const { identification, ...contactWithoutId } = contact;
-    const selectedAvailablePod = (bookingStore.draft.availablePods || []).find(
-      (pod) => pod.available === true,
-    );
+    const selectedPodIds =
+      bookingStore.draft.selectedPodIds?.length > 0
+        ? bookingStore.draft.selectedPodIds
+        : bookingStore.draft.podId
+          ? [bookingStore.draft.podId]
+          : [];
     const payload = {
       dates: bookingStore.draft.dates,
       contact: contactWithoutId,
-      podId: selectedAvailablePod?.id || bookingStore.draft.availablePods?.[0]?.id,
+      podId: selectedPodIds[0],
+      podIds: selectedPodIds,
       podCount: bookingStore.draft.podCount,
       boardType: bookingStore.draft.mealPlan?.boardType || "fullBoard",
       guests: bookingStore.draft.guests,
@@ -269,13 +282,7 @@ export default function ReviewYourBooking() {
       });
 
       const result = await response.json();
-      console.log("[ReviewYourBooking] Booking API response", {
-        status: response.status,
-        ok: response.ok,
-        error: result.error,
-        bookingId: result.bookingId,
-        bookingReference: result.bookingReference,
-      });
+
       if (response.ok) {
         // Clear applied codes on success
         setAppliedDiscount(null);
@@ -303,6 +310,12 @@ export default function ReviewYourBooking() {
             bookingId: result.bookingId,
           },
         });
+      } else if (response.status === 409) {
+        setErrorMessage(
+          (result.error || "Your selected dome is no longer available.") +
+            " Please go back and choose another room.",
+        );
+        setErrorDialogOpen(true);
       } else {
         console.log("Booking failed: " + (result.error || "Unknown error"));
         setErrorMessage(result.error || "Booking failed. Please try again.");
@@ -403,13 +416,18 @@ export default function ReviewYourBooking() {
                 <div>
                   <h4 className="font-semibold text-[#09432B]">Your Rooms</h4>
                   <p className="text-sm text-[#6B6B6B]">
-                    {`x${bookingStore.draft.podCount || 0} Rooms`}
+                    {bookingStore.draft.domeDetails?.length
+                      ? bookingStore.draft.domeDetails
+                          .map((d) => d.podName)
+                          .filter(Boolean)
+                          .join(", ")
+                      : `x${bookingStore.draft.podCount || 0} Rooms`}
                   </p>
                   {bookingStore.draft.domeDetails && bookingStore.draft.domeDetails.length > 0 ? (
                     <div className="mt-2 space-y-2">
                        {bookingStore.draft.domeDetails.map((dome, idx) => (
                          <div key={idx} className="text-xs text-[#6B6B6B] border-l-2 border-[#E6F2EE] pl-2">
-                           <span className="font-semibold">Dome {idx + 1}:</span> {dome.bedConfig}
+                           <span className="font-semibold">{dome.podName || `Dome ${idx + 1}`}:</span> {dome.bedConfig}
                            {dome.guests?.[0] && <div className="italic text-gray-500">- {dome.guests.join(', ').replace(/, $/, '')}</div>}
                          </div>
                        ))}
