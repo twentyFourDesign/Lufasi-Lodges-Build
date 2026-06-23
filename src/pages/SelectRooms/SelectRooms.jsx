@@ -12,6 +12,7 @@ import {
   Loader2,
 } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
+import FunnelMobileStickyCta from "@/components/booking/FunnelMobileStickyCta";
 import { useBookingStore, calculateDynamicSubTotal } from "@/store/useBookingStore";
 import { BASE_URL } from "@/config";
 import { formatDateSafe, parseAvailabilityCheckResponse, resolveMediaUrl, DEFAULT_POD_IMAGE_URL, toISODate } from "@/lib/utils";
@@ -405,7 +406,7 @@ export default function SelectRooms() {
   }
 
   return (
-    <div className="overflow-x-hidden min-h-screen w-full bg-[#F7F5F0]">
+    <div className="overflow-x-hidden min-h-screen w-full bg-[#F7F5F0] pb-28 md:pb-0">
       <CommonNavbar />
 
       <div className="max-w-7xl mx-auto px-4 md:px-6 lg:px-8 py-8">
@@ -641,7 +642,7 @@ export default function SelectRooms() {
               })()}
             </div>
 
-            <div className="w-full rounded-t-xl overflow-hidden">
+            <div className="hidden md:block w-full rounded-t-xl overflow-hidden">
               <div
                 className="px-4 py-3 text-[#0A4C30] text-sm font-medium"
                 style={{ backgroundColor: "#B7FFFF" }}
@@ -676,6 +677,20 @@ export default function SelectRooms() {
           </div>
         </div>
       </div>
+
+      <FunnelMobileStickyCta>
+        <Button
+          className={`w-full text-white text-base font-bold py-6 rounded-xl ${
+            selectionComplete
+              ? "bg-[#09432B] hover:bg-[#083f28]"
+              : "bg-gray-400 cursor-not-allowed opacity-50"
+          }`}
+          disabled={!selectionComplete}
+          onClick={handleContinue}
+        >
+          Continue to Bed Configuration →
+        </Button>
+      </FunnelMobileStickyCta>
     </div>
   );
 }

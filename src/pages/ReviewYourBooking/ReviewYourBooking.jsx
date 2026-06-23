@@ -573,25 +573,21 @@ export default function ReviewYourBooking() {
                 </div>
               </div>
               <div className="mt-5 rounded-xl overflow-hidden border border-[#d9d9d9]">
-                <div className="bg-[#B7FFFF] px-4 py-3 text-[#0A4C30] font-medium flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <span className="text-sm">Discount:</span>
-                    <span className="text-sm">Savings:</span>
-                    <span className="text-sm font-semibold ml-2">
+                <div className="bg-[#B7FFFF] px-4 py-3 text-[#0A4C30] font-medium flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                  <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-sm">
+                    <span>Savings:</span>
+                    <span className="font-semibold">
                       ₦{formatPrice(pricing.totalSavings)}
                     </span>
                   </div>
                   <div className="text-sm text-[#4b4b4b]">
-                    Apply Discount Code
+                    Apply voucher or discount code
                   </div>
                 </div>
                 <div className="p-4 bg-[#B7FFFF]">
-                  <div className="text-sm font-semibold mb-3">
-                    Enter Guests Information ▲
-                  </div>
                   <div className="space-y-3">
-                    <div className="flex gap-3 items-center">
-                      <div className="flex-1">
+                    <div className="flex flex-col sm:flex-row gap-3 sm:items-end">
+                      <div className="flex-1 min-w-0">
                         <Label className="text-sm">Voucher Code</Label>
                         <Input
                           placeholder="Enter Voucher Code"
@@ -600,17 +596,15 @@ export default function ReviewYourBooking() {
                           className="mt-1"
                         />
                       </div>
-                      <div className="w-28 flex-shrink-0">
-                        <Button
-                          onClick={applyVoucher}
-                          className="w-full  h-10 mt-5"
-                        >
-                          Apply
-                        </Button>
-                      </div>
+                      <Button
+                        onClick={applyVoucher}
+                        className="w-full sm:w-28 shrink-0 h-10"
+                      >
+                        Apply
+                      </Button>
                     </div>
-                    <div className="flex gap-3 items-center">
-                      <div className="flex-1">
+                    <div className="flex flex-col sm:flex-row gap-3 sm:items-end">
+                      <div className="flex-1 min-w-0">
                         <Label className="text-sm">Discount Code</Label>
                         <Input
                           placeholder="Enter Discount Code"
@@ -619,14 +613,12 @@ export default function ReviewYourBooking() {
                           className="mt-1"
                         />
                       </div>
-                      <div className="w-28 flex-shrink-0">
-                        <Button
-                          onClick={applyDiscount}
-                          className="w-full h-10 mt-5"
-                        >
-                          Apply
-                        </Button>
-                      </div>
+                      <Button
+                        onClick={applyDiscount}
+                        className="w-full sm:w-28 shrink-0 h-10"
+                      >
+                        Apply
+                      </Button>
                     </div>
                   </div>
 

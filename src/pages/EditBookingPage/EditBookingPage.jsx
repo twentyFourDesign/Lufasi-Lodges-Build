@@ -13,21 +13,23 @@ import { BASE_URL } from "@/config";
 import { parseAvailabilityCheckResponse } from "@/lib/utils";
 
 const Row = ({ icon, title, subtitle, onClick }) => (
-  <div className="w-full border border-[#E5E5E5] rounded-xl bg-white px-4 py-4 flex items-center justify-between">
-    <div className="flex items-start gap-3">
-      <div className="w-8 h-8 rounded-full bg-[#E6F2EE] flex items-center justify-center">
+  <div className="w-full border border-[#E5E5E5] rounded-xl bg-white px-4 py-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+    <div className="flex items-start gap-3 min-w-0 flex-1">
+      <div className="w-8 h-8 rounded-full bg-[#E6F2EE] flex items-center justify-center shrink-0">
         {icon}
       </div>
-      <div className="flex flex-col">
+      <div className="flex flex-col min-w-0">
         <span className="text-[#09432B] font-medium">{title}</span>
         {subtitle && (
-          <span className="text-sm text-[#737373] font-medium">{subtitle}</span>
+          <div className="text-sm text-[#737373] font-medium min-w-0 break-words">
+            {subtitle}
+          </div>
         )}
       </div>
     </div>
     <button
       onClick={onClick}
-      className="flex items-center gap-1 text-[#027A48] font-medium text-sm"
+      className="flex items-center gap-1 text-[#027A48] font-medium text-sm self-end sm:self-center shrink-0"
     >
       Edit
       <Pencil size={15} />
@@ -230,7 +232,7 @@ export default function EditBookingPage() {
     <div className="min-h-screen bg-[#F7F5F0] pb-12">
       <CommonNavbar />
       <div className="max-w-2xl mx-auto px-4 mt-6">
-        <h1 className="text-center text-3xl font-bold text-[#09432B]">
+        <h1 className="text-center text-2xl sm:text-3xl font-bold text-[#09432B]">
           Edit Your Booking
         </h1>
         <p className="text-center text-sm text-[#737373] mt-1">
@@ -240,14 +242,17 @@ export default function EditBookingPage() {
           <Row
             icon={<Calendar size={18} className="text-[#09432B]" />}
             title="Stay Dates"
-            subtitle={`Check in: ${format(
-              bookingStore.draft.dates.checkIn,
-              "dd/MM/yyyy",
-            )}  
-            Check out: ${format(
-              bookingStore.draft.dates.checkOut,
-              "dd/MM/yyyy",
-            )} • ${bookingStore.draft.numberOfNights} Nights`}
+            subtitle={
+              <>
+                <span className="block">
+                  Check in: {format(bookingStore.draft.dates.checkIn, "dd/MM/yyyy")}
+                </span>
+                <span className="block">
+                  Check out: {format(bookingStore.draft.dates.checkOut, "dd/MM/yyyy")} •{" "}
+                  {bookingStore.draft.numberOfNights} Nights
+                </span>
+              </>
+            }
             onClick={() => setStayOpen(true)}
           />
           <Row
@@ -294,15 +299,15 @@ export default function EditBookingPage() {
               <span>₦{bookingStore.draft.subTotal.toLocaleString()}</span>
             </div>
 
-            <div className="flex justify-between">
-              <span>After consumption tax and VAT(12.5%)</span>
-              <span>
+            <div className="flex flex-col gap-1 sm:flex-row sm:justify-between sm:gap-4">
+              <span className="text-[#737373]">Tax & VAT (12.5%)</span>
+              <span className="shrink-0">
                 ₦{(bookingStore.draft.subTotal * 0.125).toLocaleString()}
               </span>
             </div>
-            <div className="bg-[#DFFBFF] px-4 py-3 rounded-lg flex justify-between">
-              <span>Discount:</span>
-              <span>0% &nbsp; Apply Discount Code</span>
+            <div className="bg-[#DFFBFF] px-4 py-3 rounded-lg flex flex-col gap-1 sm:flex-row sm:justify-between sm:items-center">
+              <span>Discount</span>
+              <span className="text-sm text-[#4b4b4b]">Apply discount code at checkout</span>
             </div>
             <div className="flex justify-between border-t pt-3 font-semibold">
               <span>Total:</span>
@@ -317,14 +322,19 @@ export default function EditBookingPage() {
             Download a Performa Invoice
           </Button>
 
-          <div className="flex justify-between mt-4">
+          <div className="flex flex-col-reverse sm:flex-row sm:justify-between gap-3 mt-4">
             <Button
               variant="outline"
-              className="px-8 py-5 border-[#09432B] text-[#09432B] rounded-lg"
+              className="w-full sm:w-auto px-8 py-5 border-[#09432B] text-[#09432B] rounded-lg"
             >
               Go Back
             </Button>
-            <button className="text-red-600 font-medium">Cancel Booking</button>
+            <button
+              type="button"
+              className="w-full sm:w-auto text-red-600 font-medium py-3 sm:py-0 text-center"
+            >
+              Cancel Booking
+            </button>
           </div>
         </div>
       </div>

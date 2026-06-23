@@ -65,10 +65,10 @@ export default function ManageBooking() {
         <h1 className="text-3xl md:text-5xl font-bold text-center text-[#09432B]">
           Manage Your Booking
         </h1>
-        <p className="text-center text-lg text-[#737373] mt-2 mb-12 max-w-xl mx-auto leading-relaxed">
-          Enter Details Below to find you booking details
+        <p className="text-center text-sm md:text-lg text-[#737373] mt-2 mb-12 max-w-xl mx-auto leading-relaxed px-2">
+          Enter your details below to find your booking
         </p>
-        <Card className="w-full max-w-sm h-[376px] bg-white rounded-xl shadow-md hover:shadow-lg transition px-8 py-10 m-auto">
+        <Card className="w-full max-w-sm bg-white rounded-xl shadow-md hover:shadow-lg transition px-6 sm:px-8 py-8 sm:py-10 m-auto">
           <form onSubmit={handleFindBooking} className="flex flex-col gap-8">
             <div className="flex flex-col gap-3">
               <label className="text-gray-700 font-semibold text-sm">
@@ -96,48 +96,22 @@ export default function ManageBooking() {
                 required
               />
             </div>
-            <div className="flex items-center gap-2 md:gap-4 w-full box-border">
+            <div className="flex flex-col sm:flex-row items-stretch gap-3 w-full">
               <Button
-                className="
-                hidden md:flex                     
-                bg-white
-                text-[#09432B]
-                rounded-md
-                font-bold
-                hover:bg-gray-100
-                transition
-
-                md:h-9 lg:h-12
-                p-6
-                items-center justify-center gap-2
-                flex-1
-                border-[#09432B]
-              "
+                className="bg-white text-[#09432B] rounded-md font-bold hover:bg-gray-100 h-12 items-center justify-center flex-1 border-[#09432B]"
                 variant="outline"
+                asChild
               >
                 <Link to="/">Go Back</Link>
               </Button>
 
               <Button
-                className="
-                bg-[#09432B]
-                text-white
-                rounded-md
-                font-bold
-                hover:bg-green-900
-                transition
-                
-                md:h-9 lg:h-12
-                p-6
-                hidden md:flex                     
-                items-center justify-center gap-2
-                flex-1
-              "
+                className="bg-[#09432B] text-white rounded-md font-bold hover:bg-green-900 h-12 items-center justify-center gap-2 flex-1"
                 type="submit"
                 disabled={loading}
               >
-                {loading ? "Finding..." : "Find Booking"}{" "}
-                <ArrowRight className="w-4 h-4 mt-1" />
+                {loading ? "Finding..." : "Find Booking"}
+                <ArrowRight className="w-4 h-4" />
               </Button>
             </div>
           </form>

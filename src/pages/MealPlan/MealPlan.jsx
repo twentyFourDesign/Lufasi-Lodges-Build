@@ -14,6 +14,7 @@ import {
 import { LuBedSingle } from "react-icons/lu";
 import { IoBedOutline } from "react-icons/io5";
 import { Link, useNavigate } from "react-router-dom";
+import FunnelMobileStickyCta from "@/components/booking/FunnelMobileStickyCta";
 import { BASE_URL } from "@/config";
 import { useBookingStore, calculateDynamicSubTotal } from "@/store/useBookingStore";
 import { format } from "date-fns";
@@ -83,7 +84,7 @@ export default function MealPlan() {
   }
 
   return (
-    <div className="overflow-x-hidden min-h-screen w-full bg-[#F7F5F0]">
+    <div className="overflow-x-hidden min-h-screen w-full bg-[#F7F5F0] pb-28 md:pb-0">
       <CommonNavbar />
 
       <div className="max-w-7xl mx-auto px-4 md:px-6 lg:px-8 py-10">
@@ -327,7 +328,7 @@ export default function MealPlan() {
               })()}
             </div>
 
-            <div className="w-full rounded-t-xl overflow-hidden">
+            <div className="hidden md:block w-full rounded-t-xl overflow-hidden">
               <div
                 className="px-4 py-3 text-[#0A4C30] text-sm font-medium"
                 style={{ backgroundColor: "#B7FFFF" }}
@@ -367,6 +368,17 @@ export default function MealPlan() {
           </div>
         </div>
       </div>
+
+      <FunnelMobileStickyCta>
+        <Button
+          asChild
+          className="w-full bg-[#09432B] hover:bg-[#083f28] text-white text-base font-bold py-6 rounded-xl"
+        >
+          <Link to="/extras" className="flex items-center gap-2 justify-center">
+            Continue to Extras →
+          </Link>
+        </Button>
+      </FunnelMobileStickyCta>
     </div>
   );
 }

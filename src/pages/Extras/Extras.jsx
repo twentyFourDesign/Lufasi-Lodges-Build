@@ -17,6 +17,7 @@ import {
   Loader2,
 } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
+import FunnelMobileStickyCta from "@/components/booking/FunnelMobileStickyCta";
 import { BASE_URL } from "@/config";
 import { formatDateSafe } from "@/lib/utils";
 import { formatSelectedRoomNames } from "@/lib/bookingDisplay";
@@ -197,7 +198,7 @@ export default function Extras() {
   };
 
   return (
-    <div className="overflow-x-hidden min-h-screen w-full bg-[#F7F5F0]">
+    <div className="overflow-x-hidden min-h-screen w-full bg-[#F7F5F0] pb-28 md:pb-0">
       <CommonNavbar />
 
       <div className="max-w-7xl mx-auto px-4 md:px-6 lg:px-8 py-10">
@@ -456,7 +457,7 @@ export default function Extras() {
             </div>
 
             {/* Continue Button */}
-            <div className="w-full rounded-t-xl overflow-hidden">
+            <div className="hidden md:block w-full rounded-t-xl overflow-hidden">
               <div
                 className="px-4 py-3 text-[#0A4C30] font-medium text-sm"
                 style={{ background: "#B7FFFF" }}
@@ -504,6 +505,21 @@ export default function Extras() {
           </div>
         </div>
       </div>
+
+      <FunnelMobileStickyCta>
+        <Button
+          asChild
+          className="w-full bg-[#09432B] hover:bg-[#083f28] text-white font-bold py-6 rounded-xl"
+        >
+          <Link
+            to="/enter-your-details"
+            onClick={handleContinue}
+            className="flex items-center gap-2 justify-center"
+          >
+            Continue to Guest Details →
+          </Link>
+        </Button>
+      </FunnelMobileStickyCta>
     </div>
   );
 }
