@@ -74,10 +74,18 @@ export default function PaymentResult() {
             if (data.success && (data.paymentStatus === "successful" || data.status === "success")) {
                 setStatus("success");
                 const amountPaid = parseFloat(data.booking?.totalPrice || 0);
-                const roomName =
-                    data.booking?.Pod?.title ||
-                    data.booking?.Pod?.podName ||
-                    "Geodesic Dome";
+                const roomName = (() => {
+                    const details = data.booking?.domeDetails;
+                    if (Array.isArray(details) && details.length > 0) {
+                        const names = details.map((d) => d.podName).filter(Boolean);
+                        if (names.length > 0) return names.join(", ");
+                    }
+                    return (
+                        data.booking?.Pod?.title ||
+                        data.booking?.Pod?.podName ||
+                        "Geodesic Dome"
+                    );
+                })();
                 const pods = data.booking?.podCount || 1;
                 const nights = diffNights(data.booking?.checkIn, data.booking?.checkOut);
                 // Map the verify endpoint response to expected format
@@ -135,6 +143,7 @@ export default function PaymentResult() {
                 paidAt: paymentData?.paidAt,
                 amount: paymentData?.amount,
                 guest: paymentData?.guest,
+                roomNames: paymentData?.roomName,
             },
         });
     };

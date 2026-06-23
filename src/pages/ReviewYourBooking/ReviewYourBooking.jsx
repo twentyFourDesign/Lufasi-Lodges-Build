@@ -17,6 +17,7 @@ import { useBookingStore } from "@/store/useBookingStore";
 import { format } from "date-fns/format";
 import { BASE_URL } from "@/config";
 import { formatDateSafe } from "@/lib/utils";
+import { formatSelectedRoomNames } from "@/lib/bookingDisplay";
 import { calculateStayRoomSubtotal } from "@/lib/stayPricing";
 import { isFamilyCompositionAllowed } from "@/lib/familyRules";
 import {
@@ -296,6 +297,7 @@ export default function ReviewYourBooking() {
                 bookingReference: result.bookingReference,
                 id: result.bookingId,
               },
+              roomNames: formatSelectedRoomNames(bookingStore.draft),
             },
           });
           return;
@@ -416,12 +418,7 @@ export default function ReviewYourBooking() {
                 <div>
                   <h4 className="font-semibold text-[#09432B]">Your Rooms</h4>
                   <p className="text-sm text-[#6B6B6B]">
-                    {bookingStore.draft.domeDetails?.length
-                      ? bookingStore.draft.domeDetails
-                          .map((d) => d.podName)
-                          .filter(Boolean)
-                          .join(", ")
-                      : `x${bookingStore.draft.podCount || 0} Rooms`}
+                    {formatSelectedRoomNames(bookingStore.draft)}
                   </p>
                   {bookingStore.draft.domeDetails && bookingStore.draft.domeDetails.length > 0 ? (
                     <div className="mt-2 space-y-2">

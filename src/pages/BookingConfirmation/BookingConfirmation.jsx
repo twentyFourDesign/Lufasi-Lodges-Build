@@ -10,6 +10,7 @@ export default function BookingConfirmation() {
   const state = location.state || {};
   const bookingReference =
     state.booking?.bookingReference || state.bookingReference || "N/A";
+  const roomNames = state.roomNames || state.booking?.roomNames || null;
   return (
     <div className="min-h-screen bg-[#F7F5EF] ">
       <CommonNavbar />
@@ -36,6 +37,11 @@ export default function BookingConfirmation() {
               <p className="text-xl md:text-2xl font-bold tracking-wide text-[#0A4C30]">
                 {bookingReference}
               </p>
+              {roomNames && (
+                <p className="text-sm text-[#0A4C30] mt-3 font-medium">
+                  Your dome{roomNames.includes(",") ? "s" : ""}: {roomNames}
+                </p>
+              )}
             </div>
             <div className="bg-[#F0EDDD] rounded-xl p-4 md:p-6 mt-6 space-y-4">
               <div className="flex gap-3">

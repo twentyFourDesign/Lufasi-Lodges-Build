@@ -27,7 +27,22 @@ function formatPrice(n) {
   return n.toLocaleString();
 }
 
-function PodThumbnail({ src, alt, className = "" }) {
+/** Parse "Dome #4 - ..." from description for display order. */
+function parseDomeNumber(pod) {
+  const text = pod?.desc || "";
+  const match = text.match(/Dome\s*#\s*(\d+)/i);
+  return match ? Number(match[1]) : 999;
+}
+
+function sortPodsByDomeNumber(pods) {
+  return [...pods].sort((a, b) => {
+    const diff = parseDomeNumber(a) - parseDomeNumber(b);
+    if (diff !== 0) return diff;
+    return (a.title || "").localeCompare(b.title || "");
+  });
+}
+
+function PodThumbnail({ src, className = "" }) {
   const [imgSrc, setImgSrc] = useState(() => resolveMediaUrl(src));
 
   useEffect(() => {
@@ -37,11 +52,72 @@ function PodThumbnail({ src, alt, className = "" }) {
   return (
     <img
       src={imgSrc}
-      alt={alt}
+      alt=""
+      role="presentation"
       loading="lazy"
       onError={() => setImgSrc(DEFAULT_POD_IMAGE_URL)}
       className={className}
     />
+  );
+}
+
+function PodSelectRow({ pod, isSelected, isDisabled, onSelect }) {
+  return (
+    <button
+      type="button"
+      onClick={onSelect}
+      disabled={isDisabled}
+      className={`relative flex w-full items-start gap-3 rounded-lg border-2 px-3 py-3 text-left transition-all ${
+        isSelected
+          ? "border-[#09432B] bg-[#E6F2EE] shadow-sm"
+          : isDisabled
+            ? "border-gray-200 bg-gray-50 opacity-60 cursor-not-allowed"
+            : "border-gray-200 bg-white hover:border-[#09432B]/40 hover:shadow-sm"
+      }`}
+    >
+      <div className="w-[4.5rem] h-[4.5rem] sm:w-20 sm:h-20 shrink-0 rounded-md overflow-hidden bg-gray-100">
+        <PodThumbnail src={pod.img} className="w-full h-full object-cover" />
+      </div>
+
+      <div className="flex-1 min-w-0 pr-7">
+        <p className="text-base sm:text-lg font-bold text-[#09432B] leading-tight">
+          {pod.title}
+        </p>
+
+        {pod.desc && (
+          <p className="text-xs sm:text-sm text-[#5a5a5a] mt-1 leading-snug">
+            {pod.desc}
+          </p>
+        )}
+
+        <div className="flex flex-wrap items-center gap-1.5 mt-2">
+          <span
+            className={`text-[10px] px-2 py-0.5 rounded-full uppercase font-bold tracking-wide ${
+              pod.available
+                ? "bg-green-100 text-green-700"
+                : "bg-red-100 text-red-700"
+            }`}
+          >
+            {pod.available ? "Available" : "Occupied"}
+          </span>
+          {Array.isArray(pod.tags) &&
+            pod.tags.map((tag) => (
+              <span
+                key={tag}
+                className="text-[10px] bg-[#F2EFE7] text-[#09432B] px-2 py-0.5 rounded-full"
+              >
+                {tag}
+              </span>
+            ))}
+        </div>
+      </div>
+
+      {isSelected && (
+        <div className="absolute top-3 right-3 w-5 h-5 rounded-full bg-[#09432B] flex items-center justify-center">
+          <Check className="w-3 h-3 text-white" />
+        </div>
+      )}
+    </button>
   );
 }
 
@@ -74,6 +150,7 @@ export default function SelectRooms() {
     ? bookingStore.draft.availablePods
     : [];
   const availablePodsCount = availablePods.filter((p) => p.available === true).length;
+  const sortedPods = sortPodsByDomeNumber(availablePods);
 
   const getPodLimits = useCallback(() => {
     const guests = normalizeFamilyGuests(bookingStore.draft.guests || {});
@@ -448,73 +525,15 @@ export default function SelectRooms() {
               </Card>
             ) : (
               <div className="flex flex-col gap-2.5">
-                {availablePods.map((pod) => {
-                  const isSelected = selectedPodIds.includes(pod.id);
-                  const isDisabled = !pod.available;
-
-                  return (
-                    <button
-                      key={pod.id}
-                      type="button"
-                      onClick={() => togglePodSelection(pod.id)}
-                      disabled={isDisabled}
-                      className={`relative flex w-full items-center gap-3 rounded-lg border-2 px-3 py-2.5 text-left transition-all ${
-                        isSelected
-                          ? "border-[#09432B] bg-[#E6F2EE] shadow-sm"
-                          : isDisabled
-                            ? "border-gray-200 bg-gray-50 opacity-60 cursor-not-allowed"
-                            : "border-gray-200 bg-white hover:border-[#09432B]/40 hover:shadow-sm"
-                      }`}
-                    >
-                      <div className="w-20 h-16 sm:w-24 sm:h-[4.5rem] shrink-0 rounded-md overflow-hidden bg-gray-100">
-                        <PodThumbnail
-                          src={pod.img}
-                          alt={pod.title}
-                          className="w-full h-full object-cover"
-                        />
-                      </div>
-
-                      <div className="flex-1 min-w-0 py-0.5">
-                        <h3 className="text-sm sm:text-base font-bold text-[#09432B] truncate pr-6">
-                          {pod.title}
-                        </h3>
-
-                        {pod.desc && (
-                          <p className="text-[11px] sm:text-xs text-[#737373] mt-0.5 line-clamp-1">
-                            {pod.desc}
-                          </p>
-                        )}
-
-                        <div className="flex flex-wrap items-center gap-1.5 mt-1.5">
-                          <span
-                            className={`text-[9px] sm:text-[10px] px-1.5 py-0.5 rounded-full uppercase font-bold ${
-                              pod.available
-                                ? "bg-green-100 text-green-700"
-                                : "bg-red-100 text-red-700"
-                            }`}
-                          >
-                            {pod.available ? "Available" : "Occupied"}
-                          </span>
-                          {Array.isArray(pod.tags) &&
-                            pod.tags.slice(0, 2).map((tag) => (
-                              <span
-                                key={tag}
-                                className="text-[9px] sm:text-[10px] bg-[#F2EFE7] text-[#09432B] px-1.5 py-0.5 rounded-full truncate max-w-[7rem]"
-                              >
-                                {tag}
-                              </span>
-                            ))}
-                        </div>
-                      </div>
-
-                      {isSelected && (
-                        <div className="absolute top-2.5 right-2.5 w-5 h-5 rounded-full bg-[#09432B] flex items-center justify-center shrink-0">
-                          <Check className="w-3 h-3 text-white" />
-                        </div>
-                      )}
-                    </button>
-                  );
-                })}
+                {sortedPods.map((pod) => (
+                  <PodSelectRow
+                    key={pod.id}
+                    pod={pod}
+                    isSelected={selectedPodIds.includes(pod.id)}
+                    isDisabled={!pod.available}
+                    onSelect={() => togglePodSelection(pod.id)}
+                  />
+                ))}
               </div>
             )}
 
@@ -563,15 +582,19 @@ export default function SelectRooms() {
                 <h4 className="text-[#09432B] font-bold">Your Rooms</h4>
               </div>
               {selectedPodIds.length > 0 ? (
-                <ul className="space-y-1">
-                  {selectedPodIds.map((id) => {
-                    const pod = availablePods.find((p) => p.id === id);
-                    return (
-                      <li key={id} className="text-sm text-[#737373] font-medium">
-                        {pod?.title || "Dome"}
-                      </li>
-                    );
-                  })}
+                <ul className="space-y-2">
+                  {sortPodsByDomeNumber(
+                    selectedPodIds
+                      .map((id) => availablePods.find((p) => p.id === id))
+                      .filter(Boolean),
+                  ).map((pod) => (
+                    <li key={pod.id} className="text-sm">
+                      <span className="font-semibold text-[#09432B]">{pod.title}</span>
+                      {pod.desc && (
+                        <span className="block text-xs text-[#737373] mt-0.5">{pod.desc}</span>
+                      )}
+                    </li>
+                  ))}
                 </ul>
               ) : (
                 <p className="text-sm text-[#737373] font-medium">

@@ -30,6 +30,7 @@ import {
 import { Calendar } from "@/components/ui/calendar";
 import { Button } from "@/components/ui/button";
 import { cn, formatDateSafe } from "@/lib/utils";
+import { formatSelectedRoomNames } from "@/lib/bookingDisplay";
 import { format } from "date-fns";
 
 import {
@@ -455,7 +456,7 @@ export default function EnterDetails() {
                 <h4 className="text-[#09432B] font-bold">Your Rooms</h4>
               </div>
               <p className="text-sm text-[#737373]">
-                {`x${bookingStore.draft.podCount || 0} Rooms`}
+                {formatSelectedRoomNames(bookingStore.draft)}
               </p>
             </div>
             <div className="bg-white rounded-xl border border-gray-200 p-4 shadow-sm">

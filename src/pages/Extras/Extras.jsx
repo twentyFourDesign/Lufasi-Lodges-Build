@@ -19,6 +19,7 @@ import {
 import { Link, useNavigate } from "react-router-dom";
 import { BASE_URL } from "@/config";
 import { formatDateSafe } from "@/lib/utils";
+import { formatSelectedRoomNames } from "@/lib/bookingDisplay";
 
 function formatPrice(n) {
   return Number(n || 0).toLocaleString();
@@ -365,7 +366,7 @@ export default function Extras() {
                 <h4 className="text-[#09432B] font-bold">Rooms</h4>
               </div>
               <p className="text-sm text-[#737373]">
-                {`x${draft.podCount || 0} Rooms`}
+                {formatSelectedRoomNames(draft)}
               </p>
             </div>
 
