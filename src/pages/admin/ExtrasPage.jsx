@@ -797,7 +797,11 @@ export default function ExtrasPage() {
                                     onChange={(e) => setForm({ ...form, description: e.target.value })}
                                     rows={3}
                                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#008080] resize-none"
+                                    placeholder="Short info shown when guests expand this extra (not a text box)."
                                 />
+                                <p className="text-xs text-gray-500 mt-1">
+                                    Read-only info for guests. To collect a typed message (e.g. Flower Petals), use “Collect guest details” below.
+                                </p>
                             </div>
                             <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-1">Price</label>
@@ -839,10 +843,10 @@ export default function ExtrasPage() {
                                 />
                                 <div>
                                     <label htmlFor="requiresGuestDetails" className="text-sm text-gray-700 font-medium">
-                                        Collect guest details when selected
+                                        Show optional message box when selected
                                     </label>
                                     <p className="text-xs text-gray-500 mt-1">
-                                        Shows a description box and date picker on the booking extras step (like Welcome Note). Use for Flower Petals and similar.
+                                        Guests can type a note if they want (not required). Flower Petals always shows this box automatically.
                                     </p>
                                 </div>
                             </div>

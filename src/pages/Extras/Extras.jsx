@@ -38,6 +38,20 @@ function buildBlockedDateSet(blockedDates, extraId, category) {
   return set;
 }
 
+function extraNeedsGuestMessage(opt) {
+  return !!(opt.requiresGuestDetails || opt.detailsPrompt);
+}
+
+function isFlowerPetalExtra(opt) {
+  const name = String(opt?.name || "").toLowerCase();
+  return name.includes("petal");
+}
+
+/** Always show an optional message box for Flower Petals; others only when admin enables it. */
+function extraShowsMessageBox(opt) {
+  return isFlowerPetalExtra(opt) || extraNeedsGuestMessage(opt);
+}
+
 function ExtraPersonalizationFields({
   extraName,
   detailsPrompt,
@@ -61,10 +75,18 @@ function ExtraPersonalizationFields({
             {detailsPrompt ||
               `Tell us how you'd like ${extraName} arranged during your stay.`}
           </p>
+          <label className="block text-xs font-semibold text-[#09432B]">
+            Your message{" "}
+            {requireText ? (
+              <span className="text-red-600">*</span>
+            ) : (
+              <span className="text-gray-500 font-normal">(optional)</span>
+            )}
+          </label>
           <textarea
-            placeholder={`Details for ${extraName}...`}
-            className="w-full text-sm p-3 border border-gray-200 rounded-md focus:outline-none focus:ring-1 focus:ring-[#09432B] resize-none"
-            rows="3"
+            placeholder={`Type your message for ${extraName}...`}
+            className="w-full text-sm p-3 border border-gray-200 rounded-md focus:outline-none focus:ring-1 focus:ring-[#09432B] resize-none bg-white"
+            rows="4"
             value={text}
             onChange={(e) => onChange({ ...value, text: e.target.value, dates })}
           />
@@ -134,38 +156,54 @@ function ExtraRow({
 }) {
   const [expanded, setExpanded] = useState(false);
   const isSelected = selectedExtras.some((extra) => extra.id === opt.id);
+  const showsMessageBox = extraShowsMessageBox(opt);
   const showPersonalization =
-    isSelected && (opt.requiresGuestDetails || opt.requiresDateSelection);
+    isSelected && (showsMessageBox || opt.requiresDateSelection);
   const blockedDateSet = buildBlockedDateSet(
     blockedDates,
     opt.id,
     opt.category,
   );
 
+  const handleToggle = () => {
+    const willSelect = !isSelected;
+    onToggleExtra(opt);
+    if (willSelect && showsMessageBox) {
+      setExpanded(true);
+    }
+  };
+
   return (
     <div className="border-b last:border-b-0">
       <div className="flex items-center justify-between py-3">
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-3 min-w-0">
           <Checkbox
             checked={isSelected}
-            onCheckedChange={() => onToggleExtra(opt)}
+            onCheckedChange={handleToggle}
           />
           <button
+            type="button"
             onClick={() => setExpanded(!expanded)}
-            className="text-sm text-[#4F4F4F] font-medium hover:text-[#09432B] transition-colors text-left flex items-center gap-1.5"
+            className="text-sm text-[#4F4F4F] font-medium hover:text-[#09432B] transition-colors text-left flex items-center gap-1.5 min-w-0"
           >
-            {opt.name}
+            <span className="truncate">{opt.name}</span>
             <ChevronDown
-              className={`w-3.5 h-3.5 transition-transform duration-200 ${expanded ? "rotate-180" : ""
+              className={`w-3.5 h-3.5 shrink-0 transition-transform duration-200 ${expanded ? "rotate-180" : ""
                 }`}
             />
           </button>
         </div>
 
-        <span className="text-[#09432B] font-semibold text-sm">
+        <span className="text-[#09432B] font-semibold text-sm shrink-0 ml-2">
           ₦{opt.price.toLocaleString()}
         </span>
       </div>
+
+      {showsMessageBox && !isSelected && (
+        <p className="text-xs text-[#008080] pl-8 pb-2">
+          Tick the box above to add an optional message.
+        </p>
+      )}
 
       {expanded && (
         <div className="pb-3 pl-8 pr-4 animate-in fade-in slide-in-from-top-1 duration-200">
@@ -178,13 +216,20 @@ function ExtraRow({
       {showPersonalization && (
         <ExtraPersonalizationFields
           extraName={opt.name}
-          detailsPrompt={opt.detailsPrompt}
+          detailsPrompt={
+            isFlowerPetalExtra(opt)
+              ? opt.detailsPrompt ||
+                opt.description ||
+                "Let us know what you'd like to be welcomed with"
+              : opt.detailsPrompt ||
+                (extraNeedsGuestMessage(opt) ? opt.description : null)
+          }
           value={personalization}
           onChange={onPersonalizationChange}
           stayDates={stayDates}
           nights={nights}
-          showTextField={!!opt.requiresGuestDetails}
-          requireText={!!opt.requiresGuestDetails}
+          showTextField={showsMessageBox}
+          requireText={false}
           requireDates={!!opt.requiresDateSelection}
           blockedDateSet={blockedDateSet}
         />
@@ -371,7 +416,7 @@ export default function Extras() {
 
   const buildExtraPersonalizationsPayload = () => {
     return selectedExtras
-      .filter((ex) => ex.requiresGuestDetails || ex.requiresDateSelection)
+      .filter((ex) => extraShowsMessageBox(ex) || ex.requiresDateSelection)
       .map((ex) => ({
         extraId: ex.id,
         extraName: ex.name,
@@ -384,13 +429,6 @@ export default function Extras() {
   const validatePersonalizations = () => {
     for (const ex of selectedExtras) {
       const personalization = extraPersonalizations[ex.id];
-
-      if (ex.requiresGuestDetails && !personalization?.text?.trim()) {
-        setPersonalizationError(
-          `Please enter details for ${ex.name} before continuing.`,
-        );
-        return false;
-      }
 
       if (ex.requiresDateSelection) {
         const dates = personalization?.dates || [];
