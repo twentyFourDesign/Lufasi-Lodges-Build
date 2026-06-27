@@ -325,7 +325,7 @@ export default function BookingForm() {
               />
               <GuestCounter
                 label="Teens"
-                sublabel="13–17 years"
+                sublabel="13–18 years"
                 value={guests.teenagers}
                 onChange={(d) => tryIncrement("teenagers", d)}
                 decDisabled={guests.teenagers <= 0 || !canDecrement({ teenagers: guests.teenagers - 1 })}

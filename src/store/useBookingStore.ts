@@ -108,6 +108,17 @@ type BookingDraft = {
   subTotal?: number;
   availableExtras?: Extras[];
   extras?: Extras[];
+  welcomeNote?: {
+    enabled?: boolean;
+    text?: string;
+    dates?: string[];
+  } | null;
+  extraPersonalizations?: Array<{
+    extraId: string;
+    extraName: string;
+    text: string;
+    dates?: string[];
+  }> | null;
   contact?: {
     firstName: string;
     lastName: string;

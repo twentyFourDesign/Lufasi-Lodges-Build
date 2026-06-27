@@ -25,15 +25,129 @@ import { formatSelectedRoomNames } from "@/lib/bookingDisplay";
 function formatPrice(n) {
   return Number(n || 0).toLocaleString();
 }
-function ExtraRow({ opt, selectedExtras, onToggleExtra }) {
+function buildBlockedDateSet(blockedDates, extraId, category) {
+  const set = new Set();
+  const catKey = category ? String(category).toLowerCase() : "";
+  for (const block of blockedDates || []) {
+    const dateStr = String(block.date).slice(0, 10);
+    if (block.extraId === extraId) set.add(dateStr);
+    if (catKey && String(block.category || "").toLowerCase() === catKey) {
+      set.add(dateStr);
+    }
+  }
+  return set;
+}
+
+function ExtraPersonalizationFields({
+  extraName,
+  detailsPrompt,
+  value,
+  onChange,
+  stayDates,
+  nights,
+  showTextField,
+  requireText,
+  requireDates,
+  blockedDateSet,
+}) {
+  const text = value?.text || "";
+  const dates = value?.dates || [];
+
+  return (
+    <div className="ml-8 mt-3 mb-2 space-y-4 animate-in fade-in slide-in-from-top-1 duration-200 border-l-2 border-[#E6F2EE] pl-4">
+      {showTextField && (
+        <>
+          <p className="text-xs text-[#737373]">
+            {detailsPrompt ||
+              `Tell us how you'd like ${extraName} arranged during your stay.`}
+          </p>
+          <textarea
+            placeholder={`Details for ${extraName}...`}
+            className="w-full text-sm p-3 border border-gray-200 rounded-md focus:outline-none focus:ring-1 focus:ring-[#09432B] resize-none"
+            rows="3"
+            value={text}
+            onChange={(e) => onChange({ ...value, text: e.target.value, dates })}
+          />
+        </>
+      )}
+
+      {!showTextField && requireDates && (
+        <p className="text-xs text-[#737373]">
+          {detailsPrompt ||
+            `Select which night(s) of your stay you'd like ${extraName}.`}
+        </p>
+      )}
+
+      {stayDates.length > 0 && (showTextField || requireDates) && (
+        <div className="space-y-2">
+          <p className="text-xs font-semibold text-[#09432B]">
+            Select date(s) for {extraName} during your {nights}-night stay:
+            {requireDates && !showTextField && (
+              <span className="text-red-600 font-normal"> (required)</span>
+            )}
+          </p>
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+            {stayDates.map((date, idx) => {
+              const dateStr = format(date, "yyyy-MM-dd");
+              const isBlocked = blockedDateSet?.has(dateStr);
+              const isChecked = dates.includes(dateStr);
+              return (
+                <div key={idx} className="flex items-center gap-2">
+                  <Checkbox
+                    checked={isChecked}
+                    disabled={isBlocked}
+                    onCheckedChange={(checked) => {
+                      if (isBlocked) return;
+                      onChange({
+                        text,
+                        dates: checked
+                          ? [...dates, dateStr]
+                          : dates.filter((d) => d !== dateStr),
+                      });
+                    }}
+                  />
+                  <span
+                    className={`text-xs ${isBlocked ? "text-gray-400 line-through" : "text-[#4F4F4F]"}`}
+                  >
+                    {format(date, "MMM do")}
+                    {isBlocked && " (unavailable)"}
+                  </span>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function ExtraRow({
+  opt,
+  selectedExtras,
+  onToggleExtra,
+  stayDates,
+  nights,
+  personalization,
+  onPersonalizationChange,
+  blockedDates,
+}) {
   const [expanded, setExpanded] = useState(false);
+  const isSelected = selectedExtras.some((extra) => extra.id === opt.id);
+  const showPersonalization =
+    isSelected && (opt.requiresGuestDetails || opt.requiresDateSelection);
+  const blockedDateSet = buildBlockedDateSet(
+    blockedDates,
+    opt.id,
+    opt.category,
+  );
 
   return (
     <div className="border-b last:border-b-0">
       <div className="flex items-center justify-between py-3">
         <div className="flex items-center gap-3">
           <Checkbox
-            checked={selectedExtras.some((extra) => extra.id === opt.id)}
+            checked={isSelected}
             onCheckedChange={() => onToggleExtra(opt)}
           />
           <button
@@ -60,11 +174,35 @@ function ExtraRow({ opt, selectedExtras, onToggleExtra }) {
           </p>
         </div>
       )}
+
+      {showPersonalization && (
+        <ExtraPersonalizationFields
+          extraName={opt.name}
+          detailsPrompt={opt.detailsPrompt}
+          value={personalization}
+          onChange={onPersonalizationChange}
+          stayDates={stayDates}
+          nights={nights}
+          showTextField={!!opt.requiresGuestDetails}
+          requireText={!!opt.requiresGuestDetails}
+          requireDates={!!opt.requiresDateSelection}
+          blockedDateSet={blockedDateSet}
+        />
+      )}
     </div>
   );
 }
 
-function ExtrasCard({ item, selectedExtras, onToggleExtra }) {
+function ExtrasCard({
+  item,
+  selectedExtras,
+  onToggleExtra,
+  stayDates,
+  nights,
+  extraPersonalizations,
+  onPersonalizationChange,
+  blockedDates,
+}) {
   const [open, setOpen] = useState(item.defaultOpen || false);
   const categoryImage =
     (item.options && item.options.length > 0 && item.options[0].imageUrl) ||
@@ -112,6 +250,11 @@ function ExtrasCard({ item, selectedExtras, onToggleExtra }) {
               opt={opt}
               selectedExtras={selectedExtras}
               onToggleExtra={onToggleExtra}
+              stayDates={stayDates}
+              nights={nights}
+              personalization={extraPersonalizations[opt.id]}
+              onPersonalizationChange={(value) => onPersonalizationChange(opt.id, value)}
+              blockedDates={blockedDates}
             />
           ))}
         </div>
@@ -124,6 +267,7 @@ export default function Extras() {
   const navigate = useNavigate();
   const bookingStore = useBookingStore();
   const [extras, setExtras] = useState([]);
+  const [blockedDates, setBlockedDates] = useState([]);
   const [selectedExtras, setSelectedExtras] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -133,10 +277,12 @@ export default function Extras() {
     text: "",
     dates: [],
   });
+  const [extraPersonalizations, setExtraPersonalizations] = useState({});
+  const [personalizationError, setPersonalizationError] = useState(null);
 
   const nights = draft.numberOfNights || 1;
   const stayDates = [];
-  if (draft.dates?.checkIn && nights > 1) {
+  if (draft.dates?.checkIn && nights >= 1) {
     for (let i = 0; i < nights; i++) {
       stayDates.push(addDays(new Date(draft.dates.checkIn), i));
     }
@@ -146,19 +292,47 @@ export default function Extras() {
     fetchExtras();
   }, []);
 
+  useEffect(() => {
+    if (draft.extras?.length) {
+      setSelectedExtras(draft.extras);
+    }
+    if (draft.welcomeNote) {
+      setWelcomeNote({
+        enabled: true,
+        text: draft.welcomeNote.text || "",
+        dates: draft.welcomeNote.dates || [],
+      });
+    }
+    if (draft.extraPersonalizations?.length) {
+      const map = {};
+      draft.extraPersonalizations.forEach((p) => {
+        map[p.extraId] = { text: p.text || "", dates: p.dates || [] };
+      });
+      setExtraPersonalizations(map);
+    }
+  }, []);
+
   const fetchExtras = async () => {
     try {
       setLoading(true);
       setError(null);
 
-      const response = await fetch(`${BASE_URL}/extras/by-category`);
+      const [extrasRes, blockedRes] = await Promise.all([
+        fetch(`${BASE_URL}/extras/by-category`),
+        fetch(`${BASE_URL}/extras/blocked-dates`),
+      ]);
 
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+      if (!extrasRes.ok) {
+        throw new Error(`HTTP error! status: ${extrasRes.status}`);
       }
 
-      const data = await response.json();
+      const data = await extrasRes.json();
       setExtras(data);
+
+      if (blockedRes.ok) {
+        const blockedData = await blockedRes.json();
+        setBlockedDates(blockedData.blockedDates || []);
+      }
     } catch (error) {
       console.error("Error fetching extras:", error);
       setError(error.message);
@@ -168,12 +342,18 @@ export default function Extras() {
   };
 
   const handleToggleExtra = (extra) => {
+    setPersonalizationError(null);
     setSelectedExtras((prev) => {
       const isSelected = prev.some((item) => item.id === extra.id);
 
       let updatedExtras;
       if (isSelected) {
         updatedExtras = prev.filter((item) => item.id !== extra.id);
+        setExtraPersonalizations((p) => {
+          const next = { ...p };
+          delete next[extra.id];
+          return next;
+        });
         const currentSubTotal = bookingStore.draft.subTotal || 0;
         bookingStore.updateDraft({
           subTotal: currentSubTotal - extra.price,
@@ -189,11 +369,65 @@ export default function Extras() {
     });
   };
 
+  const buildExtraPersonalizationsPayload = () => {
+    return selectedExtras
+      .filter((ex) => ex.requiresGuestDetails || ex.requiresDateSelection)
+      .map((ex) => ({
+        extraId: ex.id,
+        extraName: ex.name,
+        text: extraPersonalizations[ex.id]?.text?.trim() || "",
+        dates: extraPersonalizations[ex.id]?.dates || [],
+      }))
+      .filter((p) => p.text || (p.dates && p.dates.length > 0));
+  };
+
+  const validatePersonalizations = () => {
+    for (const ex of selectedExtras) {
+      const personalization = extraPersonalizations[ex.id];
+
+      if (ex.requiresGuestDetails && !personalization?.text?.trim()) {
+        setPersonalizationError(
+          `Please enter details for ${ex.name} before continuing.`,
+        );
+        return false;
+      }
+
+      if (ex.requiresDateSelection) {
+        const dates = personalization?.dates || [];
+        if (!dates.length) {
+          setPersonalizationError(
+            `Please select at least one date for ${ex.name} before continuing.`,
+          );
+          return false;
+        }
+
+        const blockedSet = buildBlockedDateSet(
+          blockedDates,
+          ex.id,
+          ex.category,
+        );
+        const blockedSelected = dates.filter((d) => blockedSet.has(d));
+        if (blockedSelected.length) {
+          setPersonalizationError(
+            `${ex.name} is not available on the date(s) you selected. Please choose another date or remove this extra.`,
+          );
+          return false;
+        }
+      }
+    }
+
+    setPersonalizationError(null);
+    return true;
+  };
+
   const handleContinue = () => {
-    // Store selected extras and welcome note in booking store
+    if (!validatePersonalizations()) return;
+
+    const personalizations = buildExtraPersonalizationsPayload();
     bookingStore.updateDraft({
       extras: selectedExtras,
       welcomeNote: welcomeNote.enabled ? welcomeNote : null,
+      extraPersonalizations: personalizations.length ? personalizations : null,
     });
   };
 
@@ -241,8 +475,24 @@ export default function Extras() {
                   item={item}
                   selectedExtras={selectedExtras}
                   onToggleExtra={handleToggleExtra}
+                  stayDates={stayDates}
+                  nights={nights}
+                  extraPersonalizations={extraPersonalizations}
+                  onPersonalizationChange={(extraId, value) =>
+                    setExtraPersonalizations((prev) => ({
+                      ...prev,
+                      [extraId]: value,
+                    }))
+                  }
+                  blockedDates={blockedDates}
                 />
               ))}
+
+            {personalizationError && (
+              <div className="p-4 bg-amber-50 border border-amber-200 rounded-lg text-sm text-amber-800">
+                {personalizationError}
+              </div>
+            )}
 
             {/* Welcome Note Card */}
             {!loading && (
@@ -467,11 +717,17 @@ export default function Extras() {
 
               <Button
                 asChild
-                onClick={handleContinue}
                 className="w-full bg-[#09432B] hover:bg-[#083f28] text-white font-bold py-6 rounded-none rounded-b-xl"
               >
                 <Link
                   to="/enter-your-details"
+                  onClick={(e) => {
+                    if (!validatePersonalizations()) {
+                      e.preventDefault();
+                      return;
+                    }
+                    handleContinue();
+                  }}
                   className="flex items-center gap-2 justify-center"
                 >
                   Continue to Guest Details →
@@ -513,7 +769,13 @@ export default function Extras() {
         >
           <Link
             to="/enter-your-details"
-            onClick={handleContinue}
+            onClick={(e) => {
+              if (!validatePersonalizations()) {
+                e.preventDefault();
+                return;
+              }
+              handleContinue();
+            }}
             className="flex items-center gap-2 justify-center"
           >
             Continue to Guest Details →

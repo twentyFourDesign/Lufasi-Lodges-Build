@@ -19,6 +19,15 @@ export default function ExtrasPage() {
     const [filters, setFilters] = useState({ search: "", status: "" });
     const [categoryMetaModal, setCategoryMetaModal] = useState(null);
     const [savingCategoryMeta, setSavingCategoryMeta] = useState(false);
+    const [blockedDatesModal, setBlockedDatesModal] = useState(null);
+    const [blockedDatesList, setBlockedDatesList] = useState([]);
+    const [loadingBlockedDates, setLoadingBlockedDates] = useState(false);
+    const [savingBlockedDate, setSavingBlockedDate] = useState(false);
+    const [blockForm, setBlockForm] = useState({
+        date: "",
+        endDate: "",
+        reason: "",
+    });
 
     const [form, setForm] = useState({
         name: "",
@@ -26,6 +35,9 @@ export default function ExtrasPage() {
         price: 0,
         category: "",
         isActive: true,
+        requiresGuestDetails: false,
+        requiresDateSelection: false,
+        detailsPrompt: "",
     });
 
     useEffect(() => {
@@ -82,7 +94,7 @@ export default function ExtrasPage() {
 
     const handleAdd = () => {
         setEditingExtra(null);
-        setForm({ name: "", description: "", price: 0, category: "", isActive: true });
+        setForm({ name: "", description: "", price: 0, category: "", isActive: true, requiresGuestDetails: false, requiresDateSelection: false, detailsPrompt: "" });
         setShowAddModal(true);
     };
 
@@ -94,6 +106,9 @@ export default function ExtrasPage() {
             price: parseFloat(extra.price) || 0,
             category: extra.category || "",
             isActive: extra.isActive !== false,
+            requiresGuestDetails: !!extra.requiresGuestDetails,
+            requiresDateSelection: !!extra.requiresDateSelection,
+            detailsPrompt: extra.detailsPrompt || "",
         });
         setShowAddModal(true);
     };
@@ -247,6 +262,85 @@ export default function ExtrasPage() {
             categoryTitle: cat.categoryTitle || "",
             categorySubtitle: cat.categorySubtitle || "",
         });
+    };
+
+    const openBlockedDatesModal = (config) => {
+        setBlockedDatesModal(config);
+        setBlockForm({ date: "", endDate: "", reason: "" });
+        fetchBlockedDatesForModal(config);
+    };
+
+    const fetchBlockedDatesForModal = async (config) => {
+        if (!config) return;
+        setLoadingBlockedDates(true);
+        try {
+            const params = new URLSearchParams();
+            if (config.extraId) params.set("extraId", config.extraId);
+            if (config.category) params.set("category", config.category);
+            const response = await fetch(
+                `${BASE_URL}/extras/blocked-dates/manage?${params.toString()}`,
+                { headers: { Authorization: `Bearer ${token}` } },
+            );
+            const data = await response.json();
+            if (!response.ok) throw new Error(data.error || "Failed to load blocked dates");
+            setBlockedDatesList(data.blockedDates || []);
+        } catch (err) {
+            alert(err.message);
+            setBlockedDatesList([]);
+        } finally {
+            setLoadingBlockedDates(false);
+        }
+    };
+
+    const handleAddBlockedDate = async () => {
+        if (!blockedDatesModal || !blockForm.date) {
+            alert("Please select a date to block.");
+            return;
+        }
+        setSavingBlockedDate(true);
+        try {
+            const body = {
+                date: blockForm.date,
+                reason: blockForm.reason || undefined,
+            };
+            if (blockForm.endDate) body.endDate = blockForm.endDate;
+            if (blockedDatesModal.extraId) body.extraId = blockedDatesModal.extraId;
+            if (blockedDatesModal.category) body.category = blockedDatesModal.category;
+
+            const response = await fetch(`${BASE_URL}/extras/blocked-dates`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    Authorization: `Bearer ${token}`,
+                },
+                body: JSON.stringify(body),
+            });
+            const data = await response.json();
+            if (!response.ok) throw new Error(data.error || "Failed to block date");
+            setBlockForm({ date: "", endDate: "", reason: "" });
+            await fetchBlockedDatesForModal(blockedDatesModal);
+        } catch (err) {
+            alert(err.message);
+        } finally {
+            setSavingBlockedDate(false);
+        }
+    };
+
+    const handleRemoveBlockedDate = async (id) => {
+        if (!confirm("Remove this blocked date?")) return;
+        try {
+            const response = await fetch(`${BASE_URL}/extras/blocked-dates/${id}`, {
+                method: "DELETE",
+                headers: { Authorization: `Bearer ${token}` },
+            });
+            if (!response.ok) {
+                const data = await response.json().catch(() => ({}));
+                throw new Error(data.error || "Failed to remove blocked date");
+            }
+            await fetchBlockedDatesForModal(blockedDatesModal);
+        } catch (err) {
+            alert(err.message);
+        }
     };
 
     const saveCategoryMeta = async () => {
@@ -439,6 +533,20 @@ export default function ExtrasPage() {
                                                     <button onClick={() => handleEdit(extra)} className="text-[#008080] hover:underline">Edit</button>
                                                 </td>
                                                 <td className="py-3 px-2">
+                                                    <button
+                                                        type="button"
+                                                        onClick={() =>
+                                                            openBlockedDatesModal({
+                                                                extraId: extra.id,
+                                                                label: extra.name,
+                                                            })
+                                                        }
+                                                        className="text-[#008080] hover:underline whitespace-nowrap"
+                                                    >
+                                                        Block dates
+                                                    </button>
+                                                </td>
+                                                <td className="py-3 px-2">
                                                     <button onClick={() => handleDelete(extra)} className="text-red-500 hover:underline">Remove</button>
                                                 </td>
                                             </tr>
@@ -529,6 +637,18 @@ export default function ExtrasPage() {
                                                 {cat.count}
                                             </td>
                                             <td className="py-3 px-4 space-x-3 flex flex-wrap gap-y-1">
+                                                <button
+                                                    type="button"
+                                                    className="text-[#008080] hover:underline text-sm"
+                                                    onClick={() =>
+                                                        openBlockedDatesModal({
+                                                            category: cat.name,
+                                                            label: `${cat.name} (all extras)`,
+                                                        })
+                                                    }
+                                                >
+                                                    Block dates
+                                                </button>
                                                 <button
                                                     type="button"
                                                     className="text-[#008080] hover:underline text-sm"
@@ -707,6 +827,60 @@ export default function ExtrasPage() {
                                 />
                                 <label className="text-sm text-gray-700">Active</label>
                             </div>
+                            <div className="flex items-start gap-2 pt-1 border-t border-gray-100">
+                                <input
+                                    type="checkbox"
+                                    id="requiresGuestDetails"
+                                    checked={form.requiresGuestDetails}
+                                    onChange={(e) =>
+                                        setForm({ ...form, requiresGuestDetails: e.target.checked })
+                                    }
+                                    className="w-4 h-4 mt-1 text-[#008080] focus:ring-[#008080] rounded"
+                                />
+                                <div>
+                                    <label htmlFor="requiresGuestDetails" className="text-sm text-gray-700 font-medium">
+                                        Collect guest details when selected
+                                    </label>
+                                    <p className="text-xs text-gray-500 mt-1">
+                                        Shows a description box and date picker on the booking extras step (like Welcome Note). Use for Flower Petals and similar.
+                                    </p>
+                                </div>
+                            </div>
+                            {form.requiresGuestDetails && (
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                                        Details box prompt
+                                    </label>
+                                    <textarea
+                                        value={form.detailsPrompt}
+                                        onChange={(e) =>
+                                            setForm({ ...form, detailsPrompt: e.target.value })
+                                        }
+                                        rows={2}
+                                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#008080] resize-none"
+                                        placeholder="e.g. Describe how you'd like the flower petals arranged..."
+                                    />
+                                </div>
+                            )}
+                            <div className="flex items-start gap-2 pt-1 border-t border-gray-100">
+                                <input
+                                    type="checkbox"
+                                    id="requiresDateSelection"
+                                    checked={form.requiresDateSelection}
+                                    onChange={(e) =>
+                                        setForm({ ...form, requiresDateSelection: e.target.checked })
+                                    }
+                                    className="w-4 h-4 mt-1 text-[#008080] focus:ring-[#008080] rounded"
+                                />
+                                <div>
+                                    <label htmlFor="requiresDateSelection" className="text-sm text-gray-700 font-medium">
+                                        Require date selection when selected
+                                    </label>
+                                    <p className="text-xs text-gray-500 mt-1">
+                                        Guests must pick which night(s) of their stay the extra applies to. Use for massages and similar services. Block unavailable dates via “Block dates”.
+                                    </p>
+                                </div>
+                            </div>
                         </div>
                         <div className="p-6 border-t border-gray-100 flex justify-end gap-3">
                             <button
@@ -722,6 +896,112 @@ export default function ExtrasPage() {
                             >
                                 {saving ? "Saving..." : "Save"}
                             </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {blockedDatesModal && (
+                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+                    <div className="bg-white rounded-lg w-full max-w-lg max-h-[90vh] overflow-y-auto">
+                        <div className="p-6 border-b border-gray-100 flex justify-between items-center">
+                            <div>
+                                <h2 className="text-xl font-semibold text-[#333333]">
+                                    Block unavailable dates
+                                </h2>
+                                <p className="text-sm text-gray-500 mt-1">
+                                    {blockedDatesModal.label}
+                                </p>
+                            </div>
+                            <button
+                                type="button"
+                                onClick={() => setBlockedDatesModal(null)}
+                                className="text-gray-400 hover:text-gray-600"
+                            >
+                                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                </svg>
+                            </button>
+                        </div>
+
+                        <div className="p-6 space-y-4">
+                            <p className="text-xs text-gray-500">
+                                Block dates when this service is unavailable (e.g. masseuse off). Guests cannot select these nights when booking this extra.
+                                {blockedDatesModal.category && (
+                                    <> Applies to every extra in the <strong>{blockedDatesModal.category}</strong> category.</>
+                                )}
+                            </p>
+
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">Start date *</label>
+                                    <input
+                                        type="date"
+                                        value={blockForm.date}
+                                        onChange={(e) => setBlockForm({ ...blockForm, date: e.target.value })}
+                                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#008080]"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">End date (optional)</label>
+                                    <input
+                                        type="date"
+                                        value={blockForm.endDate}
+                                        onChange={(e) => setBlockForm({ ...blockForm, endDate: e.target.value })}
+                                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#008080]"
+                                    />
+                                </div>
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">Reason (optional)</label>
+                                <input
+                                    type="text"
+                                    value={blockForm.reason}
+                                    onChange={(e) => setBlockForm({ ...blockForm, reason: e.target.value })}
+                                    placeholder="e.g. Masseuse unavailable"
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#008080]"
+                                />
+                            </div>
+                            <button
+                                type="button"
+                                onClick={handleAddBlockedDate}
+                                disabled={savingBlockedDate || !blockForm.date}
+                                className="w-full py-2 bg-[#008080] text-white rounded-lg hover:bg-[#006666] disabled:opacity-50"
+                            >
+                                {savingBlockedDate ? "Saving..." : "Add blocked date(s)"}
+                            </button>
+
+                            <div className="border-t border-gray-100 pt-4">
+                                <h3 className="text-sm font-semibold text-gray-700 mb-3">Currently blocked</h3>
+                                {loadingBlockedDates ? (
+                                    <div className="text-sm text-gray-500 py-4 text-center">Loading...</div>
+                                ) : blockedDatesList.length === 0 ? (
+                                    <div className="text-sm text-gray-500 py-4 text-center">No blocked dates yet.</div>
+                                ) : (
+                                    <ul className="space-y-2 max-h-48 overflow-y-auto">
+                                        {blockedDatesList.map((row) => (
+                                            <li
+                                                key={row.id}
+                                                className="flex items-center justify-between text-sm bg-gray-50 rounded-lg px-3 py-2"
+                                            >
+                                                <div>
+                                                    <span className="font-medium text-gray-800">{row.date}</span>
+                                                    {row.reason && (
+                                                        <span className="text-gray-500 ml-2">— {row.reason}</span>
+                                                    )}
+                                                </div>
+                                                <button
+                                                    type="button"
+                                                    onClick={() => handleRemoveBlockedDate(row.id)}
+                                                    className="text-red-500 hover:underline text-xs"
+                                                >
+                                                    Remove
+                                                </button>
+                                            </li>
+                                        ))}
+                                    </ul>
+                                )}
+                            </div>
                         </div>
                     </div>
                 </div>

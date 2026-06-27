@@ -814,6 +814,24 @@ export default function BookingDetailsPage() {
               </div>
             )}
 
+            {booking.extraPersonalizations?.length > 0 && (
+              <div className="mt-4 border-t border-gray-200 pt-3 space-y-3">
+                {booking.extraPersonalizations.map((item) => (
+                  <div key={item.extraId}>
+                    <p className="text-sm font-semibold text-[#333333] mb-1">
+                      {item.extraName || "Extra"} details:
+                    </p>
+                    <p className="text-sm text-gray-600 italic">"{item.text}"</p>
+                    {item.dates?.length > 0 && (
+                      <p className="text-xs text-gray-500 mt-1">
+                        Dates: {item.dates.join(", ")}
+                      </p>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
+
             {booking.popUpBeds > 0 && (
               <div className="mt-3 border-t border-gray-200 pt-3">
                 <p className="text-sm text-gray-600">

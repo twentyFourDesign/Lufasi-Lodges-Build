@@ -331,7 +331,7 @@ export default function GuestDetails() {
                 incDisabled: !canSetGuests({ adults: adults + 1 }),
               })}
               {renderGuestCounter({
-                label: "Teens (13–17 years)",
+                label: "Teens (13–18 years)",
                 value: teens,
                 onChange: onChangeTeens,
                 decDisabled: teens <= 0 || !canSetGuests({ teenagers: teens - 1 }),

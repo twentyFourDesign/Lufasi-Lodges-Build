@@ -253,6 +253,7 @@ export default function ReviewYourBooking() {
       bedConfiguration: bookingStore.draft.bedConfiguration,
       domeDetails: bookingStore.draft.domeDetails,
       welcomeNote: bookingStore.draft.welcomeNote,
+      extraPersonalizations: bookingStore.draft.extraPersonalizations,
     };
 
     try {
@@ -450,7 +451,7 @@ export default function ReviewYourBooking() {
                   <div className="text-sm text-[#6B6B6B] space-y-1">
                     <p>{bookingStore.draft.guests?.adults || 0} Adults (18+)</p>
                     {(bookingStore.draft.guests?.teenagers || 0) > 0 && (
-                      <p>{bookingStore.draft.guests?.teenagers} Teens (13–17)</p>
+                      <p>{bookingStore.draft.guests?.teenagers} Teens (13–18)</p>
                     )}
                     {(bookingStore.draft.guests?.infants || 0) > 0 && (
                       <p>{bookingStore.draft.guests?.infants} Infants (0–1)</p>
@@ -495,10 +496,37 @@ export default function ReviewYourBooking() {
                 <div>
                   <h4 className="font-semibold text-[#09432B]">Extras</h4>
                   <p className="text-sm text-[#6B6B6B]">
-                    {bookingStore.draft.extras.length > 0
-                      ? `${bookingStore.draft.extras.length} Selected`
+                    {bookingStore.draft.extras?.length > 0
+                      ? bookingStore.draft.extras
+                          .map((e) => e.name || e.title)
+                          .filter(Boolean)
+                          .join(", ")
                       : "N/A"}
                   </p>
+                  {bookingStore.draft.extraPersonalizations?.map((item) => (
+                    <div
+                      key={item.extraId}
+                      className="mt-2 text-xs text-[#6B6B6B] border-l-2 border-[#E6F2EE] pl-2"
+                    >
+                      <span className="font-semibold text-[#09432B]">
+                        {item.extraName}:
+                      </span>{" "}
+                      {item.text}
+                      {item.dates?.length > 0 && (
+                        <div className="text-gray-500 mt-0.5">
+                          Dates: {item.dates.join(", ")}
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                  {bookingStore.draft.welcomeNote?.text && (
+                    <div className="mt-2 text-xs text-[#6B6B6B] border-l-2 border-[#E6F2EE] pl-2">
+                      <span className="font-semibold text-[#09432B]">
+                        Welcome note:
+                      </span>{" "}
+                      {bookingStore.draft.welcomeNote.text}
+                    </div>
+                  )}
                 </div>
               </CardContent>
             </Card>
