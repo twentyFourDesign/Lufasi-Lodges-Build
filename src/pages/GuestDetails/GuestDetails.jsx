@@ -259,14 +259,19 @@ export default function GuestDetails() {
       Number(bookingStore.draft.podCount) === 6) &&
     !noticeMessage;
 
-  const renderGuestCounter = ({ label, value, onChange, decDisabled, incDisabled }) => (
+  const renderGuestCounter = ({ label, sublabel, value, onChange, decDisabled, incDisabled }) => (
     <div
       className="
     flex flex-col items-center text-center py-6
     sm:flex-row sm:justify-between sm:text-left
   "
     >
-      <span className="text-lg font-semibold text-[#09432B]">{label}</span>
+      <div>
+        <span className="text-lg font-semibold text-[#09432B]">{label}</span>
+        {sublabel && (
+          <p className="text-xs text-[#737373] mt-1">{sublabel}</p>
+        )}
+      </div>
 
       <div className="flex items-center gap-6 mt-4 sm:mt-0">
         <button
@@ -332,6 +337,7 @@ export default function GuestDetails() {
               })}
               {renderGuestCounter({
                 label: "Teens (13–18 years)",
+                sublabel: "25% off adult guest rate",
                 value: teens,
                 onChange: onChangeTeens,
                 decDisabled: teens <= 0 || !canSetGuests({ teenagers: teens - 1 }),
@@ -339,6 +345,7 @@ export default function GuestDetails() {
               })}
               {renderGuestCounter({
                 label: "Infants (0–1 year) ",
+                sublabel: "Free",
                 value: infants,
                 onChange: onChangeInfants,
                 decDisabled: infants <= 0 || !canSetGuests({ infants: infants - 1 }),
@@ -346,6 +353,7 @@ export default function GuestDetails() {
               })}
               {renderGuestCounter({
                 label: "Toddlers (1–3 years) ",
+                sublabel: "75% off adult guest rate",
                 value: toddlers,
                 onChange: onChangeToddlers,
                 decDisabled: toddlers <= 0 || !canSetGuests({ toddlers: toddlers - 1 }),
@@ -353,6 +361,7 @@ export default function GuestDetails() {
               })}
               {renderGuestCounter({
                 label: "Children (4–12 years) ",
+                sublabel: "50% off adult guest rate",
                 value: children,
                 onChange: onChangeChildren,
                 decDisabled: children <= 0 || !canSetGuests({ children: children - 1 }),
