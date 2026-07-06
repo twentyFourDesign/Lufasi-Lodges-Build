@@ -138,7 +138,80 @@ export function applyDefaultGuestAllocation(domeDetails, guests, podCount) {
   }));
 }
 
-export function buildDomeDetailsWithGuestTypes(selectedPodIds, availablePods, guests, podCount) {
+export function tryAssignGuestToDome(
+  domeDetails,
+  type,
+  toDomeIdx,
+  guests,
+  podCount,
+) {
+  const podGuests = [...(domeDetails[toDomeIdx]?.guestTypes || [])];
+  if (!canAddGuestToPod(podGuests, type, guests, podCount, toDomeIdx)) {
+    return null;
+  }
+  return domeDetails.map((dome, i) =>
+    i === toDomeIdx
+      ? { ...dome, guestTypes: [...(dome.guestTypes || []), type] }
+      : dome,
+  );
+}
+
+export function tryMoveGuestBetweenDomes(
+  domeDetails,
+  fromDomeIdx,
+  guestIdx,
+  toDomeIdx,
+  guests,
+  podCount,
+) {
+  if (fromDomeIdx === toDomeIdx) return null;
+  const type = domeDetails[fromDomeIdx]?.guestTypes?.[guestIdx];
+  if (!type) return null;
+
+  const targetPod = [...(domeDetails[toDomeIdx]?.guestTypes || [])];
+  if (!canAddGuestToPod(targetPod, type, guests, podCount, toDomeIdx)) {
+    return null;
+  }
+
+  return domeDetails.map((dome, i) => {
+    if (i === fromDomeIdx) {
+      const types = [...(dome.guestTypes || [])];
+      types.splice(guestIdx, 1);
+      return { ...dome, guestTypes: types };
+    }
+    if (i === toDomeIdx) {
+      return { ...dome, guestTypes: [...(dome.guestTypes || []), type] };
+    }
+    return dome;
+  });
+}
+
+export function tryRemoveGuestFromDome(domeDetails, fromDomeIdx, guestIdx) {
+  const type = domeDetails[fromDomeIdx]?.guestTypes?.[guestIdx];
+  if (!type) return null;
+  return domeDetails.map((dome, i) => {
+    if (i !== fromDomeIdx) return dome;
+    const types = [...(dome.guestTypes || [])];
+    types.splice(guestIdx, 1);
+    return { ...dome, guestTypes: types };
+  });
+}
+
+export function buildUnassignedTypeList(remaining) {
+  return GUEST_TYPE_ORDER.flatMap((type) =>
+    Array.from({ length: remaining[type] || 0 }, (_, i) => ({
+      type,
+      key: `${type}-pool-${i}`,
+    })),
+  );
+}
+
+export function buildDomeDetailsWithGuestTypes(
+  selectedPodIds,
+  availablePods,
+  guests,
+  podCount,
+) {
   const g = normalizeFamilyGuests(guests);
   const pods = Number(podCount) || selectedPodIds.length || 1;
   const allocation = allocateGuestsToPods(g, pods);
