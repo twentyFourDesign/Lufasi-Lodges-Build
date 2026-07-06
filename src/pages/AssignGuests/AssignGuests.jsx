@@ -22,7 +22,10 @@ import {
   GUEST_TYPE_LABELS,
   applyDefaultGuestAllocation,
   buildUnassignedTypeList,
+  getGuestMoveArrowState,
   getRemainingGuestPool,
+  getWhyGuestCannotAssignToDome,
+  getWhyGuestCannotMoveToDome,
   isGuestAllocationComplete,
   podAllocationFromDomeDetails,
   tryAssignGuestToDome,
@@ -43,16 +46,70 @@ function formatPrice(n) {
   return n.toLocaleString();
 }
 
+function ArrowMoveButton({ direction, canMove, reason, onActivate, onBlocked }) {
+  const Icon = direction === "up" ? ChevronUp : ChevronDown;
+  const label = direction === "up" ? "Move to dome above" : "Move to dome below";
+
+  const handleClick = (e) => {
+    e.stopPropagation();
+    if (!canMove) {
+      onBlocked?.(reason);
+      return;
+    }
+    onActivate?.();
+  };
+
+  return (
+    <div className="relative group">
+      <button
+        type="button"
+        aria-disabled={!canMove}
+        title={reason || label}
+        onPointerDown={(e) => e.stopPropagation()}
+        onClick={handleClick}
+        aria-label={canMove ? label : reason || label}
+        className={[
+          "w-7 h-7 rounded-md flex items-center justify-center transition-colors",
+          canMove
+            ? "bg-white/20 hover:bg-white/35 cursor-pointer"
+            : "bg-white/10 opacity-40 cursor-not-allowed",
+        ].join(" ")}
+      >
+        <Icon className="w-4 h-4" />
+      </button>
+      {reason && (
+        <div
+          role="tooltip"
+          className={[
+            "pointer-events-none absolute z-[60] w-44 sm:w-52",
+            "px-2.5 py-2 text-[11px] leading-snug rounded-lg shadow-lg",
+            "bg-[#09432B] text-white border border-[#073522]",
+            direction === "up"
+              ? "right-full mr-2 top-0"
+              : "right-full mr-2 bottom-0",
+            canMove
+              ? "opacity-0 group-hover:opacity-100 group-focus-within:opacity-100"
+              : "opacity-0 group-hover:opacity-100 group-focus-within:opacity-100",
+          ].join(" ")}
+        >
+          {reason}
+        </div>
+      )}
+    </div>
+  );
+}
+
 function GuestBlock({
   type,
   selected,
   dragging,
   showArrows,
-  canMoveUp,
-  canMoveDown,
+  moveUp,
+  moveDown,
   onPointerDown,
   onMoveUp,
   onMoveDown,
+  onBlockedAction,
   onTap,
 }) {
   return (
@@ -82,32 +139,20 @@ function GuestBlock({
       </span>
       {showArrows && (
         <div className="flex flex-col gap-0.5 shrink-0">
-          <button
-            type="button"
-            disabled={!canMoveUp}
-            onPointerDown={(e) => e.stopPropagation()}
-            onClick={(e) => {
-              e.stopPropagation();
-              onMoveUp?.();
-            }}
-            className="w-7 h-7 rounded-md bg-white/20 hover:bg-white/30 disabled:opacity-30 flex items-center justify-center"
-            aria-label="Move to dome above"
-          >
-            <ChevronUp className="w-4 h-4" />
-          </button>
-          <button
-            type="button"
-            disabled={!canMoveDown}
-            onPointerDown={(e) => e.stopPropagation()}
-            onClick={(e) => {
-              e.stopPropagation();
-              onMoveDown?.();
-            }}
-            className="w-7 h-7 rounded-md bg-white/20 hover:bg-white/30 disabled:opacity-30 flex items-center justify-center"
-            aria-label="Move to dome below"
-          >
-            <ChevronDown className="w-4 h-4" />
-          </button>
+          <ArrowMoveButton
+            direction="up"
+            canMove={moveUp?.canMove}
+            reason={moveUp?.reason}
+            onActivate={onMoveUp}
+            onBlocked={onBlockedAction}
+          />
+          <ArrowMoveButton
+            direction="down"
+            canMove={moveDown?.canMove}
+            reason={moveDown?.reason}
+            onActivate={onMoveDown}
+            onBlocked={onBlockedAction}
+          />
         </div>
       )}
     </div>
@@ -145,8 +190,24 @@ export default function AssignGuests() {
   const [dragState, setDragState] = useState(null);
   const [hoverDrop, setHoverDrop] = useState(null);
   const [picked, setPicked] = useState(null);
+  const [actionHint, setActionHint] = useState(null);
   const dragRef = useRef(null);
   const suppressClickRef = useRef(false);
+  const hintTimerRef = useRef(null);
+
+  const showActionHint = useCallback((message) => {
+    if (!message) return;
+    setActionHint(message);
+    if (hintTimerRef.current) clearTimeout(hintTimerRef.current);
+    hintTimerRef.current = setTimeout(() => setActionHint(null), 4000);
+  }, []);
+
+  useEffect(
+    () => () => {
+      if (hintTimerRef.current) clearTimeout(hintTimerRef.current);
+    },
+    [],
+  );
 
   const domeDetails = useMemo(() => {
     if (bookingStore.draft.domeDetails?.length) {
@@ -240,7 +301,19 @@ export default function AssignGuests() {
           guests,
           podCount,
         );
-        if (next) updateDomeDetails(next);
+        if (next) {
+          updateDomeDetails(next);
+        } else {
+          showActionHint(
+            getWhyGuestCannotAssignToDome(
+              domeDetails,
+              source.type,
+              target.domeIdx,
+              guests,
+              podCount,
+            ) || "Cannot place this guest in that dome.",
+          );
+        }
         return;
       }
 
@@ -263,11 +336,24 @@ export default function AssignGuests() {
             guests,
             podCount,
           );
-          if (next) updateDomeDetails(next);
+          if (next) {
+            updateDomeDetails(next);
+          } else {
+            showActionHint(
+              getWhyGuestCannotMoveToDome(
+                domeDetails,
+                source.domeIdx,
+                source.guestIdx,
+                target.domeIdx,
+                guests,
+                podCount,
+              ) || "Cannot move this guest to that dome.",
+            );
+          }
         }
       }
     },
-    [domeDetails, guests, podCount, updateDomeDetails],
+    [domeDetails, guests, podCount, updateDomeDetails, showActionHint],
   );
 
   const startDrag = useCallback((e, payload) => {
@@ -343,13 +429,77 @@ export default function AssignGuests() {
       return;
     }
     if (!picked) return;
+
+    if (picked.kind === "pool" && target.kind === "dome") {
+      const next = tryAssignGuestToDome(
+        domeDetails,
+        picked.type,
+        target.domeIdx,
+        guests,
+        podCount,
+      );
+      if (next) {
+        updateDomeDetails(next);
+        setPicked(null);
+      } else {
+        showActionHint(
+          getWhyGuestCannotAssignToDome(
+            domeDetails,
+            picked.type,
+            target.domeIdx,
+            guests,
+            podCount,
+          ) || "Cannot place this guest in that dome.",
+        );
+      }
+      return;
+    }
+
+    if (picked.kind === "dome" && target.kind === "dome") {
+      const next = tryMoveGuestBetweenDomes(
+        domeDetails,
+        picked.domeIdx,
+        picked.guestIdx,
+        target.domeIdx,
+        guests,
+        podCount,
+      );
+      if (next) {
+        updateDomeDetails(next);
+        setPicked(null);
+      } else {
+        showActionHint(
+          getWhyGuestCannotMoveToDome(
+            domeDetails,
+            picked.domeIdx,
+            picked.guestIdx,
+            target.domeIdx,
+            guests,
+            podCount,
+          ) || "Cannot move this guest to that dome.",
+        );
+      }
+      return;
+    }
+
     applyDrop(picked, target);
     setPicked(null);
   };
 
   const moveGuestByArrow = (fromDomeIdx, guestIdx, direction) => {
+    const state = getGuestMoveArrowState(
+      domeDetails,
+      fromDomeIdx,
+      guestIdx,
+      direction,
+      guests,
+      podCount,
+    );
+    if (!state.canMove) {
+      showActionHint(state.reason);
+      return;
+    }
     const toDomeIdx = direction === "up" ? fromDomeIdx - 1 : fromDomeIdx + 1;
-    if (toDomeIdx < 0 || toDomeIdx >= domeDetails.length) return;
     const next = tryMoveGuestBetweenDomes(
       domeDetails,
       fromDomeIdx,
@@ -411,6 +561,12 @@ export default function AssignGuests() {
         <p className="text-center text-xs text-[#737373] mb-6 md:hidden">
           Hold a guest block and drag, or tap to select then tap a dome. Use arrows to move between domes.
         </p>
+
+        {actionHint && (
+          <div className="mb-4 rounded-lg border border-[#09432B]/30 bg-[#E6F2EE] px-4 py-3 text-sm text-[#09432B] font-medium text-center shadow-sm">
+            {actionHint}
+          </div>
+        )}
 
         <div className="grid grid-cols-1 md:grid-cols-12 gap-8">
           <div className="md:col-span-8 space-y-5">
@@ -543,8 +699,22 @@ export default function AssignGuests() {
                               key={`${domeIdx}-${guestIdx}-${type}`}
                               type={type}
                               showArrows
-                              canMoveUp={domeIdx > 0}
-                              canMoveDown={domeIdx < domeDetails.length - 1}
+                              moveUp={getGuestMoveArrowState(
+                                domeDetails,
+                                domeIdx,
+                                guestIdx,
+                                "up",
+                                guests,
+                                podCount,
+                              )}
+                              moveDown={getGuestMoveArrowState(
+                                domeDetails,
+                                domeIdx,
+                                guestIdx,
+                                "down",
+                                guests,
+                                podCount,
+                              )}
                               selected={
                                 picked?.kind === "dome" &&
                                 picked.domeIdx === domeIdx &&
@@ -573,6 +743,7 @@ export default function AssignGuests() {
                               onMoveDown={() =>
                                 moveGuestByArrow(domeIdx, guestIdx, "down")
                               }
+                              onBlockedAction={showActionHint}
                             />
                           ))
                         )}

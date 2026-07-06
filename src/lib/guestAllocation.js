@@ -197,6 +197,107 @@ export function tryRemoveGuestFromDome(domeDetails, fromDomeIdx, guestIdx) {
   });
 }
 
+function domeLabel(domeDetails, domeIdx) {
+  return domeDetails[domeIdx]?.podName || `Dome ${domeIdx + 1}`;
+}
+
+/** Human-readable reason a guest cannot move to a target dome, or null if allowed. */
+export function getWhyGuestCannotMoveToDome(
+  domeDetails,
+  fromDomeIdx,
+  guestIdx,
+  toDomeIdx,
+  guests,
+  podCount,
+) {
+  const type = domeDetails[fromDomeIdx]?.guestTypes?.[guestIdx];
+  if (!type) return "This guest is not in a dome.";
+
+  const targetPod = [...(domeDetails[toDomeIdx]?.guestTypes || [])];
+  const targetName = domeLabel(domeDetails, toDomeIdx);
+
+  if (type === "infant" && targetPod.filter((g) => g === "infant").length >= 1) {
+    return `${targetName} already has an infant — only one infant per dome.`;
+  }
+
+  const billable = targetPod.filter((g) => g !== "infant").length;
+  const allowTriple =
+    isOneAdultTwoChildrenOnePod(guests, podCount) && toDomeIdx === 0;
+  const maxBillable = allowTriple ? 3 : 2;
+
+  if (billable >= maxBillable) {
+    return `${targetName} is full — max ${maxBillable} guest${maxBillable === 1 ? "" : "s"} per dome.`;
+  }
+
+  return null;
+}
+
+/** Whether ↑/↓ is allowed and why not when disabled. */
+export function getGuestMoveArrowState(
+  domeDetails,
+  domeIdx,
+  guestIdx,
+  direction,
+  guests,
+  podCount,
+) {
+  const toDomeIdx = direction === "up" ? domeIdx - 1 : domeIdx + 1;
+  const targetName =
+    toDomeIdx >= 0 && toDomeIdx < domeDetails.length
+      ? domeLabel(domeDetails, toDomeIdx)
+      : null;
+
+  if (direction === "up" && domeIdx <= 0) {
+    return { canMove: false, reason: "Already in the top dome." };
+  }
+  if (direction === "down" && domeIdx >= domeDetails.length - 1) {
+    return { canMove: false, reason: "Already in the bottom dome." };
+  }
+
+  const blockReason = getWhyGuestCannotMoveToDome(
+    domeDetails,
+    domeIdx,
+    guestIdx,
+    toDomeIdx,
+    guests,
+    podCount,
+  );
+  if (blockReason) {
+    return { canMove: false, reason: blockReason };
+  }
+
+  return {
+    canMove: true,
+    reason: `Move to ${targetName}`,
+  };
+}
+
+export function getWhyGuestCannotAssignToDome(
+  domeDetails,
+  type,
+  toDomeIdx,
+  guests,
+  podCount,
+) {
+  const targetPod = [...(domeDetails[toDomeIdx]?.guestTypes || [])];
+  const targetName = domeLabel(domeDetails, toDomeIdx);
+
+  if (!canAddGuestToPod(targetPod, type, guests, podCount, toDomeIdx)) {
+    if (type === "infant" && targetPod.filter((g) => g === "infant").length >= 1) {
+      return `${targetName} already has an infant — only one infant per dome.`;
+    }
+    const billable = targetPod.filter((g) => g !== "infant").length;
+    const allowTriple =
+      isOneAdultTwoChildrenOnePod(guests, podCount) && toDomeIdx === 0;
+    const maxBillable = allowTriple ? 3 : 2;
+    if (billable >= maxBillable) {
+      return `${targetName} is full — max ${maxBillable} guest${maxBillable === 1 ? "" : "s"} per dome.`;
+    }
+    return `Cannot add ${GUEST_TYPE_LABELS[type] || type} to ${targetName}.`;
+  }
+  return null;
+}
+
 export function buildUnassignedTypeList(remaining) {
   return GUEST_TYPE_ORDER.flatMap((type) =>
     Array.from({ length: remaining[type] || 0 }, (_, i) => ({
