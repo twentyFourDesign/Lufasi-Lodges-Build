@@ -3,10 +3,10 @@ import { normalizeFamilyGuests } from "./familyRules";
 
 export const GUEST_TYPE_LABELS = {
   adult: "Adult (18+)",
-  teen: "Teen (13–18)",
-  child: "Child (4–12)",
-  toddler: "Toddler (1–3)",
-  infant: "Infant (0–1)",
+  teen: "Teen (13 to 18)",
+  child: "Child (4 to 12)",
+  toddler: "Toddler (1 to 3)",
+  infant: "Infant (0 to 1)",
 };
 
 export const GUEST_TYPE_ORDER = ["adult", "teen", "child", "toddler", "infant"];
@@ -216,8 +216,12 @@ export function getWhyGuestCannotMoveToDome(
   const targetPod = [...(domeDetails[toDomeIdx]?.guestTypes || [])];
   const targetName = domeLabel(domeDetails, toDomeIdx);
 
+  if (canAddGuestToPod(targetPod, type, guests, podCount, toDomeIdx)) {
+    return null;
+  }
+
   if (type === "infant" && targetPod.filter((g) => g === "infant").length >= 1) {
-    return `${targetName} already has an infant — only one infant per dome.`;
+    return `${targetName} already has an infant. Only one infant per dome.`;
   }
 
   const billable = targetPod.filter((g) => g !== "infant").length;
@@ -226,10 +230,10 @@ export function getWhyGuestCannotMoveToDome(
   const maxBillable = allowTriple ? 3 : 2;
 
   if (billable >= maxBillable) {
-    return `${targetName} is full — max ${maxBillable} guest${maxBillable === 1 ? "" : "s"} per dome.`;
+    return `${targetName} is full. Max ${maxBillable} guest${maxBillable === 1 ? "" : "s"} per dome.`;
   }
 
-  return null;
+  return `Cannot move this guest to ${targetName}.`;
 }
 
 /** Whether ↑/↓ is allowed and why not when disabled. */
@@ -284,14 +288,14 @@ export function getWhyGuestCannotAssignToDome(
 
   if (!canAddGuestToPod(targetPod, type, guests, podCount, toDomeIdx)) {
     if (type === "infant" && targetPod.filter((g) => g === "infant").length >= 1) {
-      return `${targetName} already has an infant — only one infant per dome.`;
+      return `${targetName} already has an infant. Only one infant per dome.`;
     }
     const billable = targetPod.filter((g) => g !== "infant").length;
     const allowTriple =
       isOneAdultTwoChildrenOnePod(guests, podCount) && toDomeIdx === 0;
     const maxBillable = allowTriple ? 3 : 2;
     if (billable >= maxBillable) {
-      return `${targetName} is full — max ${maxBillable} guest${maxBillable === 1 ? "" : "s"} per dome.`;
+      return `${targetName} is full. Max ${maxBillable} guest${maxBillable === 1 ? "" : "s"} per dome.`;
     }
     return `Cannot add ${GUEST_TYPE_LABELS[type] || type} to ${targetName}.`;
   }

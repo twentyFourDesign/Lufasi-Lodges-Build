@@ -35,11 +35,11 @@ import {
 } from "@/lib/guestAllocation";
 
 const TYPE_BLOCK_STYLES = {
-  adult: "bg-[#09432B] text-white border-[#073522]",
-  teen: "bg-[#1B6B4A] text-white border-[#145239]",
-  child: "bg-[#3D8B6E] text-white border-[#2F7058]",
-  toddler: "bg-[#6BAF93] text-[#09432B] border-[#5A9A80]",
-  infant: "bg-[#E6F2EE] text-[#09432B] border-[#09432B]/25",
+  adult: "bg-[#E6F2EE] text-[#09432B] border-[#B8D4CA]",
+  teen: "bg-[#EAF5F0] text-[#1A5C42] border-[#BDD9CE]",
+  child: "bg-[#F0F7F3] text-[#2A6B50] border-[#C8E0D4]",
+  toddler: "bg-[#F4FAF7] text-[#3A7560] border-[#D0E8DC]",
+  infant: "bg-[#FAFCFB] text-[#4A6358] border-[#D8E8E0]",
 };
 
 function formatPrice(n) {
@@ -60,7 +60,7 @@ function ArrowMoveButton({ direction, canMove, reason, onActivate, onBlocked }) 
   };
 
   return (
-    <div className="relative group">
+    <div className="relative group flex flex-col items-center">
       <button
         type="button"
         aria-disabled={!canMove}
@@ -71,8 +71,8 @@ function ArrowMoveButton({ direction, canMove, reason, onActivate, onBlocked }) 
         className={[
           "w-7 h-7 rounded-md flex items-center justify-center transition-colors",
           canMove
-            ? "bg-white/20 hover:bg-white/35 cursor-pointer"
-            : "bg-white/10 opacity-40 cursor-not-allowed",
+            ? "bg-[#09432B]/10 hover:bg-[#09432B]/18 text-[#09432B] cursor-pointer"
+            : "bg-[#09432B]/5 text-[#09432B]/35 cursor-not-allowed",
         ].join(" ")}
       >
         <Icon className="w-4 h-4" />
@@ -81,18 +81,22 @@ function ArrowMoveButton({ direction, canMove, reason, onActivate, onBlocked }) 
         <div
           role="tooltip"
           className={[
-            "pointer-events-none absolute z-[60] w-44 sm:w-52",
-            "px-2.5 py-2 text-[11px] leading-snug rounded-lg shadow-lg",
-            "bg-[#09432B] text-white border border-[#073522]",
-            direction === "up"
-              ? "right-full mr-2 top-0"
-              : "right-full mr-2 bottom-0",
-            canMove
-              ? "opacity-0 group-hover:opacity-100 group-focus-within:opacity-100"
-              : "opacity-0 group-hover:opacity-100 group-focus-within:opacity-100",
+            "pointer-events-none absolute z-[60] w-48 sm:w-56",
+            "bottom-full left-1/2 -translate-x-1/2 mb-2",
+            "px-3 py-2 text-[11px] leading-snug rounded-lg",
+            "bg-white text-[#4A4A4A] border border-[#D4DED9]",
+            "shadow-[0_4px_16px_rgba(9,67,43,0.12)]",
+            "opacity-0 group-hover:opacity-100 group-focus-within:opacity-100",
+            "transition-opacity duration-150",
           ].join(" ")}
         >
           {reason}
+          <span
+            className="absolute left-1/2 -translate-x-1/2 top-full w-0 h-0
+              border-l-[6px] border-r-[6px] border-t-[6px]
+              border-l-transparent border-r-transparent border-t-white"
+            aria-hidden
+          />
         </div>
       )}
     </div>
@@ -126,7 +130,7 @@ function GuestBlock({
       }}
       className={[
         "guest-block select-none touch-none rounded-xl border-2 px-3 py-3 min-w-[148px] max-w-full",
-        "flex items-center gap-2 shadow-sm transition-all duration-150",
+        "flex items-center gap-2 shadow-sm transition-all duration-150 overflow-visible",
         TYPE_BLOCK_STYLES[type] || "bg-gray-200 text-gray-800",
         dragging ? "opacity-40 scale-95" : "opacity-100",
         selected ? "ring-2 ring-[#B7FFFF] ring-offset-2 ring-offset-[#F7F5F0]" : "",
@@ -138,7 +142,7 @@ function GuestBlock({
         {GUEST_TYPE_LABELS[type] || type}
       </span>
       {showArrows && (
-        <div className="flex flex-col gap-0.5 shrink-0">
+        <div className="flex flex-col gap-0.5 shrink-0 overflow-visible">
           <ArrowMoveButton
             direction="up"
             canMove={moveUp?.canMove}
@@ -556,14 +560,14 @@ export default function AssignGuests() {
           Assign Guests to Domes
         </h2>
         <p className="text-center text-sm md:text-lg font-medium text-[#737373] mt-2 mb-2">
-          Step 3 of 7 — Drag guests into each dome
+          Step 3 of 7. Drag guests into each dome
         </p>
         <p className="text-center text-xs text-[#737373] mb-6 md:hidden">
           Hold a guest block and drag, or tap to select then tap a dome. Use arrows to move between domes.
         </p>
 
         {actionHint && (
-          <div className="mb-4 rounded-lg border border-[#09432B]/30 bg-[#E6F2EE] px-4 py-3 text-sm text-[#09432B] font-medium text-center shadow-sm">
+          <div className="mb-4 rounded-xl border border-[#D4E8DF] bg-[#F7FBF9] px-4 py-3 text-sm text-[#3D5C50] font-medium text-center shadow-sm">
             {actionHint}
           </div>
         )}
@@ -580,7 +584,7 @@ export default function AssignGuests() {
               <Info className="w-4 h-4 shrink-0 mt-0.5" />
               <div className="text-sm font-medium space-y-1">
                 <p>
-                  Drag each guest block into a dome — or use the ↑ ↓ arrows to move between domes.
+                  Drag each guest block into a dome, or use the arrows to move between domes.
                   A teen alone in a dome pays the full adult rate.
                 </p>
                 <p className="text-[#5a5a5a] hidden md:block">
@@ -673,7 +677,7 @@ export default function AssignGuests() {
                       picked ? "cursor-pointer" : "",
                     ].join(" ")}
                   >
-                    <CardContent className="p-4 sm:p-5">
+                    <CardContent className="p-4 sm:p-5 overflow-visible">
                       <div className="flex items-center gap-2 mb-4">
                         <div className="w-9 h-9 bg-[#E6F2EE] rounded-full flex items-center justify-center shrink-0">
                           <Home className="w-4 h-4 text-[#09432B]" />
@@ -685,7 +689,7 @@ export default function AssignGuests() {
 
                       <div
                         className={[
-                          "rounded-xl border-2 border-dashed min-h-[5.5rem] p-3 flex flex-wrap gap-3 content-start transition-colors",
+                          "rounded-xl border-2 border-dashed min-h-[5.5rem] p-3 flex flex-wrap gap-3 content-start transition-colors overflow-visible",
                           highlighted ? "border-[#09432B] bg-white/80" : "border-gray-200 bg-[#FAFAF8]",
                         ].join(" ")}
                       >
@@ -836,7 +840,7 @@ export default function AssignGuests() {
                 style={{ backgroundColor: "#B7FFFF" }}
               >
                 {isComplete
-                  ? "All guests assigned — continue to bed setup"
+                  ? "All guests assigned. Continue to bed setup"
                   : "Place every guest block in a dome to continue"}
               </div>
               <Button
