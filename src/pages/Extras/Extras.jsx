@@ -486,7 +486,7 @@ export default function Extras() {
           Enhance Your Experience
         </h2>
         <p className="text-center text-sm md:text-lg text-[#737373] mt-2 mb-10">
-          Step 4 of 6 – Add special touches to your stay
+          Step 5 of 7 – Add special touches to your stay
         </p>
 
         <div className="grid grid-cols-1 md:grid-cols-12 gap-8">

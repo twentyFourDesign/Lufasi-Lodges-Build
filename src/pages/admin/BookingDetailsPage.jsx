@@ -524,6 +524,11 @@ export default function BookingDetailsPage() {
                         </span>
                       </div>
                       <div className="space-y-1">
+                        {dome.guestTypes?.length > 0 && (
+                          <div className="text-xs text-gray-500 mb-1">
+                            {dome.guestTypes.join(", ")}
+                          </div>
+                        )}
                         {dome.guests?.map((guestName, gIdx) =>
                           guestName && (
                             <div key={gIdx} className="text-sm text-gray-600 flex items-center gap-2">

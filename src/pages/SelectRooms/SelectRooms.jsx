@@ -23,6 +23,7 @@ import {
   isFamilyCompositionAllowed,
   normalizeFamilyGuests,
 } from "@/lib/familyRules";
+import { buildDomeDetailsWithGuestTypes } from "@/lib/guestAllocation";
 
 function formatPrice(n) {
   return n.toLocaleString();
@@ -122,16 +123,13 @@ function PodSelectRow({ pod, isSelected, isDisabled, onSelect }) {
   );
 }
 
-function buildDomeDetailsFromSelection(selectedPodIds, availablePods) {
-  return selectedPodIds.map((id) => {
-    const pod = availablePods.find((p) => p.id === id);
-    return {
-      podId: id,
-      podName: pod?.title || "Dome",
-      bedConfig: "1 x King Bed (6 foot)",
-      guests: ["", ""],
-    };
-  });
+function buildDomeDetailsFromSelection(selectedPodIds, availablePods, guests, podCount) {
+  return buildDomeDetailsWithGuestTypes(
+    selectedPodIds,
+    availablePods,
+    guests || {},
+    podCount || selectedPodIds.length || 1,
+  );
 }
 
 export default function SelectRooms() {
@@ -364,7 +362,12 @@ export default function SelectRooms() {
         return prev;
       }
 
-      const domeDetails = buildDomeDetailsFromSelection(next, availablePods);
+      const domeDetails = buildDomeDetailsFromSelection(
+        next,
+        availablePods,
+        bookingStore.draft.guests,
+        required,
+      );
       bookingStore.updateDraft({
         selectedPodIds: next,
         podId: next[0] || undefined,
@@ -379,7 +382,12 @@ export default function SelectRooms() {
     const required = roomCount || Number(bookingStore.draft.podCount) || 1;
     if (selectedPodIds.length !== required) return;
 
-    const domeDetails = buildDomeDetailsFromSelection(selectedPodIds, availablePods);
+    const domeDetails = buildDomeDetailsFromSelection(
+      selectedPodIds,
+      availablePods,
+      bookingStore.draft.guests,
+      required,
+    );
     bookingStore.updateDraft({
       selectedPodIds,
       podId: selectedPodIds[0],
@@ -388,7 +396,7 @@ export default function SelectRooms() {
       bedConfiguration: domeDetails[0]?.bedConfig || "",
       subTotal: computeSubTotal(required),
     });
-    navigate("/meal-plan");
+    navigate("/assign-guests");
   };
 
   const { minPods, maxPods } = getPodLimits();
@@ -422,7 +430,7 @@ export default function SelectRooms() {
           Choose Your Dome
         </h2>
         <p className="text-center text-sm md:text-lg font-medium text-[#737373] mt-2 mb-6">
-          Step 2 of 6 — Select your preferred room{requiredCount > 1 ? "s" : ""}
+          Step 2 of 7 — Select your preferred room{requiredCount > 1 ? "s" : ""}
         </p>
 
         <div className="grid grid-cols-1 md:grid-cols-12 gap-8">
@@ -660,7 +668,7 @@ export default function SelectRooms() {
                 disabled={!selectionComplete}
                 onClick={handleContinue}
               >
-                Continue to Bed Configuration →
+                Continue to Guest Assignment →
               </Button>
             </div>
 
@@ -688,7 +696,7 @@ export default function SelectRooms() {
           disabled={!selectionComplete}
           onClick={handleContinue}
         >
-          Continue to Bed Configuration →
+          Continue to Guest Assignment →
         </Button>
       </FunnelMobileStickyCta>
     </div>

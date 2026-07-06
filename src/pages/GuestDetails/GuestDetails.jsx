@@ -322,7 +322,7 @@ export default function GuestDetails() {
         </h2>
 
         <p className="text-center text-sm md:text-lg font-medium text-[#737373] mt-2 mb-10">
-          Step 1 of 6 – Who’s joining you?
+          Step 1 of 7 – Who’s joining you?
         </p>
 
         <div className="grid grid-cols-1 md:grid-cols-12 gap-8">

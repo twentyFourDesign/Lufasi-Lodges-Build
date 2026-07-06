@@ -20,6 +20,7 @@ import { formatDateSafe } from "@/lib/utils";
 import { formatSelectedRoomNames } from "@/lib/bookingDisplay";
 import { calculateStayRoomSubtotal } from "@/lib/stayPricing";
 import { isFamilyCompositionAllowed } from "@/lib/familyRules";
+import { podAllocationFromDomeDetails, GUEST_TYPE_LABELS } from "@/lib/guestAllocation";
 import {
   Dialog,
   DialogContent,
@@ -115,9 +116,14 @@ export default function ReviewYourBooking() {
       seasonalRates,
     };
 
+    const podAllocation = podAllocationFromDomeDetails(
+      bookingStore.draft.domeDetails,
+    );
+
     const { subtotal: roomSubtotal } = calculateStayRoomSubtotal({
       ...stayPricingArgs,
       guestCounts,
+      podAllocation,
     });
 
     const { subtotal: baseForStayPreview } = calculateStayRoomSubtotal({
@@ -373,7 +379,7 @@ export default function ReviewYourBooking() {
           Review Your Booking
         </h1>
         <p className="text-center text-sm text-[#6B6B6B] mt-1 mb-8">
-          Step 6 of 6 - Confirm and pay
+          Step 7 of 7 - Confirm and pay
         </p>
 
         <div className="max-w-3xl mx-auto space-y-4">
@@ -426,6 +432,11 @@ export default function ReviewYourBooking() {
                        {bookingStore.draft.domeDetails.map((dome, idx) => (
                          <div key={idx} className="text-xs text-[#6B6B6B] border-l-2 border-[#E6F2EE] pl-2">
                            <span className="font-semibold">{dome.podName || `Dome ${idx + 1}`}:</span> {dome.bedConfig}
+                           {dome.guestTypes?.length > 0 && (
+                             <div className="text-gray-500 mt-0.5">
+                               {dome.guestTypes.map((t) => GUEST_TYPE_LABELS[t] || t).join(", ")}
+                             </div>
+                           )}
                            {dome.guests?.[0] && <div className="italic text-gray-500">- {dome.guests.join(', ').replace(/, $/, '')}</div>}
                          </div>
                        ))}

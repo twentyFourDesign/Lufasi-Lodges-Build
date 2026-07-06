@@ -1,6 +1,7 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import { calculateStayRoomSubtotal } from "@/lib/stayPricing";
+import { podAllocationFromDomeDetails } from "@/lib/guestAllocation";
 
 export enum BoardType {
   FULL_BOARD = "fullBoard",
@@ -102,6 +103,7 @@ type BookingDraft = {
     podName?: string;
     bedConfig: string;
     guests: string[];
+    guestTypes?: string[];
   }>;
   availableMealPlans?: BoardOption[];
   mealPlan?: BoardOption;
@@ -188,12 +190,14 @@ export const calculateDynamicSubTotal = (draft: BookingDraft): number => {
   const checkIn = draft.dates?.checkIn;
   const checkOut = draft.dates?.checkOut;
   const pods = draft.podCount || 1;
+  const podAllocation = podAllocationFromDomeDetails(draft.domeDetails);
 
   const { subtotal: roomSubtotal } = calculateStayRoomSubtotal({
     checkIn,
     checkOut,
     podsCount: pods,
     guestCounts,
+    podAllocation,
     pricingConfig,
     seasonalRates: draft.seasonalRatePeriods ?? [],
   });

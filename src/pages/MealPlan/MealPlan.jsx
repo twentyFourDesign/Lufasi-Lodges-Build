@@ -19,6 +19,7 @@ import { BASE_URL } from "@/config";
 import { useBookingStore, calculateDynamicSubTotal } from "@/store/useBookingStore";
 import { format } from "date-fns";
 import { formatDateSafe } from "@/lib/utils";
+import { isGuestAllocationComplete } from "@/lib/guestAllocation";
 
 function formatPrice(n) {
   return n?.toLocaleString() || "0";
@@ -50,6 +51,17 @@ export default function MealPlan() {
       bookingStore.draft.selectedPodIds.length !== bookingStore.draft.podCount
     ) {
       navigate("/select-rooms", { replace: true });
+      return;
+    }
+
+    if (
+      !isGuestAllocationComplete(
+        bookingStore.draft.domeDetails,
+        bookingStore.draft.guests,
+        bookingStore.draft.podCount,
+      )
+    ) {
+      navigate("/assign-guests", { replace: true });
       return;
     }
 
@@ -93,7 +105,7 @@ export default function MealPlan() {
           className="flex items-center gap-2 text-sm text-gray-700 mb-6 pl-0 hover:bg-transparent"
         >
           <ArrowLeft className="w-4 h-4" />
-          <Link to="/select-rooms">Back</Link>
+          <Link to="/assign-guests">Back</Link>
         </Button>
 
         <h2 className="text-2xl md:text-5xl font-bold text-[#09432B] text-center">
@@ -101,7 +113,7 @@ export default function MealPlan() {
         </h2>
 
         <p className="text-center text-sm md:text-lg font-medium text-[#737373] mt-2 mb-10">
-          Step 3 of 6 – Full Board meals are always included
+          Step 4 of 7 – Full Board meals are always included
         </p>
 
         <div className="grid grid-cols-1 md:grid-cols-12 gap-8">

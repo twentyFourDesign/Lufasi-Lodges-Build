@@ -2,6 +2,7 @@ import { Routes, Route, Navigate, useLocation } from "react-router-dom";
 import Home from "../pages/Home/Home";
 import BookYourStay from "@/pages/BookYourStay/BookYourStay";
 import NewBooking from "@/pages/NewBooking/NewBooking";
+import AssignGuests from "@/pages/AssignGuests/AssignGuests";
 import MealPlan from "@/pages/MealPlan/MealPlan";
 import GuestDetails from "@/pages/GuestDetails/GuestDetails";
 import SelectRooms from "@/pages/SelectRooms/SelectRooms";
@@ -124,6 +125,7 @@ export default function AppRoutes() {
         <Route path="/meal-plan" element={<MealPlan />} />
         <Route path="/guest-details" element={<GuestDetails />} />
         <Route path="/select-rooms" element={<SelectRooms />} />
+        <Route path="/assign-guests" element={<AssignGuests />} />
         <Route path="/extras" element={<ExtrasPage />} />
         <Route path="/enter-your-details" element={<EnterYourDetails />} />
         <Route path="/review-your-booking" element={<ReviewYourBooking />} />

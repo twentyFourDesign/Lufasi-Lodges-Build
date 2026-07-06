@@ -1,5 +1,10 @@
 /** Mirrors backend utils/weekdayPeakPricing.js for booking UI totals */
 
+import {
+  allocateGuestsToPods,
+  calculatePodNightCharge,
+} from "./podGuestPricing";
+
 function parseLocalDate(dateInput) {
   if (!dateInput) return null;
   if (dateInput instanceof Date && !isNaN(dateInput.getTime())) {
@@ -117,34 +122,20 @@ function normalizeGuestCounts(guestCounts = {}) {
   };
 }
 
-/** Adults fill included pod slots first; teens/children/toddlers pay discounted adult (extra guest) rates. */
-function allocateAdultTeenSlots(guests, pods) {
-  const adultsInBase = Math.min(guests.adults, pods);
-  const extraAdults = Math.max(0, guests.adults - adultsInBase);
-  return { adultsInBase, extraAdults };
-}
-
 export function calculateStayRoomSubtotal({
   checkIn,
   checkOut,
   podsCount,
   guestsCount,
   guestCounts,
+  podAllocation: podAllocationOverride,
   pricingConfig = {},
   seasonalRates = [],
 }) {
   const pods = podsCount < 1 ? 1 : podsCount;
   const guests = normalizeGuestCounts(guestCounts);
-  const toddlers = guestCounts != null ? guests.toddlers : 0;
-  const children = guestCounts != null ? guests.children : 0;
   const legacyAdultGuests =
     guestCounts == null ? Math.max(1, Number(guestsCount) || 1) : null;
-  const { extraAdults } =
-    guestCounts != null
-      ? allocateAdultTeenSlots(guests, pods)
-      : {
-          extraAdults: Math.max(0, legacyAdultGuests - pods),
-        };
 
   const nights = iterStayNights(checkIn, checkOut);
   if (!nights.length) {
@@ -158,8 +149,16 @@ export function calculateStayRoomSubtotal({
       peakNights: 0,
       offPeakNights: 0,
       nights: 0,
+      podAllocation: [],
     };
   }
+
+  const podAllocation =
+    podAllocationOverride != null
+      ? podAllocationOverride
+      : guestCounts != null
+        ? allocateGuestsToPods(guests, pods)
+        : null;
 
   let subtotal = 0;
   let baseForStay = 0;
@@ -180,14 +179,32 @@ export function calculateStayRoomSubtotal({
     const seasonalPct = getSeasonalPercentForDate(ymd, seasonalRates);
     const multiplier = 1 + seasonalPct / 100;
 
-    const nightBase = pods * basePerPod * multiplier;
-    const nightExtraAdult = extraAdults * extraGuestFee * multiplier;
-    const nightTeen =
-      guests.teenagers * extraGuestFee * TEEN_RATE_MULTIPLIER * multiplier;
-    const nightChild =
-      children * extraGuestFee * CHILD_RATE_MULTIPLIER * multiplier;
-    const nightToddler =
-      toddlers * extraGuestFee * TODDLER_RATE_MULTIPLIER * multiplier;
+    let nightBase = 0;
+    let nightExtraAdult = 0;
+    let nightTeen = 0;
+    let nightChild = 0;
+    let nightToddler = 0;
+
+    if (podAllocation) {
+      for (const podGuests of podAllocation) {
+        if (!podGuests.length) continue;
+        const podCharge = calculatePodNightCharge(
+          podGuests,
+          basePerPod,
+          extraGuestFee,
+        );
+        nightBase += podCharge.base * multiplier;
+        nightExtraAdult += podCharge.extraAdult * multiplier;
+        nightTeen += podCharge.teenExtra * multiplier;
+        nightChild += podCharge.childExtra * multiplier;
+        nightToddler += podCharge.toddlerExtra * multiplier;
+      }
+    } else {
+      const extraAdults = Math.max(0, legacyAdultGuests - pods);
+      nightBase = pods * basePerPod * multiplier;
+      nightExtraAdult = extraAdults * extraGuestFee * multiplier;
+    }
+
     const nightTotal =
       nightBase + nightExtraAdult + nightTeen + nightChild + nightToddler;
 
@@ -211,5 +228,6 @@ export function calculateStayRoomSubtotal({
     peakNights,
     offPeakNights,
     nights: nights.length,
+    podAllocation: podAllocation || [],
   };
 }

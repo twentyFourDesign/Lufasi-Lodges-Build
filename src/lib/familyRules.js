@@ -26,27 +26,31 @@ export function getDisplayGuestCount(guests = {}) {
 export function isFamilyCompositionAllowed(guests = {}, podCount = 1) {
   const g = normalizeFamilyGuests(guests);
   const pods = Number(podCount) || 1;
-  const adultRateGuests = g.adults + g.teenagers;
+  const billable = getBillableGuestCount(guests);
   const childLikeGuests = g.toddlers + g.children;
+  const needsAdultSupervisor =
+    g.infants + g.toddlers + g.children > 0;
+  const oneAdultTwoChildrenOnePod =
+    pods === 1 &&
+    g.adults === 1 &&
+    g.teenagers === 0 &&
+    g.children === 2 &&
+    g.toddlers === 0;
 
   if (pods < 1 || pods > 6) return false;
-  if (adultRateGuests < 1) return false;
-  if (adultRateGuests > pods * 2) return false;
+  if (g.adults + g.teenagers < 1) return false;
+  if (needsAdultSupervisor && g.adults < 1) return false;
+  if (billable > pods * 2 && !oneAdultTwoChildrenOnePod) return false;
+  if (billable < pods) return false;
   if (g.infants > pods) return false;
-  // At least one adult/teen per dome (no unsupervised children).
-  if (adultRateGuests < pods) return false;
-  // At least one billable (non-infant) guest per dome.
-  if (adultRateGuests + childLikeGuests < pods) return false;
 
-  // Explicit client rule: 2 adults + 2 children (4-12) must take 2 domes.
-  if (adultRateGuests >= 2 && g.children >= 2 && pods < 2) return false;
-
-  // Explicit client rule: 1 adult + 2 children (4-12) may stay in 1 dome.
-  if (pods === 1 && adultRateGuests === 1 && g.children === 2 && g.toddlers === 0) {
+  if (g.adults + g.teenagers >= 2 && g.children >= 2 && pods < 2) {
+    return false;
+  }
+  if (oneAdultTwoChildrenOnePod) {
     return g.infants <= 1;
   }
 
-  // Recommended interpretation: toddlers count like children for capacity.
   return childLikeGuests <= pods;
 }
 
@@ -86,4 +90,3 @@ export function getMaxPopUpBeds(guests = {}, podCount = 1) {
   const pods = Math.max(1, Number(podCount) || 1);
   return Math.min(pods, g.toddlers + g.children);
 }
-
