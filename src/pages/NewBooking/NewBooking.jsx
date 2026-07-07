@@ -9,7 +9,9 @@ export default function NewBooking() {
 
   useEffect(() => {
     const { draft } = bookingStore;
-    if (draft.dates?.checkIn && draft.guests?.adults) {
+    const leadGuests =
+      (Number(draft.guests?.adults) || 0) + (Number(draft.guests?.teenagers) || 0);
+    if (draft.dates?.checkIn && leadGuests >= 1) {
       if (draft.selectedPodIds?.length === draft.podCount) {
         navigate("/meal-plan", { replace: true });
       } else {

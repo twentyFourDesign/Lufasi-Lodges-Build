@@ -238,7 +238,10 @@ export default function SelectRooms() {
       navigate("/", { replace: true });
       return;
     }
-    if (!bookingStore.draft.guests?.adults) {
+    const leadGuests =
+      (Number(bookingStore.draft.guests?.adults) || 0) +
+      (Number(bookingStore.draft.guests?.teenagers) || 0);
+    if (leadGuests < 1) {
       navigate("/guest-details", { replace: true });
       return;
     }
