@@ -15,7 +15,7 @@ import { useNavigate } from "react-router-dom";
 import { toISODate, parseAvailabilityCheckResponse } from "@/lib/utils";
 import {
   findMinValidPodCount,
-  isFamilyCompositionAllowed,
+  isAllowedGuestCombination,
   normalizeFamilyGuests,
 } from "@/lib/familyRules";
 
@@ -130,15 +130,12 @@ export default function BookingForm() {
 
   const canDecrement = (patch) => {
     const next = normalizeFamilyGuests({ ...guests, ...patch });
-    // Adults can never go below 1
-    if (next.adults < 1) return false;
     return findMinValidPodCount(next) !== null;
   };
 
   const tryIncrement = (key, delta) => {
     setSubmitError(null);
     const nextVal = Math.max(0, (guests[key] || 0) + delta);
-    if (key === "adults" && nextVal < 1) return;
     const next = { ...guests, [key]: nextVal };
 
     if (delta > 0) {
@@ -177,7 +174,9 @@ export default function BookingForm() {
     const minPods = findMinValidPodCount(normalized);
     if (minPods === null) {
       setSubmitError(
-        "Your guest mix can't be accommodated. Please review the family occupancy rules.",
+        isAllowedGuestCombination(normalized)
+          ? "Your guest mix can't be accommodated in the available domes."
+          : "This guest combination is not available for booking.",
       );
       return;
     }
@@ -319,13 +318,13 @@ export default function BookingForm() {
                 sublabel="18+ years"
                 value={guests.adults}
                 onChange={(d) => tryIncrement("adults", d)}
-                decDisabled={guests.adults <= 1 || !canDecrement({ adults: guests.adults - 1 })}
+                decDisabled={guests.adults <= 0 || !canDecrement({ adults: guests.adults - 1 })}
                 incDisabled={!canIncrement({ adults: guests.adults + 1 })}
                 incHint="No valid pod arrangement"
               />
               <GuestCounter
                 label="Teens"
-                sublabel="13–18 years"
+                sublabel="13–17 years"
                 value={guests.teenagers}
                 onChange={(d) => tryIncrement("teenagers", d)}
                 decDisabled={guests.teenagers <= 0 || !canDecrement({ teenagers: guests.teenagers - 1 })}

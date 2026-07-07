@@ -585,7 +585,6 @@ export default function AssignGuests() {
               <div className="text-sm font-medium space-y-1">
                 <p>
                   Drag each guest block into a dome, or use the arrows to move between domes.
-                  A teen alone in a dome pays the full adult rate.
                 </p>
                 <p className="text-[#5a5a5a] hidden md:block">
                   Hold and drag on mobile, or tap a block then tap a dome.

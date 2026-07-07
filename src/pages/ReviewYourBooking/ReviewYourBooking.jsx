@@ -19,7 +19,7 @@ import { BASE_URL } from "@/config";
 import { formatDateSafe } from "@/lib/utils";
 import { formatSelectedRoomNames } from "@/lib/bookingDisplay";
 import { calculateStayRoomSubtotal } from "@/lib/stayPricing";
-import { isFamilyCompositionAllowed } from "@/lib/familyRules";
+import { isFamilyCompositionAllowed, isAllowedGuestCombination } from "@/lib/familyRules";
 import { podAllocationFromDomeDetails, GUEST_TYPE_LABELS } from "@/lib/guestAllocation";
 import {
   Dialog,
@@ -219,11 +219,11 @@ export default function ReviewYourBooking() {
       return "Please enter your date of birth on the details page.";
     }
     const guests = draft.guests || {};
-    if (!guests.adults || guests.adults < 1) {
-      return "At least one adult guest is required for a booking.";
+    if (!isAllowedGuestCombination(guests)) {
+      return "This guest combination is not available for booking.";
     }
     if (!isFamilyCompositionAllowed(guests, draft.podCount || 1)) {
-      return "Guest mix does not match the family occupancy rules for the selected number of domes.";
+      return "This guest combination cannot be accommodated in the selected number of domes.";
     }
     return null;
   };
@@ -462,7 +462,7 @@ export default function ReviewYourBooking() {
                   <div className="text-sm text-[#6B6B6B] space-y-1">
                     <p>{bookingStore.draft.guests?.adults || 0} Adults (18+)</p>
                     {(bookingStore.draft.guests?.teenagers || 0) > 0 && (
-                      <p>{bookingStore.draft.guests?.teenagers} Teens (13–18)</p>
+                      <p>{bookingStore.draft.guests?.teenagers} Teens (13–17)</p>
                     )}
                     {(bookingStore.draft.guests?.infants || 0) > 0 && (
                       <p>{bookingStore.draft.guests?.infants} Infants (0–1)</p>

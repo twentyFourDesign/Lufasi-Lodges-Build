@@ -3,7 +3,7 @@ import { normalizeFamilyGuests } from "./familyRules";
 
 export const GUEST_TYPE_LABELS = {
   adult: "Adult (18+)",
-  teen: "Teen (13 to 18)",
+  teen: "Teen (13 to 17)",
   child: "Child (4 to 12)",
   toddler: "Toddler (1 to 3)",
   infant: "Infant (0 to 1)",
@@ -114,9 +114,10 @@ export function validatePodAllocation(podAllocation, guests, podCount) {
 
   if (
     g.infants + g.toddlers + g.children > 0 &&
-    g.adults < 1
+    g.adults < 1 &&
+    g.teenagers < 1
   ) {
-    errors.push("An adult must be in the booking when traveling with children.");
+    errors.push("At least one adult or teen must be in the booking.");
   }
 
   return { valid: errors.length === 0, errors };

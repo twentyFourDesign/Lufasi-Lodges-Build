@@ -20,6 +20,7 @@ import { BASE_URL } from "@/config";
 import { formatDateSafe } from "@/lib/utils";
 import {
   isFamilyCompositionAllowed,
+  isAllowedGuestCombination,
   normalizeFamilyGuests,
   findMinValidPodCount,
   getMaxPopUpBeds,
@@ -158,7 +159,9 @@ export default function GuestDetails() {
     const { pods, bumped } = resolvePodCount(normalized);
     if (pods === null) {
       setNoticeMessage(
-        "We can't fit this guest mix in the available domes. Please change your dates or reduce guests.",
+        isAllowedGuestCombination(normalized)
+          ? "We can't fit this guest mix in the available domes. Please change your dates or reduce guests."
+          : "This guest combination is not available for booking. Please adjust your party to a permitted mix.",
       );
       return;
     }
@@ -219,7 +222,7 @@ export default function GuestDetails() {
 
   const onChangeAdults = (type) => {
     const nextAdults = type === "dec" ? adults - 1 : adults + 1;
-    if (nextAdults < 1) return;
+    if (nextAdults < 0) return;
     updateGuestCounts({ ...currentGuests(), adults: nextAdults });
   };
 
@@ -332,12 +335,11 @@ export default function GuestDetails() {
                 label: "Adults (18+ years)",
                 value: adults,
                 onChange: onChangeAdults,
-                decDisabled: adults <= 1 || !canSetGuests({ adults: adults - 1 }),
+                decDisabled: adults <= 0 || !canSetGuests({ adults: adults - 1 }),
                 incDisabled: !canSetGuests({ adults: adults + 1 }),
               })}
               {renderGuestCounter({
-                label: "Teens (13–18 years)",
-                sublabel: "25% off adult guest rate",
+                label: "Teens (13–17 years)",
                 value: teens,
                 onChange: onChangeTeens,
                 decDisabled: teens <= 0 || !canSetGuests({ teenagers: teens - 1 }),
@@ -345,7 +347,6 @@ export default function GuestDetails() {
               })}
               {renderGuestCounter({
                 label: "Infants (0–1 year) ",
-                sublabel: "Free",
                 value: infants,
                 onChange: onChangeInfants,
                 decDisabled: infants <= 0 || !canSetGuests({ infants: infants - 1 }),
@@ -353,7 +354,6 @@ export default function GuestDetails() {
               })}
               {renderGuestCounter({
                 label: "Toddlers (1–3 years) ",
-                sublabel: "75% off adult guest rate",
                 value: toddlers,
                 onChange: onChangeToddlers,
                 decDisabled: toddlers <= 0 || !canSetGuests({ toddlers: toddlers - 1 }),
@@ -361,7 +361,6 @@ export default function GuestDetails() {
               })}
               {renderGuestCounter({
                 label: "Children (4–12 years) ",
-                sublabel: "50% off adult guest rate",
                 value: children,
                 onChange: onChangeChildren,
                 decDisabled: children <= 0 || !canSetGuests({ children: children - 1 }),

@@ -57,7 +57,7 @@ export default function EditGuestsModal({ open, onOpenChange, value, onSave, pod
             </div>
 
             <div className="w-full flex items-center justify-between">
-              <div className="text-sm">Teens (13–18 years)</div>
+              <div className="text-sm">Teens (13–17 years)</div>
               <div className="flex items-center gap-3">
                 <Button
                   variant="outline"

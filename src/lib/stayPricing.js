@@ -105,7 +105,7 @@ function getSeasonalPercentForDate(dateYmd, seasonalRates) {
   return best ? Number(best.percentageAdjustment) : 0;
 }
 
-/** Teens (13–18): 25% discount off adult price → pay 75%. */
+/** Teens (13–17): 25% discount off adult price → pay 75%. */
 export const TEEN_RATE_MULTIPLIER = 0.75;
 /** Children (4–12): 50% discount off adult price → pay 50%. */
 export const CHILD_RATE_MULTIPLIER = 0.5;
