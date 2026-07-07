@@ -1,12 +1,9 @@
 import { useState, useEffect } from "react";
-import { Button } from "@/components/ui/button";
 const heroImage = "/main-home.jpeg";
 import heroImageMobile from "../../assets/image-mobile.png";
 import Navbar from "../../components/shared/Navbar/Navbar";
-import { ArrowRight } from "lucide-react";
 import BookingForm from "@/components/Home/BookingForm/BookingForm";
 import Footer from "@/components/shared/Footer/Footer";
-import { Link } from "react-router-dom";
 import ComingSoonPage from "@/components/shared/ComingSoonPage";
 import { isComingSoonEnabled } from "@/config";
 // import { BASE_URL } from "@/config"; // Uncomment when re-enabling EmailTestButton below
@@ -141,46 +138,10 @@ export default function Home() {
           Wake Up Wild
         </h1>
 
-        <p className="max-w-xl text-base md:text-lg font-semibold mb-6 drop-shadow-md">
+        <p className="max-w-xl text-base md:text-lg font-semibold mb-10 drop-shadow-md">
           Immerse yourself in the rhythm of nature, surrounded by refined beauty
           and effortless elegance. Welcome to Lufasi Lodges.
         </p>
-
-        {/* HERO BUTTONS */}
-        <div className="flex gap-3 mb-10">
-          <Button
-            className="
-              bg-[#B5AB84] text-white font-bold
-              px-5 py-2 md:px-6 md:py-3
-              rounded-md hover:bg-[#a79b6e] transition
-              h-10 md:h-12 flex items-center gap-2
-            "
-          >
-            <Link to="/manage-your-booking">Manage Booking</Link>
-
-            <ArrowRight className="w-4 h-4" />
-          </Button>
-
-          <Button
-            asChild
-            variant="outline"
-            className="
-              text-white border border-white/40
-              bg-white/0 backdrop-blur-md
-              rounded-md font-bold
-              px-4 py-2 md:px-6 md:py-3
-              h-10 md:h-12
-            "
-          >
-            <a
-              href="https://www.lufasilodges.com/domes"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              Explore our Lodges
-            </a>
-          </Button>
-        </div>
 
         {/* BOOKING FORM */}
         <div className="w-full flex justify-center mb-10">

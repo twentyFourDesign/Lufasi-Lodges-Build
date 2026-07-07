@@ -25,26 +25,7 @@ export default function Navbar() {
 
         <div className="flex items-center gap-2 md:gap-4">
           <Button
-            className="
-              hidden md:flex                     
-              bg-[#09432B]
-              text-white
-              rounded-md
-              font-bold
-              hover:bg-green-900
-              transition
-
-             md:h-9 lg:h-12
-              px-6 py-3
-
-              items-center justify-center gap-2
-            "
-          >
-            <Link to="/manage-your-booking">Manage Booking</Link>
-            <ArrowRight className="w-4 h-4 mt-1" />
-          </Button>
-
-          <Button
+            asChild
             variant="outline"
             className="
               text-white
@@ -59,8 +40,57 @@ export default function Navbar() {
               transition
 
               h-8 md:h-9 lg:h-12
-              px-4 py-2 md:px-6 md:py-3
-              text-sm md:text-base
+              px-3 py-2 md:px-6 md:py-3
+              text-xs md:text-base
+            "
+          >
+            <a
+              href="https://www.lufasilodges.com/domes"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              Explore our Lodges
+            </a>
+          </Button>
+
+          <Button
+            className="
+              hidden md:flex
+              bg-[#09432B]
+              text-white
+              rounded-md
+              font-bold
+              hover:bg-green-900
+              transition
+
+              md:h-9 lg:h-12
+              px-6 py-3
+
+              items-center justify-center gap-2
+            "
+          >
+            <Link to="/manage-your-booking">Manage Booking</Link>
+            <ArrowRight className="w-4 h-4 mt-1" />
+          </Button>
+
+          <Button
+            asChild
+            variant="outline"
+            className="
+              text-white
+              hover:text-white
+              border border-white/40
+              bg-white/0
+              backdrop-blur-md
+              rounded-md
+              shadow-sm
+              hover:bg-white/20
+              font-bold
+              transition
+
+              h-8 md:h-9 lg:h-12
+              px-3 py-2 md:px-6 md:py-3
+              text-xs md:text-base
             "
           >
             <a href="https://www.lufasilodges.com/" target="_blank" rel="noopener noreferrer">
