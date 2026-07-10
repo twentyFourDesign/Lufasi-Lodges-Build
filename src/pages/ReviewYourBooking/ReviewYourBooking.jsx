@@ -19,7 +19,7 @@ import { BASE_URL } from "@/config";
 import { formatDateSafe } from "@/lib/utils";
 import { formatSelectedRoomNames } from "@/lib/bookingDisplay";
 import { calculateStayRoomSubtotal } from "@/lib/stayPricing";
-import { isFamilyCompositionAllowed, isAllowedGuestCombination } from "@/lib/familyRules";
+import { isFamilyCompositionAllowed } from "@/lib/familyRules";
 import { podAllocationFromDomeDetails, GUEST_TYPE_LABELS } from "@/lib/guestAllocation";
 import {
   Dialog,
@@ -219,9 +219,6 @@ export default function ReviewYourBooking() {
       return "Please enter your date of birth on the details page.";
     }
     const guests = draft.guests || {};
-    if (!isAllowedGuestCombination(guests)) {
-      return "This guest combination is not available for booking.";
-    }
     if (!isFamilyCompositionAllowed(guests, draft.podCount || 1)) {
       return "This guest combination cannot be accommodated in the selected number of domes.";
     }

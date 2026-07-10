@@ -15,7 +15,6 @@ import { useNavigate } from "react-router-dom";
 import { toISODate, parseAvailabilityCheckResponse } from "@/lib/utils";
 import {
   findMinValidPodCount,
-  isAllowedGuestCombination,
   normalizeFamilyGuests,
 } from "@/lib/familyRules";
 
@@ -174,9 +173,7 @@ export default function BookingForm() {
     const minPods = findMinValidPodCount(normalized);
     if (minPods === null) {
       setSubmitError(
-        isAllowedGuestCombination(normalized)
-          ? "Your guest mix can't be accommodated in the available domes."
-          : "This guest combination is not available for booking.",
+        "This guest mix can't be accommodated under the dome occupancy rules. Please adjust guest counts.",
       );
       return;
     }

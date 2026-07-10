@@ -20,7 +20,6 @@ import { BASE_URL } from "@/config";
 import { formatDateSafe } from "@/lib/utils";
 import {
   isFamilyCompositionAllowed,
-  isAllowedGuestCombination,
   normalizeFamilyGuests,
   findMinValidPodCount,
   getMaxPopUpBeds,
@@ -159,9 +158,7 @@ export default function GuestDetails() {
     const { pods, bumped } = resolvePodCount(normalized);
     if (pods === null) {
       setNoticeMessage(
-        isAllowedGuestCombination(normalized)
-          ? "We can't fit this guest mix in the available domes. Please change your dates or reduce guests."
-          : "This guest combination is not available for booking. Please adjust your party to a permitted mix.",
+        "This guest mix can't be accommodated under the dome occupancy rules. Please adjust guest counts (max 2 guests per dome, or 1 adult + 2 children in one dome).",
       );
       return;
     }
