@@ -158,7 +158,7 @@ export default function GuestDetails() {
     const { pods, bumped } = resolvePodCount(normalized);
     if (pods === null) {
       setNoticeMessage(
-        "This guest mix can't be accommodated under the dome occupancy rules. Please adjust guest counts (max 2 guests per dome, or 1 adult + 2 children in one dome).",
+        "This guest mix can't be accommodated under the dome occupancy rules. Each dome holds up to 2 adults/teens, plus 1 child or toddler, plus 1 infant.",
       );
       return;
     }

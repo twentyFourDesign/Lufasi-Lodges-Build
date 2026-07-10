@@ -52,17 +52,23 @@ export function isOneAdultTwoChildrenOnePod(guests, podCount) {
   );
 }
 
+/** Per dome: 2 adults/teens + 1 child/toddler + 1 infant (or 1A+2C triple). */
 export function canAddGuestToPod(podGuests, type, guests, podCount, podIndex) {
   if (!GUEST_TYPE_ORDER.includes(type)) return false;
-  const billable = podGuests.filter((g) => g !== "infant").length;
   const allowTriple =
     isOneAdultTwoChildrenOnePod(guests, podCount) && podIndex === 0;
-  const maxBillable = allowTriple ? 3 : 2;
+  const primary = podGuests.filter((g) => g === "adult" || g === "teen").length;
+  const childLike = podGuests.filter(
+    (g) => g === "child" || g === "toddler",
+  ).length;
+  const infants = podGuests.filter((g) => g === "infant").length;
 
-  if (type === "infant") {
-    return podGuests.filter((g) => g === "infant").length < 1;
+  if (type === "infant") return infants < 1;
+  if (type === "adult" || type === "teen") return primary < 2;
+  if (type === "child" || type === "toddler") {
+    return allowTriple ? childLike < 2 : childLike < 1;
   }
-  return billable < maxBillable;
+  return false;
 }
 
 export function getRemainingGuestPool(guests, podAllocation) {
@@ -101,13 +107,21 @@ export function validatePodAllocation(podAllocation, guests, podCount) {
   const pods = Number(podCount) || 1;
   for (let i = 0; i < podAllocation.length; i++) {
     const pod = podAllocation[i] || [];
-    const billable = pod.filter((t) => t !== "infant").length;
     const allowTriple = isOneAdultTwoChildrenOnePod(g, pods) && i === 0;
-    const maxBillable = allowTriple ? 3 : 2;
-    if (billable > maxBillable) {
-      errors.push(`Dome ${i + 1} has too many guests.`);
+    const primary = pod.filter((t) => t === "adult" || t === "teen").length;
+    const childLike = pod.filter((t) => t === "child" || t === "toddler").length;
+    const infants = pod.filter((t) => t === "infant").length;
+    if (primary > 2) {
+      errors.push(`Dome ${i + 1} can have at most 2 adults/teens.`);
     }
-    if (pod.filter((t) => t === "infant").length > 1) {
+    if (childLike > (allowTriple ? 2 : 1)) {
+      errors.push(
+        allowTriple
+          ? `Dome ${i + 1} can have at most 2 children in this mix.`
+          : `Dome ${i + 1} can have at most 1 child or toddler.`,
+      );
+    }
+    if (infants > 1) {
       errors.push(`Dome ${i + 1} can only have one infant.`);
     }
   }
@@ -225,13 +239,16 @@ export function getWhyGuestCannotMoveToDome(
     return `${targetName} already has an infant. Only one infant per dome.`;
   }
 
-  const billable = targetPod.filter((g) => g !== "infant").length;
-  const allowTriple =
-    isOneAdultTwoChildrenOnePod(guests, podCount) && toDomeIdx === 0;
-  const maxBillable = allowTriple ? 3 : 2;
+  const primary = targetPod.filter((g) => g === "adult" || g === "teen").length;
+  const childLike = targetPod.filter(
+    (g) => g === "child" || g === "toddler",
+  ).length;
 
-  if (billable >= maxBillable) {
-    return `${targetName} is full. Max ${maxBillable} guest${maxBillable === 1 ? "" : "s"} per dome.`;
+  if ((type === "adult" || type === "teen") && primary >= 2) {
+    return `${targetName} already has 2 adults/teens.`;
+  }
+  if ((type === "child" || type === "toddler") && childLike >= 1) {
+    return `${targetName} already has a child or toddler.`;
   }
 
   return `Cannot move this guest to ${targetName}.`;
@@ -291,12 +308,15 @@ export function getWhyGuestCannotAssignToDome(
     if (type === "infant" && targetPod.filter((g) => g === "infant").length >= 1) {
       return `${targetName} already has an infant. Only one infant per dome.`;
     }
-    const billable = targetPod.filter((g) => g !== "infant").length;
-    const allowTriple =
-      isOneAdultTwoChildrenOnePod(guests, podCount) && toDomeIdx === 0;
-    const maxBillable = allowTriple ? 3 : 2;
-    if (billable >= maxBillable) {
-      return `${targetName} is full. Max ${maxBillable} guest${maxBillable === 1 ? "" : "s"} per dome.`;
+    const primary = targetPod.filter((g) => g === "adult" || g === "teen").length;
+    const childLike = targetPod.filter(
+      (g) => g === "child" || g === "toddler",
+    ).length;
+    if ((type === "adult" || type === "teen") && primary >= 2) {
+      return `${targetName} already has 2 adults/teens.`;
+    }
+    if ((type === "child" || type === "toddler") && childLike >= 1) {
+      return `${targetName} already has a child or toddler.`;
     }
     return `Cannot add ${GUEST_TYPE_LABELS[type] || type} to ${targetName}.`;
   }

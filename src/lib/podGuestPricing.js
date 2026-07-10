@@ -39,16 +39,30 @@ export function allocateGuestsToPods(guests, podCount) {
 
   const pushToPod = (p, type) => {
     if (p < 0 || p >= podCount) return false;
-    const billable = pods[p].filter((g) => g !== "infant").length;
-    const maxBillable = allowTripleOccupancy && p === 0 ? 3 : 2;
+    const allowTriple = allowTripleOccupancy && p === 0;
+    const primary = pods[p].filter((g) => g === "adult" || g === "teen").length;
+    const childLike = pods[p].filter(
+      (g) => g === "child" || g === "toddler",
+    ).length;
+    const infants = pods[p].filter((g) => g === "infant").length;
+
     if (type === "infant") {
-      if (pods[p].filter((g) => g === "infant").length >= 1) return false;
+      if (infants >= 1) return false;
       pods[p].push("infant");
       return true;
     }
-    if (billable >= maxBillable) return false;
-    pods[p].push(type);
-    return true;
+    if (type === "adult" || type === "teen") {
+      if (primary >= 2) return false;
+      pods[p].push(type);
+      return true;
+    }
+    if (type === "child" || type === "toddler") {
+      const maxChildLike = allowTriple ? 2 : 1;
+      if (childLike >= maxChildLike) return false;
+      pods[p].push(type);
+      return true;
+    }
+    return false;
   };
 
   for (let p = 0; p < podCount && adults > 0; p++) {

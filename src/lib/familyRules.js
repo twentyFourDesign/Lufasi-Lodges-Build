@@ -1,12 +1,17 @@
 /**
- * Pod occupancy rules (not an exclusive guest-mix whitelist).
+ * Original family / dome occupancy rules:
  *
- * - At least one adult or teen
- * - Max 2 billable guests per dome (adults, teens, children, toddlers)
- * - Exception: 1 adult + 2 children may share a single dome
- * - Max 1 infant per dome (infants are not billable)
- * - Max 1 child/toddler per dome (except the 1A+2C triple case)
- * - Billable guests must be >= dome count (no empty billable domes)
+ * Per dome maximum:
+ * - 2 adults/teens (primary guests)
+ * - + 1 child (4–12) or toddler (1–3) sharing / optional pop-up bed
+ * - + 1 infant (0–1, free)
+ *
+ * Exceptions:
+ * - 1 adult + 2 children may share a single dome
+ *
+ * Children/toddlers do NOT consume the adult slots — so e.g.
+ * 5 adults + 1 teen + 1 child + 1 toddler + 1 infant → 3 domes
+ * (6 primary / 2 = 3), not 4.
  */
 
 export function normalizeFamilyGuests(guests = {}) {
@@ -24,9 +29,16 @@ export function hasUnder13Guests(guests = {}) {
   return g.infants + g.toddlers + g.children > 0;
 }
 
+/** Adults + teens + children + toddlers (used for pricing / 12-guest discount). */
 export function getBillableGuestCount(guests = {}) {
   const g = normalizeFamilyGuests(guests);
   return g.adults + g.teenagers + g.toddlers + g.children;
+}
+
+/** Adults + teens — drive dome count (2 per dome). */
+export function getPrimaryGuestCount(guests = {}) {
+  const g = normalizeFamilyGuests(guests);
+  return g.adults + g.teenagers;
 }
 
 export function getDisplayGuestCount(guests = {}) {
@@ -47,29 +59,27 @@ function isOneAdultTwoChildrenOnePod(g, pods) {
 export function isFamilyCompositionAllowed(guests = {}, podCount = 1) {
   const g = normalizeFamilyGuests(guests);
   const pods = Number(podCount) || 1;
-  const billable = getBillableGuestCount(guests);
+  const primary = getPrimaryGuestCount(g);
   const childLikeGuests = g.toddlers + g.children;
   const triple = isOneAdultTwoChildrenOnePod(g, pods);
 
   if (pods < 1 || pods > 6) return false;
-  if (g.adults + g.teenagers < 1) return false;
+  if (primary < 1) return false;
+  // Each booked dome needs at least one adult/teen
+  if (primary < pods) return false;
+  if (primary > pods * 2) return false;
   if (g.infants > pods) return false;
-  if (billable < pods) return false;
 
   if (triple) {
     return g.infants <= 1;
   }
 
-  if (billable > pods * 2) return false;
-  // One child/toddler per dome (pop-up / share king bed)
+  // One child/toddler per dome (share king bed or pop-up)
   if (childLikeGuests > pods) return false;
 
   return true;
 }
 
-/**
- * Smallest pod count (1–6) that fits this composition, or null if impossible.
- */
 export function findMinValidPodCount(guests = {}) {
   for (let p = 1; p <= 6; p += 1) {
     if (isFamilyCompositionAllowed(guests, p)) return p;
@@ -77,9 +87,6 @@ export function findMinValidPodCount(guests = {}) {
   return null;
 }
 
-/**
- * Largest pod count (1–6) that fits, capped by availability.
- */
 export function findMaxValidPodCount(guests = {}, availablePods = 6) {
   const cap = Math.min(6, Math.max(1, Number(availablePods) || 6));
   let best = null;
@@ -89,17 +96,10 @@ export function findMaxValidPodCount(guests = {}, availablePods = 6) {
   return best;
 }
 
-/**
- * True when the mix can fit in some valid dome count (1–6).
- * Kept for call-site compatibility; this is occupancy, not a whitelist.
- */
 export function isAllowedGuestCombination(guests = {}) {
   return findMinValidPodCount(guests) !== null;
 }
 
-/**
- * Max pop-up beds: one per child/toddler, capped by dome count.
- */
 export function getMaxPopUpBeds(guests = {}, podCount = 1) {
   const g = normalizeFamilyGuests(guests);
   const pods = Math.max(1, Number(podCount) || 1);
