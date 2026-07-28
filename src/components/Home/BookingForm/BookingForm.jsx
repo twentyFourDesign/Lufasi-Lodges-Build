@@ -7,7 +7,7 @@ import {
   PopoverContent,
 } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
-import { addDays, differenceInCalendarDays } from "date-fns";
+import { addDays, differenceInCalendarDays, startOfDay } from "date-fns";
 
 import { BASE_URL } from "@/config";
 import { useBookingStore } from "@/store/useBookingStore";
@@ -95,6 +95,14 @@ export default function BookingForm() {
   const navigate = useNavigate();
 
   const launchDate = new Date(2026, 4, 1);
+  const today = startOfDay(new Date());
+
+  const isCheckoutDisabled = (date) => {
+    const day = startOfDay(date);
+    if (checkIn) return day <= startOfDay(checkIn);
+    const floor = launchDate.getTime() > Date.now() ? startOfDay(launchDate) : today;
+    return day <= floor;
+  };
 
   useEffect(() => {
     fetch(`${BASE_URL}/config/holidays`)
@@ -246,11 +254,13 @@ export default function BookingForm() {
                 setCheckIn(date);
                 setCheckInOpen(false);
                 if (date) {
-                  const nextCheckout = addDays(date, 2);
-                  setCheckOut(nextCheckout);
+                  setCheckOut(addDays(startOfDay(date), 1));
                 }
               }}
-              disabled={(date) => date < launchDate || date < new Date()}
+              disabled={(date) => {
+                const day = startOfDay(date);
+                return day < startOfDay(launchDate) || day < today;
+              }}
               className="rounded-md"
             />
           </PopoverContent>
@@ -271,11 +281,12 @@ export default function BookingForm() {
             <Calendar
               mode="single"
               selected={checkOut}
+              defaultMonth={checkOut ?? (checkIn ? addDays(checkIn, 1) : undefined)}
               onSelect={(date) => {
                 setCheckOut(date);
                 setCheckOutOpen(false);
               }}
-              disabled={(date) => date <= (checkIn || launchDate.getTime() > Date.now() ? launchDate : new Date())}
+              disabled={isCheckoutDisabled}
               className="rounded-md"
             />
           </PopoverContent>
