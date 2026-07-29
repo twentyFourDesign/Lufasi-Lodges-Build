@@ -280,7 +280,7 @@ export default function PodsManagementPage() {
             <div className="space-y-6">
                 {/* Header */}
                 <div className="flex items-center justify-between">
-                    <h1 className="text-2xl font-bold text-[#333333]">Pods</h1>
+                    <h1 className="text-2xl font-bold text-[#333333]">Domes</h1>
                     <button
                         onClick={() => setShowAddModal(true)}
                         className="px-4 py-2 bg-[#008080] text-white rounded-lg flex items-center gap-2 hover:bg-[#006666]"

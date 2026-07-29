@@ -12,7 +12,7 @@ const navItems = [
     { name: "Vouchers & Discount", path: "/admin/vouchers", icon: "vouchers" },
     { name: "Extras", path: "/admin/extras", icon: "extras" },
     { name: "Meals", path: "/admin/meals", icon: "meals" },
-    { name: "Pods", path: "/admin/pods", icon: "pods" },
+    { name: "Domes", path: "/admin/pods", icon: "pods" },
     { name: "Guest Details", path: "/admin/guests", icon: "guests" },
     { name: "Booking Logs", path: "/admin/logs", icon: "logs" },
     { name: "Reports", path: "/admin/reports", icon: "reports" },
