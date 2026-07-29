@@ -21,7 +21,14 @@ export default function EditPodModal({ open, onOpenChange, value, onSave }) {
   const availablePodsCount = value.availablePods
     ? value.availablePods.filter((pod) => pod.available === true).length
     : 0;
-  const podTags = ["Lake View", "Private Pool", "King Size Bed"];
+  // Collect all unique tags from available pods
+  const podTags = Array.from(
+    new Set(
+      (value.availablePods || [])
+        .flatMap((pod) => (Array.isArray(pod.tags) ? pod.tags : []))
+        .filter(Boolean)
+    )
+  );
 
   const pick = () => {
     console.log("Selected Room Count:", roomCount);
