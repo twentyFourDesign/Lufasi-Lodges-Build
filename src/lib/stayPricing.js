@@ -47,18 +47,20 @@ function toYmd(date) {
 }
 
 function num(v, fallback = 0) {
+  // null/"" must not become 0 via Number(null) — that silently zeroed rates.
+  if (v === null || v === undefined || v === "") return fallback;
   const n = Number(v);
-  return Number.isFinite(n) ? n : fallback;
+  return Number.isFinite(n) && n > 0 ? n : fallback;
 }
 
 function getNightRatesFromConfig(config, isPeakNight) {
   const legacyBase = num(
     config?.basePricePerPod ?? config?.base_price_per_pod,
-    400000,
+    300000,
   );
   const legacyExtra = num(
     config?.extraGuestFee ?? config?.extra_guest_fee,
-    100000,
+    200000,
   );
 
   if (isPeakNight) {

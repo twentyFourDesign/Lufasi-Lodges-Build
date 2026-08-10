@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import CommonNavbar from "@/components/shared/common/CommonNavbar/CommonNavbar";
 import {
@@ -31,6 +31,7 @@ import { Calendar } from "@/components/ui/calendar";
 import { Button } from "@/components/ui/button";
 import { cn, formatDateSafe } from "@/lib/utils";
 import { formatSelectedRoomNames } from "@/lib/bookingDisplay";
+import { ensurePricingConfig } from "@/lib/pricingConfig";
 import { format } from "date-fns";
 
 import {
@@ -58,6 +59,11 @@ function formatPrice(n) {
 export default function EnterDetails() {
   const navigate = useNavigate();
   const bookingStore = useBookingStore();
+
+  useEffect(() => {
+    ensurePricingConfig(bookingStore);
+  }, []);
+
   const form = useForm({
     defaultValues: {
       firstName: "",

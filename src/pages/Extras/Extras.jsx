@@ -21,6 +21,7 @@ import FunnelMobileStickyCta from "@/components/booking/FunnelMobileStickyCta";
 import { BASE_URL } from "@/config";
 import { formatDateSafe } from "@/lib/utils";
 import { formatSelectedRoomNames } from "@/lib/bookingDisplay";
+import { ensurePricingConfig } from "@/lib/pricingConfig";
 
 function formatPrice(n) {
   return Number(n || 0).toLocaleString();
@@ -335,6 +336,7 @@ export default function Extras() {
 
   useEffect(() => {
     fetchExtras();
+    ensurePricingConfig(bookingStore);
   }, []);
 
   useEffect(() => {

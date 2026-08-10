@@ -18,6 +18,8 @@ import { useBookingStore, calculateDynamicSubTotal } from "@/store/useBookingSto
 import { format } from "date-fns";
 import { BASE_URL } from "@/config";
 import { formatDateSafe } from "@/lib/utils";
+import { ensurePricingConfig } from "@/lib/pricingConfig";
+import { calculateStayRoomSubtotal } from "@/lib/stayPricing";
 import {
   isFamilyCompositionAllowed,
   normalizeFamilyGuests,
@@ -53,36 +55,54 @@ export default function GuestDetails() {
       return;
     }
 
-    const normalized = normalizeFamilyGuests(
-      bookingStore.draft.guests || {
-        adults,
-        teenagers: teens,
-        toddlers,
-        children,
-        infants,
-      },
-    );
-    const { pods } = resolvePodCount(normalized);
-    if (pods !== null && pods !== Number(bookingStore.draft.podCount)) {
-      const nextDraft = {
-        ...bookingStore.draft,
-        guests: normalized,
-        podCount: pods,
-        selectedPodIds: [],
-        podId: undefined,
-        domeDetails: [],
-        bedConfiguration: "",
-      };
-      bookingStore.updateDraft({
-        guests: normalized,
-        podCount: pods,
-        selectedPodIds: [],
-        podId: undefined,
-        domeDetails: [],
-        bedConfiguration: "",
-        subTotal: calculateDynamicSubTotal(nextDraft),
-      });
+    let cancelled = false;
+
+    async function init() {
+      await ensurePricingConfig(bookingStore);
+      if (cancelled) return;
+
+      const normalized = normalizeFamilyGuests(
+        bookingStore.draft.guests || {
+          adults,
+          teenagers: teens,
+          toddlers,
+          children,
+          infants,
+        },
+      );
+      const { pods } = resolvePodCount(normalized);
+      if (pods !== null && pods !== Number(bookingStore.draft.podCount)) {
+        const nextDraft = {
+          ...bookingStore.draft,
+          guests: normalized,
+          podCount: pods,
+          selectedPodIds: [],
+          podId: undefined,
+          domeDetails: [],
+          bedConfiguration: "",
+        };
+        const nextSubTotal = calculateDynamicSubTotal(nextDraft);
+        bookingStore.updateDraft({
+          guests: normalized,
+          podCount: pods,
+          selectedPodIds: [],
+          podId: undefined,
+          domeDetails: [],
+          bedConfiguration: "",
+          subTotal: nextSubTotal,
+        });
+        setSubTotal(nextSubTotal);
+      } else {
+        const nextSubTotal = calculateDynamicSubTotal(bookingStore.draft);
+        setSubTotal(nextSubTotal);
+        bookingStore.updateDraft({ subTotal: nextSubTotal });
+      }
     }
+
+    init();
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   useEffect(() => {
@@ -500,24 +520,24 @@ export default function GuestDetails() {
                   (guestCounts.children || 0) +
                   (guestCounts.infants || 0);
                 const pricingConfig = bookingStore.draft.pricingConfig || {};
-                const basePricePerPod =
-                  pricingConfig.basePricePerPod !== undefined
-                    ? pricingConfig.basePricePerPod
-                    : 400000;
-                const nights = bookingStore.draft.numberOfNights || 1;
                 const pods = bookingStore.draft.podCount || 1;
-                const baseForStayPreview = pods * basePricePerPod * nights;
                 const configuredDiscountPercent =
-                  pricingConfig.twelveGuestDiscountPercent ?? 10;
+                  pricingConfig.twelveGuestDiscountPercent ?? 0;
                 const discountPercent =
                   totalGuests === 12 ? configuredDiscountPercent : 0;
+                const subTotalLocal = calculateDynamicSubTotal(bookingStore.draft);
+                const { subtotal: baseForDiscount } = calculateStayRoomSubtotal({
+                  checkIn: bookingStore.draft.dates?.checkIn,
+                  checkOut: bookingStore.draft.dates?.checkOut,
+                  podsCount: pods,
+                  guestCounts: { adults: pods },
+                  pricingConfig,
+                  seasonalRates: bookingStore.draft.seasonalRatePeriods ?? [],
+                });
                 const discountAmount =
                   discountPercent > 0
-                    ? Math.round(
-                        baseForStayPreview * (configuredDiscountPercent / 100),
-                      )
+                    ? Math.round(baseForDiscount * (configuredDiscountPercent / 100))
                     : 0;
-                const subTotalLocal = calculateDynamicSubTotal(bookingStore.draft);
                 const taxableBase = subTotalLocal - discountAmount;
                 const taxAmount =
                   taxableBase > 0 ? Math.round(taxableBase * 0.125) : 0;

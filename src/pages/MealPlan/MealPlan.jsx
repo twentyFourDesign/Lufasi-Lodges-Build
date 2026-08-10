@@ -19,6 +19,8 @@ import { BASE_URL } from "@/config";
 import { useBookingStore, calculateDynamicSubTotal } from "@/store/useBookingStore";
 import { format } from "date-fns";
 import { formatDateSafe } from "@/lib/utils";
+import { ensurePricingConfig } from "@/lib/pricingConfig";
+import { calculateStayRoomSubtotal } from "@/lib/stayPricing";
 import { isGuestAllocationComplete } from "@/lib/guestAllocation";
 
 function formatPrice(n) {
@@ -65,14 +67,20 @@ export default function MealPlan() {
       return;
     }
 
-    bookingStore.updateDraft({
-      basePrice:
-        pricingConfig?.basePricePerPod !== undefined
-          ? pricingConfig.basePricePerPod
-          : 400000,
-      bedConfiguration: bedConfig,
-    });
-    setLoading(false);
+    let cancelled = false;
+    async function init() {
+      const config = await ensurePricingConfig(bookingStore);
+      if (cancelled) return;
+      bookingStore.updateDraft({
+        basePrice: config.basePricePerPod,
+        bedConfiguration: bedConfig,
+      });
+      setLoading(false);
+    }
+    init();
+    return () => {
+      cancelled = true;
+    };
   }, [bookingStore.draft.dates, bookingStore.draft.podCount, navigate]);
 
   const handleSelectDomeBedConfig = (domeIdx, value) => {
@@ -286,24 +294,24 @@ export default function MealPlan() {
                   (guestCounts.children || 0) +
                   (guestCounts.infants || 0);
                 const pricingConfig = bookingStore.draft.pricingConfig || {};
-                const basePricePerPod =
-                  pricingConfig.basePricePerPod !== undefined
-                    ? pricingConfig.basePricePerPod
-                    : 400000;
-                const nights = bookingStore.draft.numberOfNights || 1;
                 const pods = bookingStore.draft.podCount || 1;
-                const baseForStayPreview = pods * basePricePerPod * nights;
                 const configuredDiscountPercent =
-                  pricingConfig.twelveGuestDiscountPercent ?? 10;
+                  pricingConfig.twelveGuestDiscountPercent ?? 0;
                 const discountPercent =
                   totalGuests === 12 ? configuredDiscountPercent : 0;
+                const dynamicSubTotal = calculateDynamicSubTotal(bookingStore.draft);
+                const { subtotal: baseForDiscount } = calculateStayRoomSubtotal({
+                  checkIn: bookingStore.draft.dates?.checkIn,
+                  checkOut: bookingStore.draft.dates?.checkOut,
+                  podsCount: pods,
+                  guestCounts: { adults: pods },
+                  pricingConfig,
+                  seasonalRates: bookingStore.draft.seasonalRatePeriods ?? [],
+                });
                 const discountAmount =
                   discountPercent > 0
-                    ? Math.round(
-                        baseForStayPreview * (configuredDiscountPercent / 100),
-                      )
+                    ? Math.round(baseForDiscount * (configuredDiscountPercent / 100))
                     : 0;
-                const dynamicSubTotal = calculateDynamicSubTotal(bookingStore.draft);
                 const taxableBase = dynamicSubTotal - discountAmount;
                 const taxAmount =
                   taxableBase > 0 ? Math.round(taxableBase * 0.125) : 0;

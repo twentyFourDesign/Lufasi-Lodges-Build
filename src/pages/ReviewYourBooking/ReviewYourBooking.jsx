@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -19,6 +19,7 @@ import { BASE_URL } from "@/config";
 import { formatDateSafe } from "@/lib/utils";
 import { formatSelectedRoomNames } from "@/lib/bookingDisplay";
 import { calculateStayRoomSubtotal } from "@/lib/stayPricing";
+import { ensurePricingConfig } from "@/lib/pricingConfig";
 import { isFamilyCompositionAllowed } from "@/lib/familyRules";
 import { podAllocationFromDomeDetails, GUEST_TYPE_LABELS } from "@/lib/guestAllocation";
 import {
@@ -45,6 +46,10 @@ export default function ReviewYourBooking() {
   const [successMessage, setSuccessMessage] = useState("");
   const [successDialogOpen, setSuccessDialogOpen] = useState(false);
   const navigate = useNavigate();
+
+  useEffect(() => {
+    ensurePricingConfig(bookingStore);
+  }, []);
 
   const applyVoucher = async () => {
     if (!voucherCode) return;

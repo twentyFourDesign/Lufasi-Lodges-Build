@@ -17,6 +17,7 @@ import { useBookingStore, calculateDynamicSubTotal } from "@/store/useBookingSto
 import { BASE_URL } from "@/config";
 import { formatDateSafe, parseAvailabilityCheckResponse, resolveMediaUrl, DEFAULT_POD_IMAGE_URL, toISODate } from "@/lib/utils";
 import { calculateStayRoomSubtotal } from "@/lib/stayPricing";
+import { ensurePricingConfig } from "@/lib/pricingConfig";
 import {
   findMinValidPodCount,
   findMaxValidPodCount,
@@ -248,31 +249,7 @@ export default function SelectRooms() {
 
     async function init() {
       setLoading(true);
-      if (!pricingConfig) {
-        try {
-          const response = await fetch(`${BASE_URL}/config/pricing`);
-          if (response.ok) {
-            const data = await response.json();
-            bookingStore.updateDraft({
-              pricingConfig: {
-                basePricePerPod: data.base_price_per_pod,
-                extraGuestFee: data.extra_guest_fee,
-                basePricePerPodOffPeak: data.base_price_per_pod_off_peak,
-                basePricePerPodPeak: data.base_price_per_pod_peak,
-                extraGuestFeeOffPeak: data.extra_guest_fee_off_peak,
-                extraGuestFeePeak: data.extra_guest_fee_peak,
-                maxGuestsPerPod: data.max_guests_per_pod,
-                minGuestsPerPod: data.min_guests_per_pod,
-                totalPodsAvailable: data.total_pods_available,
-                twelveGuestDiscountPercent: data.twelve_guest_discount_percent ?? 10,
-                currency: data.currency,
-              },
-            });
-          }
-        } catch (err) {
-          console.error("Error fetching pricing:", err);
-        }
-      }
+      await ensurePricingConfig(bookingStore);
 
       await refreshAvailability();
       setLoading(false);

@@ -2,6 +2,7 @@ import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import { calculateStayRoomSubtotal } from "@/lib/stayPricing";
 import { podAllocationFromDomeDetails } from "@/lib/guestAllocation";
+import { FALLBACK_PRICING_CONFIG } from "@/lib/pricingConfig";
 
 export enum BoardType {
   FULL_BOARD = "fullBoard",
@@ -179,13 +180,11 @@ export const calculateDynamicSubTotal = (draft: BookingDraft): number => {
     children: 0,
     infants: 0,
   };
-  const pricingConfig = draft.pricingConfig || {
-    basePricePerPod: 400000,
-    extraGuestFee: 100000,
-    maxGuestsPerPod: 2,
-    minGuestsPerPod: 1,
-    totalPodsAvailable: 6,
-    currency: "NGN",
+  // Always merge with fallback so peak/off-peak are never missing
+  // (flat legacy-only config was charging 400k × every night).
+  const pricingConfig = {
+    ...FALLBACK_PRICING_CONFIG,
+    ...(draft.pricingConfig || {}),
   };
   const checkIn = draft.dates?.checkIn;
   const checkOut = draft.dates?.checkOut;

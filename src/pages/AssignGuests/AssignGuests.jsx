@@ -18,6 +18,7 @@ import { Link, useNavigate } from "react-router-dom";
 import FunnelMobileStickyCta from "@/components/booking/FunnelMobileStickyCta";
 import { useBookingStore, calculateDynamicSubTotal } from "@/store/useBookingStore";
 import { formatDateSafe } from "@/lib/utils";
+import { ensurePricingConfig } from "@/lib/pricingConfig";
 import {
   GUEST_TYPE_LABELS,
   applyDefaultGuestAllocation,
@@ -237,6 +238,10 @@ export default function AssignGuests() {
       navigate("/select-rooms", { replace: true });
     }
   }, [bookingStore.draft, navigate]);
+
+  useEffect(() => {
+    ensurePricingConfig(bookingStore);
+  }, []);
 
   useEffect(() => {
     const needsInit =

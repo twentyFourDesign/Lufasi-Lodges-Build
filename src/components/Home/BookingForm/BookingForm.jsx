@@ -13,6 +13,7 @@ import { BASE_URL } from "@/config";
 import { useBookingStore } from "@/store/useBookingStore";
 import { useNavigate } from "react-router-dom";
 import { toISODate, parseAvailabilityCheckResponse } from "@/lib/utils";
+import { fetchPricingConfig } from "@/lib/pricingConfig";
 import {
   findMinValidPodCount,
   normalizeFamilyGuests,
@@ -211,6 +212,13 @@ export default function BookingForm() {
       const { pods, peakRateInfo, weekdayPeakInfo, seasonalRatePeriods } =
         parseAvailabilityCheckResponse(data);
 
+      let pricingConfig;
+      try {
+        pricingConfig = await fetchPricingConfig();
+      } catch (err) {
+        console.error("Error fetching pricing on availability check:", err);
+      }
+
       bookingStore.updateDraft({
         dates: {
           checkIn: toISODate(checkIn),
@@ -223,6 +231,7 @@ export default function BookingForm() {
         peakRateInfo,
         weekdayPeakInfo,
         seasonalRatePeriods,
+        ...(pricingConfig ? { pricingConfig } : {}),
       });
 
       navigate("/guest-details");
