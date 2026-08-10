@@ -263,7 +263,7 @@ export default function BookingForm() {
                 setCheckIn(date);
                 setCheckInOpen(false);
                 if (date) {
-                  setCheckOut(addDays(startOfDay(date), 1));
+                  setCheckOut(addDays(startOfDay(date), 2));
                 }
               }}
               disabled={(date) => {
@@ -290,7 +290,7 @@ export default function BookingForm() {
             <Calendar
               mode="single"
               selected={checkOut}
-              defaultMonth={checkOut ?? (checkIn ? addDays(checkIn, 1) : undefined)}
+              defaultMonth={checkOut ?? (checkIn ? addDays(checkIn, 2) : undefined)}
               onSelect={(date) => {
                 setCheckOut(date);
                 setCheckOutOpen(false);

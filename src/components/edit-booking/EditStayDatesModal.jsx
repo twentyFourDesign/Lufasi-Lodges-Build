@@ -91,7 +91,7 @@ export default function EditStayDatesModal({
                       new Date(),
                     );
                     if (!isNaN(parsedDate.getTime())) {
-                      const autoCheckOut = addDays(parsedDate, 1);
+                      const autoCheckOut = addDays(parsedDate, 2);
                       newLocal.checkOut = format(autoCheckOut, "dd/MM/yyyy");
                     }
                   } catch (err) {
