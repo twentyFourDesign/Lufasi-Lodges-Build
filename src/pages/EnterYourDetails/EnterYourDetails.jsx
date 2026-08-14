@@ -46,12 +46,12 @@ import {
   Calendar as CalendarIcon,
   Home,
   Wallet,
-  Users,
   FileUp,
 } from "lucide-react";
 
 import { Link, useNavigate } from "react-router-dom";
 import FunnelMobileStickyCta from "@/components/booking/FunnelMobileStickyCta";
+import ReservationGuestsCard from "@/components/booking/ReservationGuestsCard";
 
 function formatPrice(n) {
   return n.toLocaleString();
@@ -476,15 +476,11 @@ export default function EnterDetails() {
                   "1 x King Bed (6 foot)"}
               </p>
             </div>
-            <div className="bg-white rounded-xl border border-gray-200 p-4 shadow-sm">
-              <div className="flex items-center gap-2 mb-3">
-                <Users className="w-5 h-5 text-[#09432B]" />
-                <h4 className="text-[#09432B] font-bold">Guests</h4>
-              </div>
-              <p className="text-sm text-[#737373]">
-                {bookingStore.draft.guests?.adults || 0} Adults (18+)
-              </p>
-            </div>
+            <ReservationGuestsCard
+              guests={bookingStore.draft.guests}
+              popUpBeds={bookingStore.draft.popUpBeds}
+              className="p-4"
+            />
             <div className="bg-white rounded-xl border border-gray-200 p-4 shadow-sm">
               <div className="flex items-center gap-2 mb-3">
                 <Wallet className="w-5 h-5 text-[#09432B]" />

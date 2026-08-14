@@ -12,12 +12,12 @@ import {
   ChevronDown,
   Calendar,
   Home,
-  User,
   Gift,
   Loader2,
 } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import FunnelMobileStickyCta from "@/components/booking/FunnelMobileStickyCta";
+import ReservationGuestsCard from "@/components/booking/ReservationGuestsCard";
 import { BASE_URL } from "@/config";
 import { formatDateSafe } from "@/lib/utils";
 import { formatSelectedRoomNames } from "@/lib/bookingDisplay";
@@ -676,18 +676,11 @@ export default function Extras() {
               </div>
             )}
 
-            {/* Guests Card */}
-            <div className="bg-white rounded-xl border border-gray-200 p-4 shadow-sm">
-              <div className="flex items-center gap-2 mb-3">
-                <div className="w-8 h-8 bg-[#E6F2EE] rounded-full flex items-center justify-center">
-                  <User className="w-4 h-4 text-[#09432B]" />
-                </div>
-                <h4 className="text-[#09432B] font-bold">Guests</h4>
-              </div>
-              <p className="text-sm text-[#737373]">
-                {(draft.guests?.adults || 0)} Adults (18+)
-              </p>
-            </div>
+            <ReservationGuestsCard
+              guests={draft.guests}
+              popUpBeds={draft.popUpBeds}
+              className="p-4"
+            />
 
             {/* Selected Extras Card */}
             <div className="bg-white rounded-xl border border-gray-200 p-4 shadow-sm">

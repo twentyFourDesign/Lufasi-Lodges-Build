@@ -7,13 +7,13 @@ import {
   Home,
   Wallet,
   Info,
-  Users,
   Plus,
   Minus,
   UtensilsCrossed,
 } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import FunnelMobileStickyCta from "@/components/booking/FunnelMobileStickyCta";
+import ReservationGuestsCard from "@/components/booking/ReservationGuestsCard";
 import { useBookingStore, calculateDynamicSubTotal } from "@/store/useBookingStore";
 import { format } from "date-fns";
 import { BASE_URL } from "@/config";
@@ -485,6 +485,10 @@ export default function GuestDetails() {
                   : `${bookingStore.draft.podCount || 0} dome${(bookingStore.draft.podCount || 0) === 1 ? "" : "s"} required — choose on next step`}
               </p>
             </div>
+            <ReservationGuestsCard
+              guests={currentGuests()}
+              popUpBeds={popUpBeds}
+            />
             <div className="bg-white rounded-xl border border-gray-200 px-5 py-4 shadow-sm">
               <div className="flex items-center gap-2 mb-3">
                 <div className="w-8 h-8 bg-[#E6F2EE] rounded-full flex items-center justify-center">

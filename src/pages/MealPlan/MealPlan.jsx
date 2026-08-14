@@ -15,6 +15,7 @@ import { LuBedSingle } from "react-icons/lu";
 import { IoBedOutline } from "react-icons/io5";
 import { Link, useNavigate } from "react-router-dom";
 import FunnelMobileStickyCta from "@/components/booking/FunnelMobileStickyCta";
+import ReservationGuestsCard from "@/components/booking/ReservationGuestsCard";
 import { BASE_URL } from "@/config";
 import { useBookingStore, calculateDynamicSubTotal } from "@/store/useBookingStore";
 import { format } from "date-fns";
@@ -272,6 +273,11 @@ export default function MealPlan() {
                 {domeDetails.map((d) => d.podName || "Dome").join(", ")}
               </p>
             </div>
+
+            <ReservationGuestsCard
+              guests={bookingStore.draft.guests}
+              popUpBeds={bookingStore.draft.popUpBeds}
+            />
 
             <div className="bg-white rounded-xl border border-gray-200 px-5 py-4 shadow-sm">
               <div className="flex items-center gap-2 mb-3">

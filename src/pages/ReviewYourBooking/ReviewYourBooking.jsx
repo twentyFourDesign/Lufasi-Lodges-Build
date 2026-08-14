@@ -17,7 +17,7 @@ import { useBookingStore } from "@/store/useBookingStore";
 import { format } from "date-fns/format";
 import { BASE_URL } from "@/config";
 import { formatDateSafe } from "@/lib/utils";
-import { formatSelectedRoomNames } from "@/lib/bookingDisplay";
+import { formatSelectedRoomNames, getGuestCountLabel, getGuestSummaryLines } from "@/lib/bookingDisplay";
 import { calculateStayRoomSubtotal } from "@/lib/stayPricing";
 import { ensurePricingConfig } from "@/lib/pricingConfig";
 import { isFamilyCompositionAllowed } from "@/lib/familyRules";
@@ -459,27 +459,28 @@ export default function ReviewYourBooking() {
                 <div className="w-9 h-9 rounded-full bg-[#E6F2EE] flex items-center justify-center">
                   <Users className="w-4 h-4 text-[#09432B]" />
                 </div>
-                <div>
-                  <h4 className="font-semibold text-[#09432B]">Guests</h4>
-                  <div className="text-sm text-[#6B6B6B] space-y-1">
-                    <p>{bookingStore.draft.guests?.adults || 0} Adults (18+)</p>
-                    {(bookingStore.draft.guests?.teenagers || 0) > 0 && (
-                      <p>{bookingStore.draft.guests?.teenagers} Teens (13–17)</p>
-                    )}
-                    {(bookingStore.draft.guests?.infants || 0) > 0 && (
-                      <p>{bookingStore.draft.guests?.infants} Infants (0–1)</p>
-                    )}
-                    {(bookingStore.draft.guests?.toddlers || 0) > 0 && (
-                      <p>{bookingStore.draft.guests?.toddlers} Toddlers (1–3)</p>
-                    )}
-                    {(bookingStore.draft.guests?.children || 0) > 0 && (
-                      <p>{bookingStore.draft.guests?.children} Children (4–12)</p>
-                    )}
-                    {(bookingStore.draft.popUpBeds || 0) > 0 && (
-                      <p className="text-[#09432B] italic">
-                        + {bookingStore.draft.popUpBeds} Pop-up bed{(bookingStore.draft.popUpBeds || 0) === 1 ? "" : "s"} (no extra charge)
+                <div className="flex-1">
+                  <div className="flex justify-between">
+                    <h4 className="font-semibold text-[#09432B]">Guests</h4>
+                    <span className="font-semibold text-[#09432B] text-sm">
+                      {getGuestCountLabel(bookingStore.draft.guests)}
+                    </span>
+                  </div>
+                  <div className="text-sm text-[#6B6B6B] space-y-1 mt-1">
+                    {getGuestSummaryLines(
+                      bookingStore.draft.guests,
+                      bookingStore.draft.popUpBeds,
+                    ).map((line) => (
+                      <p
+                        key={line}
+                        className={
+                          line.startsWith("+") ? "text-[#09432B] italic" : undefined
+                        }
+                      >
+                        {line}
+                        {line.startsWith("+") ? " (no extra charge)" : ""}
                       </p>
-                    )}
+                    ))}
                   </div>
                 </div>
               </CardContent>

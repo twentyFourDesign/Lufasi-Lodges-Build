@@ -10,12 +10,12 @@ import {
   GripVertical,
   Home,
   Info,
-  Users,
   Wallet,
   RotateCcw,
 } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import FunnelMobileStickyCta from "@/components/booking/FunnelMobileStickyCta";
+import ReservationGuestsCard from "@/components/booking/ReservationGuestsCard";
 import { useBookingStore, calculateDynamicSubTotal } from "@/store/useBookingStore";
 import { formatDateSafe } from "@/lib/utils";
 import { ensurePricingConfig } from "@/lib/pricingConfig";
@@ -790,21 +790,10 @@ export default function AssignGuests() {
               </div>
             </div>
 
-            <div className="bg-white rounded-xl border border-gray-200 px-5 py-4 shadow-sm">
-              <div className="flex items-center gap-2 mb-3">
-                <div className="w-8 h-8 bg-[#E6F2EE] rounded-full flex items-center justify-center">
-                  <Users className="w-4 h-4 text-[#09432B]" />
-                </div>
-                <h4 className="text-[#09432B] font-bold">Your Party</h4>
-              </div>
-              <div className="text-sm text-[#737373] space-y-1">
-                {(guests.adults || 0) > 0 && <p>{guests.adults} Adult(s)</p>}
-                {(guests.teenagers || 0) > 0 && <p>{guests.teenagers} Teen(s)</p>}
-                {(guests.children || 0) > 0 && <p>{guests.children} Child(ren)</p>}
-                {(guests.toddlers || 0) > 0 && <p>{guests.toddlers} Toddler(s)</p>}
-                {(guests.infants || 0) > 0 && <p>{guests.infants} Infant(s)</p>}
-              </div>
-            </div>
+            <ReservationGuestsCard
+              guests={guests}
+              popUpBeds={bookingStore.draft.popUpBeds}
+            />
 
             <div className="bg-white rounded-xl border border-gray-200 px-5 py-4 shadow-sm">
               <div className="flex items-center gap-2 mb-3">

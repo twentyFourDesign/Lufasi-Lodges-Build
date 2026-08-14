@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import FunnelMobileStickyCta from "@/components/booking/FunnelMobileStickyCta";
+import ReservationGuestsCard from "@/components/booking/ReservationGuestsCard";
 import { useBookingStore, calculateDynamicSubTotal } from "@/store/useBookingStore";
 import { BASE_URL } from "@/config";
 import { formatDateSafe, parseAvailabilityCheckResponse, resolveMediaUrl, DEFAULT_POD_IMAGE_URL, toISODate } from "@/lib/utils";
@@ -593,6 +594,11 @@ export default function SelectRooms() {
                 </p>
               )}
             </div>
+
+            <ReservationGuestsCard
+              guests={bookingStore.draft.guests}
+              popUpBeds={bookingStore.draft.popUpBeds}
+            />
 
             <div className="bg-white rounded-xl border border-gray-200 px-5 py-4 shadow-sm">
               <div className="flex items-center gap-2 mb-3">
