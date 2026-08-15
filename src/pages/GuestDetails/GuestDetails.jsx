@@ -58,7 +58,9 @@ export default function GuestDetails() {
     let cancelled = false;
 
     async function init() {
-      await ensurePricingConfig(bookingStore);
+      // Always fetch fresh config first — stale sessionStorage can have old
+      // legacy rates (e.g. 400 000 flat) that override the correct peak/off-peak values.
+      const freshPricingConfig = await ensurePricingConfig(bookingStore);
       if (cancelled) return;
 
       const normalized = normalizeFamilyGuests(
@@ -72,8 +74,11 @@ export default function GuestDetails() {
       );
       const { pods } = resolvePodCount(normalized);
       if (pods !== null && pods !== Number(bookingStore.draft.podCount)) {
+        // Build nextDraft with fresh pricingConfig so calculateDynamicSubTotal
+        // never uses the stale sessionStorage config.
         const nextDraft = {
           ...bookingStore.draft,
+          pricingConfig: freshPricingConfig,
           guests: normalized,
           podCount: pods,
           selectedPodIds: [],
@@ -83,6 +88,7 @@ export default function GuestDetails() {
         };
         const nextSubTotal = calculateDynamicSubTotal(nextDraft);
         bookingStore.updateDraft({
+          pricingConfig: freshPricingConfig,
           guests: normalized,
           podCount: pods,
           selectedPodIds: [],
@@ -93,9 +99,11 @@ export default function GuestDetails() {
         });
         setSubTotal(nextSubTotal);
       } else {
-        const nextSubTotal = calculateDynamicSubTotal(bookingStore.draft);
+        // Use freshPricingConfig explicitly so stale draft doesn't pollute the calc.
+        const freshDraft = { ...bookingStore.draft, pricingConfig: freshPricingConfig };
+        const nextSubTotal = calculateDynamicSubTotal(freshDraft);
         setSubTotal(nextSubTotal);
-        bookingStore.updateDraft({ subTotal: nextSubTotal });
+        bookingStore.updateDraft({ pricingConfig: freshPricingConfig, subTotal: nextSubTotal });
       }
     }
 
@@ -529,7 +537,11 @@ export default function GuestDetails() {
                   pricingConfig.twelveGuestDiscountPercent ?? 0;
                 const discountPercent =
                   totalGuests === 12 ? configuredDiscountPercent : 0;
-                const subTotalLocal = calculateDynamicSubTotal(bookingStore.draft);
+                // Use the `subTotal` state variable — it is set by the async init()
+                // which always fetches a fresh pricingConfig from the API, preventing
+                // stale sessionStorage values (e.g. old flat 400 000 rate) from
+                // inflating the displayed price.
+                const subTotalLocal = subTotal;
                 const { subtotal: baseForDiscount } = calculateStayRoomSubtotal({
                   checkIn: bookingStore.draft.dates?.checkIn,
                   checkOut: bookingStore.draft.dates?.checkOut,
