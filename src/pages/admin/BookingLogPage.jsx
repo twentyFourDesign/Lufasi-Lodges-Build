@@ -98,7 +98,7 @@ export default function BookingLogPage() {
 
     // Only show bookings that are actively occupying a room.
     // Cancelled, expired, failed, and abandoned bookings must NOT block calendar cells.
-    const ACTIVE_BOOKING_STATUSES = ["confirmed", "ready_for_checkin"];
+    const ACTIVE_BOOKING_STATUSES = ["confirmed", "ready_for_checkin", "paid", "confirmed_unassigned"];
 
     // Find booking for a specific pod and date
     const getBookingForCell = (podId, date) => {
@@ -114,15 +114,24 @@ export default function BookingLogPage() {
         };
 
         const booking = bookings.find((b) => {
-            if (b.podId !== podId) return false;
-
             // Skip bookings that are NOT actively holding the room
             const status = (b.bookingStatus || b.status || "").toLowerCase();
             if (!ACTIVE_BOOKING_STATUSES.includes(status)) return false;
 
             const checkIn = toISODateLocal(b.checkIn);
             const checkOut = toISODateLocal(b.checkOut);
-            return dateStr >= checkIn && dateStr < checkOut;
+            const dateInRange = dateStr >= checkIn && dateStr < checkOut;
+            if (!dateInRange) return false;
+
+            // Check primary podId (single-pod bookings)
+            if (b.podId === podId) return true;
+
+            // Check domeDetails for multi-pod bookings
+            if (Array.isArray(b.domeDetails)) {
+                return b.domeDetails.some((dome) => dome.podId === podId);
+            }
+
+            return false;
         });
 
         if (booking) return booking;
