@@ -401,16 +401,8 @@ export default function Extras() {
           delete next[extra.id];
           return next;
         });
-        const currentSubTotal = bookingStore.draft.subTotal || 0;
-        bookingStore.updateDraft({
-          subTotal: currentSubTotal - extra.price,
-        });
       } else {
         updatedExtras = [...prev, extra];
-        const currentSubTotal = bookingStore.draft.subTotal || 0;
-        bookingStore.updateDraft({
-          subTotal: currentSubTotal + extra.price,
-        });
       }
       return updatedExtras;
     });
@@ -704,39 +696,40 @@ export default function Extras() {
             <div className="bg-white rounded-xl border border-gray-200 p-4 shadow-sm">
               <h4 className="text-[#09432B] font-bold mb-3">Price Summary</h4>
 
-              <div className="space-y-3 text-sm">
-                <div className="flex justify-between">
-                  <span>Sub Total:</span>
-                  <span>₦{formatPrice(calculateDynamicSubTotal(draft))}</span>
-                </div>
+              {(() => {
+                // Merge live selectedExtras (local state) into the draft so
+                // calculateDynamicSubTotal sees the current selection, not just
+                // what was last saved to the store.
+                const draftWithExtras = { ...draft, extras: selectedExtras };
+                const subTotalWithExtras = calculateDynamicSubTotal(draftWithExtras);
+                const taxAmount = Math.round(subTotalWithExtras * 0.125);
+                const totalAmount = Math.round(subTotalWithExtras * 1.125);
+                return (
+                  <div className="space-y-3 text-sm">
+                    <div className="flex justify-between">
+                      <span>Sub Total:</span>
+                      <span>₦{formatPrice(subTotalWithExtras)}</span>
+                    </div>
 
-                <div className="flex justify-between leading-snug">
-                  <span>
-                    After consumption tax and <br /> VAT(12.5%)
-                  </span>
-                  <span>
-                    ₦
-                    {formatPrice(
-                      Math.round(calculateDynamicSubTotal(draft) * 0.125),
-                    )}
-                  </span>
-                </div>
+                    <div className="flex justify-between leading-snug">
+                      <span>
+                        After consumption tax and <br /> VAT(12.5%)
+                      </span>
+                      <span>₦{formatPrice(taxAmount)}</span>
+                    </div>
 
-                <div className="flex justify-between">
-                  <span>Discount</span>
-                  <span>0%</span>
-                </div>
+                    <div className="flex justify-between">
+                      <span>Discount</span>
+                      <span>0%</span>
+                    </div>
 
-                <div className="border-t flex justify-between bg-[#F2EFE7] px-3 py-2 rounded-md font-semibold">
-                  <span>Total:</span>
-                  <span>
-                    ₦
-                    {formatPrice(
-                      Math.round(calculateDynamicSubTotal(draft) * 1.125),
-                    )}
-                  </span>
-                </div>
-              </div>
+                    <div className="border-t flex justify-between bg-[#F2EFE7] px-3 py-2 rounded-md font-semibold">
+                      <span>Total:</span>
+                      <span>₦{formatPrice(totalAmount)}</span>
+                    </div>
+                  </div>
+                );
+              })()}
             </div>
 
             {/* Continue Button */}
