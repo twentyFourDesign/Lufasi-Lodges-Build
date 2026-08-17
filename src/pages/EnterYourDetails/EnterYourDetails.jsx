@@ -52,6 +52,7 @@ import {
 import { Link, useNavigate } from "react-router-dom";
 import FunnelMobileStickyCta from "@/components/booking/FunnelMobileStickyCta";
 import ReservationGuestsCard from "@/components/booking/ReservationGuestsCard";
+import { isAlcoholPackageIncluded } from "@/lib/alcoholPackage";
 
 function formatPrice(n) {
   return n.toLocaleString();
@@ -486,13 +487,18 @@ export default function EnterDetails() {
                 <Wallet className="w-5 h-5 text-[#09432B]" />
                 <h4 className="text-[#09432B] font-bold">Extras</h4>
               </div>
-              {!bookingStore.draft.extras || bookingStore.draft.extras.length === 0 ? (
-                <p className="text-sm text-[#737373]">None selected</p>
-              ) : (
-                <p className="text-sm text-[#737373]">
-                  {bookingStore.draft.extras.length} selected
-                </p>
-              )}{" "}
+              <p className="text-sm text-[#737373]">
+                {isAlcoholPackageIncluded(
+                  bookingStore.draft.alcoholPackageIncluded,
+                )
+                  ? "Alcohol package included"
+                  : "Alcohol package removed"}
+                {bookingStore.draft.extras?.length
+                  ? ` · ${bookingStore.draft.extras.length} extra${
+                      bookingStore.draft.extras.length === 1 ? "" : "s"
+                    } selected`
+                  : ""}
+              </p>
             </div>
             <div className="bg-white rounded-xl border border-gray-200 p-5 shadow-sm">
               <h4 className="text-[#09432B] font-bold mb-3">Price Summary</h4>

@@ -844,6 +844,15 @@ export default function BookingDetailsPage() {
                 </p>
               </div>
             )}
+
+            <div className="mt-3 border-t border-gray-200 pt-3">
+              <p className="text-sm text-gray-600">
+                Alcohol Package:{" "}
+                {booking.alcoholPackageIncluded === false
+                  ? `Removed (−₦${Number(booking.alcoholOptOutCredit || 0).toLocaleString()})`
+                  : "Included"}
+              </p>
+            </div>
           </div>
 
           {/* Price Summary */}
@@ -871,6 +880,14 @@ export default function BookingDetailsPage() {
                     </span>
                   </div>
                 )}
+              {Number(booking.alcoholOptOutCredit) > 0 && (
+                <div className="flex justify-between text-sm">
+                  <span className="text-gray-600">Alcohol package removed:</span>
+                  <span className="text-green-700">
+                    -₦{formatCurrency(booking.alcoholOptOutCredit)}
+                  </span>
+                </div>
+              )}
               <div className="flex justify-between text-sm">
                 <span className="text-gray-600">
                   After consumption tax and VAT(12.5%)

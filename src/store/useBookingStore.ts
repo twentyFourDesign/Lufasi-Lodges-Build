@@ -3,6 +3,10 @@ import { persist } from "zustand/middleware";
 import { calculateStayRoomSubtotal } from "@/lib/stayPricing";
 import { podAllocationFromDomeDetails } from "@/lib/guestAllocation";
 import { FALLBACK_PRICING_CONFIG } from "@/lib/pricingConfig";
+import {
+  calculateAlcoholOptOutCredit,
+  getStayNightCount,
+} from "@/lib/alcoholPackage";
 
 export enum BoardType {
   FULL_BOARD = "fullBoard",
@@ -122,6 +126,7 @@ type BookingDraft = {
     text: string;
     dates?: string[];
   }> | null;
+  alcoholPackageIncluded?: boolean;
   contact?: {
     firstName: string;
     lastName: string;
@@ -207,5 +212,11 @@ export const calculateDynamicSubTotal = (draft: BookingDraft): number => {
       0,
     ) || 0;
 
-  return roomSubtotal + extrasTotal;
+  const alcoholOptOutCredit = calculateAlcoholOptOutCredit({
+    alcoholPackageIncluded: draft.alcoholPackageIncluded,
+    guests: guestCounts,
+    nights: getStayNightCount(draft),
+  });
+
+  return Math.max(0, roomSubtotal + extrasTotal - alcoholOptOutCredit);
 };

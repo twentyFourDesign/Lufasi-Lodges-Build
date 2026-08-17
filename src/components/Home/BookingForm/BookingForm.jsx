@@ -227,6 +227,7 @@ export default function BookingForm() {
         guests: normalized,
         popUpBeds: 0,
         numberOfNights: differenceInCalendarDays(checkOut, checkIn),
+        alcoholPackageIncluded: true,
         availablePods: pods,
         peakRateInfo,
         weekdayPeakInfo,

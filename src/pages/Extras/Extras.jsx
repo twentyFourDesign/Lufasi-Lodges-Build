@@ -14,6 +14,7 @@ import {
   Home,
   Gift,
   Loader2,
+  Wine,
 } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import FunnelMobileStickyCta from "@/components/booking/FunnelMobileStickyCta";
@@ -22,6 +23,13 @@ import { BASE_URL } from "@/config";
 import { formatDateSafe } from "@/lib/utils";
 import { formatSelectedRoomNames } from "@/lib/bookingDisplay";
 import { ensurePricingConfig } from "@/lib/pricingConfig";
+import {
+  ALCOHOL_PACKAGE_PER_ADULT_PER_NIGHT,
+  calculateAlcoholOptOutCredit,
+  getAlcoholPackageAdultCount,
+  getAlcoholPackageSummary,
+  isAlcoholPackageIncluded,
+} from "@/lib/alcoholPackage";
 
 function formatPrice(n) {
   return Number(n || 0).toLocaleString();
@@ -325,6 +333,9 @@ export default function Extras() {
   });
   const [extraPersonalizations, setExtraPersonalizations] = useState({});
   const [personalizationError, setPersonalizationError] = useState(null);
+  const [alcoholPackageIncluded, setAlcoholPackageIncluded] = useState(
+    isAlcoholPackageIncluded(draft.alcoholPackageIncluded),
+  );
 
   const nights = draft.numberOfNights || 1;
   const stayDates = [];
@@ -460,8 +471,20 @@ export default function Extras() {
       extras: selectedExtras,
       welcomeNote: welcomeNote.enabled ? welcomeNote : null,
       extraPersonalizations: personalizations.length ? personalizations : null,
+      alcoholPackageIncluded,
     });
   };
+
+  const persistAlcoholChoice = () => {
+    bookingStore.updateDraft({ alcoholPackageIncluded });
+  };
+
+  const alcoholSummary = getAlcoholPackageSummary({
+    alcoholPackageIncluded,
+    guests: draft.guests,
+    nights,
+  });
+  const alcoholAdults = getAlcoholPackageAdultCount(draft.guests);
 
   return (
     <div className="overflow-x-hidden min-h-screen w-full bg-[#F7F5F0] pb-28 md:pb-0">
@@ -496,6 +519,65 @@ export default function Extras() {
             {loading && !error && (
               <div className="flex items-center justify-center py-20">
                 <Loader2 className="w-6 h-6 text-[#09432B] animate-spin" />
+              </div>
+            )}
+
+            {!loading && (
+              <div className="bg-white rounded-xl border border-[#09432B]/20 shadow-sm overflow-hidden">
+                <div className="bg-gradient-to-r from-[#09432B] to-[#0A4C30] px-4 py-3 flex items-center justify-between">
+                  <h3 className="text-white font-semibold flex items-center gap-2">
+                    <Wine className="w-5 h-5 text-[#B5AB84]" />
+                    Alcohol Package
+                  </h3>
+                  <span className="text-xs bg-[#B5AB84] text-[#09432B] px-2 py-0.5 rounded font-bold">
+                    Included
+                  </span>
+                </div>
+                <div className="p-4 space-y-3">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="flex items-start gap-3 min-w-0">
+                      <Checkbox
+                        checked={alcoholPackageIncluded}
+                        onCheckedChange={(checked) => {
+                          const next = checked === true;
+                          setAlcoholPackageIncluded(next);
+                          bookingStore.updateDraft({
+                            alcoholPackageIncluded: next,
+                          });
+                        }}
+                        className="mt-1"
+                      />
+                      <div>
+                        <p className="text-sm font-semibold text-[#09432B]">
+                          Drinks including alcohol
+                        </p>
+                        <p className="text-xs text-[#737373] mt-1 leading-relaxed">
+                          Included in your stay rate (food, drinks, park access
+                          and lodge facilities). Uncheck to remove alcohol and
+                          save ₦
+                          {ALCOHOL_PACKAGE_PER_ADULT_PER_NIGHT.toLocaleString()}{" "}
+                          per adult, per night — ₦
+                          {ALCOHOL_PACKAGE_PER_ADULT_PER_NIGHT.toLocaleString()}{" "}
+                          for a single traveller, ₦
+                          {(ALCOHOL_PACKAGE_PER_ADULT_PER_NIGHT * 2).toLocaleString()}{" "}
+                          for a couple.
+                        </p>
+                      </div>
+                    </div>
+                    <span className="text-sm font-semibold text-[#09432B] whitespace-nowrap">
+                      {alcoholPackageIncluded
+                        ? "Included"
+                        : `-₦${alcoholSummary.credit.toLocaleString()}`}
+                    </span>
+                  </div>
+                  {!alcoholPackageIncluded && alcoholAdults > 0 && (
+                    <p className="text-xs text-[#008080] pl-8">
+                      Saving ₦{alcoholSummary.credit.toLocaleString()} for{" "}
+                      {alcoholAdults} adult{alcoholAdults === 1 ? "" : "s"} ×{" "}
+                      {nights} night{nights === 1 ? "" : "s"}.
+                    </p>
+                  )}
+                </div>
               </div>
             )}
 
@@ -683,13 +765,16 @@ export default function Extras() {
                 <h4 className="text-[#09432B] font-bold">Extras</h4>
               </div>
 
-              {selectedExtras.length === 0 ? (
-                <p className="text-sm text-[#737373]">None selected</p>
-              ) : (
-                <p className="text-sm text-[#737373]">
-                  {selectedExtras.length} selected
-                </p>
-              )}
+              <p className="text-sm text-[#737373]">
+                {alcoholPackageIncluded
+                  ? "Alcohol package included"
+                  : "Alcohol package removed"}
+                {selectedExtras.length > 0
+                  ? ` · ${selectedExtras.length} extra${
+                      selectedExtras.length === 1 ? "" : "s"
+                    } selected`
+                  : ""}
+              </p>
             </div>
 
             {/* Price Summary Card */}
@@ -700,16 +785,32 @@ export default function Extras() {
                 // Merge live selectedExtras (local state) into the draft so
                 // calculateDynamicSubTotal sees the current selection, not just
                 // what was last saved to the store.
-                const draftWithExtras = { ...draft, extras: selectedExtras };
+                const draftWithExtras = {
+                  ...draft,
+                  extras: selectedExtras,
+                  alcoholPackageIncluded,
+                };
                 const subTotalWithExtras = calculateDynamicSubTotal(draftWithExtras);
                 const taxAmount = Math.round(subTotalWithExtras * 0.125);
                 const totalAmount = Math.round(subTotalWithExtras * 1.125);
+                const alcoholCredit = calculateAlcoholOptOutCredit({
+                  alcoholPackageIncluded,
+                  guests: draft.guests,
+                  nights,
+                });
                 return (
                   <div className="space-y-3 text-sm">
                     <div className="flex justify-between">
                       <span>Sub Total:</span>
                       <span>₦{formatPrice(subTotalWithExtras)}</span>
                     </div>
+
+                    {alcoholCredit > 0 && (
+                      <div className="flex justify-between text-[#008080]">
+                        <span>Alcohol package removed</span>
+                        <span>Saved ₦{formatPrice(alcoholCredit)}</span>
+                      </div>
+                    )}
 
                     <div className="flex justify-between leading-snug">
                       <span>
@@ -767,7 +868,9 @@ export default function Extras() {
               variant="outline"
               className="w-full py-6 rounded-md border font-bold border-[#0A4C30] text-[#0A4C30] hover:bg-[#0A4C30] hover:text-white"
             >
-              <Link to="/enter-your-details">Skip Extras</Link>
+              <Link to="/enter-your-details" onClick={persistAlcoholChoice}>
+                Skip Extras
+              </Link>
             </Button>
 
             {/* Quick Book Button */}

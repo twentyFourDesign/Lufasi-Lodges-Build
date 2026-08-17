@@ -20,6 +20,11 @@ import { formatDateSafe } from "@/lib/utils";
 import { formatSelectedRoomNames, getGuestCountLabel, getGuestSummaryLines } from "@/lib/bookingDisplay";
 import { calculateStayRoomSubtotal } from "@/lib/stayPricing";
 import { ensurePricingConfig } from "@/lib/pricingConfig";
+import {
+  calculateAlcoholOptOutCredit,
+  getStayNightCount,
+  isAlcoholPackageIncluded,
+} from "@/lib/alcoholPackage";
 import { isFamilyCompositionAllowed } from "@/lib/familyRules";
 import { podAllocationFromDomeDetails, GUEST_TYPE_LABELS } from "@/lib/guestAllocation";
 import {
@@ -142,7 +147,13 @@ export default function ReviewYourBooking() {
         0,
       ) || 0;
 
-    const subTotal = roomSubtotal + extrasTotal;
+    const alcoholOptOutCredit = calculateAlcoholOptOutCredit({
+      alcoholPackageIncluded: bookingStore.draft.alcoholPackageIncluded,
+      guests: guestCounts,
+      nights: getStayNightCount(bookingStore.draft),
+    });
+
+    const subTotal = Math.max(0, roomSubtotal + extrasTotal - alcoholOptOutCredit);
     
     // 1. Twelve Guest Discount
     const configuredDiscountPercent = pricingConfig.twelveGuestDiscountPercent ?? 10;
@@ -177,6 +188,7 @@ export default function ReviewYourBooking() {
 
     return {
       subTotal,
+      alcoholOptOutCredit,
       twelveGuestDiscountAmount,
       twelveGuestDiscountPercent,
       promoDiscountAmount,
@@ -184,7 +196,11 @@ export default function ReviewYourBooking() {
       taxableBase,
       taxAmount,
       finalTotal,
-      totalSavings: twelveGuestDiscountAmount + promoDiscountAmount + voucherDiscountAmount
+      totalSavings:
+        alcoholOptOutCredit +
+        twelveGuestDiscountAmount +
+        promoDiscountAmount +
+        voucherDiscountAmount,
     };
   };
 
@@ -262,6 +278,9 @@ export default function ReviewYourBooking() {
       domeDetails: bookingStore.draft.domeDetails,
       welcomeNote: bookingStore.draft.welcomeNote,
       extraPersonalizations: bookingStore.draft.extraPersonalizations,
+      alcoholPackageIncluded: isAlcoholPackageIncluded(
+        bookingStore.draft.alcoholPackageIncluded,
+      ),
     };
 
     try {
@@ -510,12 +529,17 @@ export default function ReviewYourBooking() {
                 <div>
                   <h4 className="font-semibold text-[#09432B]">Extras</h4>
                   <p className="text-sm text-[#6B6B6B]">
+                    {isAlcoholPackageIncluded(
+                      bookingStore.draft.alcoholPackageIncluded,
+                    )
+                      ? "Alcohol package included"
+                      : "Alcohol package removed"}
                     {bookingStore.draft.extras?.length > 0
-                      ? bookingStore.draft.extras
+                      ? `; ${bookingStore.draft.extras
                           .map((e) => e.name || e.title)
                           .filter(Boolean)
-                          .join(", ")
-                      : "N/A"}
+                          .join(", ")}`
+                      : ""}
                   </p>
                   {bookingStore.draft.extraPersonalizations?.map((item) => (
                     <div
@@ -576,6 +600,15 @@ export default function ReviewYourBooking() {
                 })()}
                 {bookingStore.draft.peakRateInfo && (
                   <div className="text-[#008080] text-xs">Seasonal rate</div>
+                )}
+
+                {pricing.alcoholOptOutCredit > 0 && (
+                  <div className="flex justify-between text-[#008080]">
+                    <span>Alcohol package removed:</span>
+                    <span className="font-semibold">
+                      Saved ₦{formatPrice(pricing.alcoholOptOutCredit)}
+                    </span>
+                  </div>
                 )}
 
                 {pricing.twelveGuestDiscountAmount > 0 && (
