@@ -25,6 +25,7 @@ import {
   getStayNightCount,
   isAlcoholPackageIncluded,
 } from "@/lib/alcoholPackage";
+import { applyVoucherToAmountDue } from "@/lib/voucherCredit";
 import { isFamilyCompositionAllowed } from "@/lib/familyRules";
 import { podAllocationFromDomeDetails, GUEST_TYPE_LABELS } from "@/lib/guestAllocation";
 import {
@@ -164,7 +165,7 @@ export default function ReviewYourBooking() {
     
     let runningTotal = subTotal - twelveGuestDiscountAmount;
     
-    // 2. Applied Discount Code
+    // 2. Applied Discount Code (reduces taxable stay amount)
     let promoDiscountAmount = 0;
     if (appliedDiscount) {
       if (appliedDiscount.type === 'percentage') {
@@ -174,17 +175,22 @@ export default function ReviewYourBooking() {
       }
       runningTotal -= promoDiscountAmount;
     }
-    
-    // 3. Applied Voucher
-    let voucherDiscountAmount = 0;
-    if (appliedVoucher) {
-      voucherDiscountAmount = Number(appliedVoucher.value);
-      runningTotal -= voucherDiscountAmount;
-    }
 
     const taxableBase = Math.max(0, runningTotal);
     const taxAmount = Math.round(taxableBase * 0.125);
-    const finalTotal = Math.round(taxableBase * 1.125);
+    const amountDueBeforeVoucher = Math.round(taxableBase * 1.125);
+
+    // 3. Applied Voucher — credit against tax-inclusive amount due
+    let voucherDiscountAmount = 0;
+    let finalTotal = amountDueBeforeVoucher;
+    if (appliedVoucher) {
+      const { applied, remaining } = applyVoucherToAmountDue(
+        amountDueBeforeVoucher,
+        appliedVoucher.value,
+      );
+      voucherDiscountAmount = applied;
+      finalTotal = remaining;
+    }
 
     return {
       subTotal,
@@ -629,15 +635,6 @@ export default function ReviewYourBooking() {
                   </div>
                 )}
 
-                {pricing.voucherDiscountAmount > 0 && (
-                  <div className="flex justify-between text-[#008080]">
-                    <span className="">Voucher ({appliedVoucher.code}):</span>
-                    <span className="font-semibold">
-                      - ₦{formatPrice(pricing.voucherDiscountAmount)}
-                    </span>
-                  </div>
-                )}
-
                 <div className="flex justify-between">
                   <span className="text-[#6B6B6B]">
                     Consumption tax & VAT (12.5%):
@@ -646,6 +643,15 @@ export default function ReviewYourBooking() {
                     ₦{formatPrice(pricing.taxAmount)}
                   </span>
                 </div>
+
+                {pricing.voucherDiscountAmount > 0 && (
+                  <div className="flex justify-between text-[#008080]">
+                    <span className="">Voucher ({appliedVoucher.code}):</span>
+                    <span className="font-semibold">
+                      - ₦{formatPrice(pricing.voucherDiscountAmount)}
+                    </span>
+                  </div>
+                )}
               </div>
               <div className="mt-5 rounded-xl overflow-hidden border border-[#d9d9d9]">
                 <div className="bg-[#B7FFFF] px-4 py-3 text-[#0A4C30] font-medium flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
